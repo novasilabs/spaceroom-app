@@ -1,0 +1,66 @@
+name: Spaceroom
+options:
+  bundleIdPrefix: io.github.spaceroom-app
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+packages:
+  SpaceroomCore:
+    path: Packages/SpaceroomCore
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    # Local builds are ad-hoc signed; release builds use a Developer ID (M1+).
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  Spaceroom:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/Spaceroom
+    dependencies:
+      - package: SpaceroomCore
+    info:
+      path: App/Spaceroom/Info.plist
+      properties:
+        CFBundleDisplayName: Spaceroom
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: "Copyright © 2026 The Spaceroom contributors. GPL-3.0-or-later."
+        CFBundleLocalizations: [en, id]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.spaceroom-app.spaceroom
+        PRODUCT_NAME: Spaceroom
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Not sandboxed by design (see docs/PRD.md §8.4): a cleaner needs Full Disk Access.
+        ENABLE_APP_SANDBOX: NO
+        COMBINE_HIDPI_IMAGES: YES
+
+schemes:
+  Spaceroom:
+    build:
+      targets:
+        Spaceroom: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    archive:
+      config: Release

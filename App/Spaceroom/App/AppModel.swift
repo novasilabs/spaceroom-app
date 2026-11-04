@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import AppKit
+import Observation
+import SpaceroomCore
+import SwiftUI
+
+/// App-wide state: selection, the rule catalog, the Restore Center and permissions.
+@MainActor
+@Observable
+final class AppModel {
+    var selection: SidebarModule = .cleanup
+    var isShowingOnboarding = false
+    var alert: AlertMessage?
+
+    /// `nil` when the rule files failed to load or validate — cleaning is then disabled (fail-closed).
+    let catalog: RuleCatalog?
+    let catalogError: String?
+
+    /// `nil` when the Restore Center index can't be read — cleaning is then disabled too.
+    let store: RestoreStore?
+    let storeError: String?
+
+    private(set) var operations: [OperationRecord] = []
+    private(set) var fullDiskAccess: FullDiskAccess.Status = .unknown
+
+    var retentionDays: Int {
+        didSet { UserDefaults.standard.set(retentionDays, forKey: Keys.retentionDays) }
+    }
+
+    var hasCompletedOnboarding: Bool {
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: Keys.onboarding) }
+    }
+
+    private(set) var flows: [CleanModule: ScanFlowModel] = [:]
+
+    static let retentionChoices = [1, 3, 7, 14, 30]
+
+    struct AlertMessage: Identifiable {
+        let id = UUID()
+        let title: String
+        let message: String
+    }
+
+    private enum Keys {
+        static let retentionDays = "retentionDays"
+        static let onboarding = "hasCompletedOnboarding"
+    }
+
+    init() {
+        let defaults = UserDefaults.standard
+        let storedRetention = defaults.integer(forKey: Keys.retentionDays)
+        retentionDays = Self.retentionChoices.contains(storedRetention) ? storedRetention : 7
+        hasCompletedOnboarding = defaults.bool(forKey: Keys.onboarding)
+
+        do {
+            catalog = try RuleCatalog.bundled()
+            catalogError = nil
+        } catch {
+            catalog = nil
+            catalogError = error.description
+        }
+        do {
+            store = try RestoreStore()
+            storeError = nil
+        } catch {
+            store = nil
+            storeError = String(describing: error)
+        }
+
+        for module in CleanModule.allCases {
+            flows[module] = ScanFlowModel(module: module, app: self)
+        }
+        refreshFullDiskAccess()
+        isShowingOnboarding = !hasCompletedOnboarding
+    }
+
+    /// Why cleaning is disabled, if it is.
+    var cleaningBlockedReason: String? {
+        if let catalogError { return String(localized: "Cleaning rules failed to load: \(catalogError)") }
+        if let storeError { return String(localized: "Restore Center is unavailable: \(storeError)") }
+        return nil
+    }
+
+    func flow(for module: CleanModule) -> ScanFlowModel? { flows[module] }
+
+    func scanContext() -> ScanContext {
+        ScanContext(home: FileManager.default.homeDirectoryForCurrentUser,
+                    runningBundleIDs: AppNames.runningBundleIDs(),
+                    runningAppNames: AppNames.runningAppNames(),
+                    now: .now)
+    }
+
+    // MARK: Lifecycle
+
+    func onLaunch() async {
+        if let store {
+            do {
+                try await store.purgeExpired(retentionDays: retentionDays)
+            } catch {
+                show("Couldn't clear expired items", error)
+            }
+        }
+        await refreshOperations()
+    }
+
+    func refreshFullDiskAccess() {
+        fullDiskAccess = FullDiskAccess.status()
+    }
+
+    func openFullDiskAccessSettings() {
+        NSWorkspace.shared.open(FullDiskAccess.settingsURL)
+    }
+
+    // MARK: Restore Center
+
+    var storedSize: Int64 { operations.reduce(0) { $0 + $1.storedSize } }
+
+    func refreshOperations() async {
+        guard let store else { return }
+        operations = await store.operations
+    }
+
+    @discardableResult
+    func restoreAll(_ operationID: UUID) async -> Bool {
+        await perform("Couldn't restore") { try await $0.restoreAll(in: operationID) }
+    }
+
+    @discardableResult
+    func restore(_ itemID: UUID, in operationID: UUID) async -> Bool {
+        await perform("Couldn't restore") { try await $0.restore([itemID], in: operationID) }
+    }
+
+    func purge(_ operationID: UUID) async {
+        await perform("Couldn't delete") { try await $0.purge(operationID) }
+    }
+
+    /// Runs a store action, reports failures (including per-item restore failures), refreshes.
+    @discardableResult
+    private func perform<T: Sendable>(_ failureTitle: String, _ action: (RestoreStore) async throws -> T) async -> Bool {
+        guard let store else { return false }
+        var succeeded = true
+        do {
+            let result = try await action(store)
+            if let outcomes = result as? [RestoreOutcome] {
+                let problems = outcomes.compactMap { outcome -> String? in
+                    switch outcome {
+                    case .missing: String(localized: "An item was no longer in the Restore Center.")
+                    case .failed(_, let message): message
+                    case .restored, .restoredRenamed: nil
+                    }
+                }
+                if !problems.isEmpty {
+                    succeeded = false
+                    alert = AlertMessage(title: failureTitle, message: problems.joined(separator: "\n"))
+                }
+            }
+        } catch {
+            succeeded = false
+            show(failureTitle, error)
+        }
+        await refreshOperations()
+        return succeeded
+    }
+
+    func show(_ title: String, _ error: any Error) {
+        alert = AlertMessage(title: title, message: error.localizedDescription)
+    }
+}

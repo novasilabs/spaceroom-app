@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import SwiftUI
+
+/// Main window: full-bleed module gradient, translucent sidebar, module content.
+struct RootView: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        @Bindable var app = app
+        HStack(spacing: 0) {
+            SidebarView()
+                .frame(width: 236)
+            detail
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .foregroundStyle(.white)
+        .background {
+            ZStack {
+                ModuleBackground(module: app.selection)
+                    .id(app.selection)
+                    .transition(.opacity)
+            }
+            .animation(.easeInOut(duration: 0.55), value: app.selection)
+        }
+        .frame(minWidth: 1000, minHeight: 680)
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $app.isShowingOnboarding) { OnboardingView() }
+        .alert(item: $app.alert) { alert in
+            Alert(title: Text(alert.title), message: Text(alert.message))
+        }
+        .task {
+            await app.onLaunch()
+            #if DEBUG
+            await DebugSnapshots.runIfRequested(app)
+            #endif
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            app.refreshFullDiskAccess()
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        let module = app.selection
+        Group {
+            if module == .restoreCenter {
+                RestoreCenterView()
+            } else if let clean = module.cleanModule, let flow = app.flow(for: clean) {
+                ScanFlowView(module: module, flow: flow)
+            } else {
+                PlaceholderModuleView(module: module)
+            }
+        }
+        .id(module)
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.3), value: module)
+    }
+}

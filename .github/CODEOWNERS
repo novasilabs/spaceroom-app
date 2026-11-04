@@ -1,0 +1,6 @@
+# Code that deletes, moves, or escalates needs a maintainer review.
+# Replace @spaceroom-app/maintainers once the GitHub organisation exists.
+/Packages/SpaceroomCore/Sources/SpaceroomCore/CleanupEngine.swift   @spaceroom-app/maintainers
+/Packages/SpaceroomCore/Sources/SpaceroomCore/SafetyGuard.swift     @spaceroom-app/maintainers
+/Packages/SpaceroomCore/Sources/SpaceroomCore/RestoreStore.swift    @spaceroom-app/maintainers
+/Packages/SpaceroomCore/Sources/SpaceroomCore/Resources/Rules/      @spaceroom-app/maintainers

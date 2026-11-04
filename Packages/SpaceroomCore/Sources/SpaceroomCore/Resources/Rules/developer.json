@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "dev.xcode.derived-data",
+      "module": "devCleanup",
+      "group": "xcode",
+      "title": "Xcode DerivedData",
+      "why_safe": "Build intermediates and indexes. Xcode rebuilds them on the next build.",
+      "rebuild_hint": "Next build and indexing take longer",
+      "paths": ["~/Library/Developer/Xcode/DerivedData/*"],
+      "skip_if_running": ["com.apple.dt.Xcode"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.xcode.ios-device-support",
+      "module": "devCleanup",
+      "group": "xcode",
+      "title": "iOS DeviceSupport",
+      "why_safe": "Debug symbols copied from devices you connected. Xcode copies them again the next time you debug on that device and OS version.",
+      "rebuild_hint": "Reconnecting a device takes several minutes",
+      "paths": ["~/Library/Developer/Xcode/iOS DeviceSupport/*"],
+      "min_age_days": 90,
+      "skip_if_running": ["com.apple.dt.Xcode"],
+      "default_selected": false
+    },
+    {
+      "id": "dev.simulator.caches",
+      "module": "devCleanup",
+      "group": "xcode",
+      "title": "Simulator caches",
+      "why_safe": "Cached data for iOS simulators (dyld and runtime caches). Simulators rebuild it on next launch. Your simulator apps and data are not touched.",
+      "paths": ["~/Library/Developer/CoreSimulator/Caches/*"],
+      "skip_if_running": ["com.apple.iphonesimulator", "com.apple.dt.Xcode"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.homebrew.cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "Homebrew downloads",
+      "why_safe": "Downloaded bottles and source archives. Homebrew downloads them again if it needs them. Installed packages are not touched.",
+      "paths": ["~/Library/Caches/Homebrew/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.npm.cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "npm cache",
+      "why_safe": "npm's download cache. Packages are fetched again on the next install. Your projects' node_modules are not touched.",
+      "rebuild_hint": "Next npm install downloads packages again",
+      "paths": ["~/.npm/_cacache"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.yarn.cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "Yarn cache",
+      "why_safe": "Yarn's download cache. Packages are fetched again on the next install.",
+      "paths": ["~/Library/Caches/Yarn/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.pip.cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "pip cache",
+      "why_safe": "pip's download and wheel cache. Packages are fetched again on the next install. Installed packages and virtual environments are not touched.",
+      "paths": ["~/Library/Caches/pip/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.cocoapods.cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "CocoaPods cache",
+      "why_safe": "Downloaded pod sources. CocoaPods fetches them again on the next pod install.",
+      "paths": ["~/Library/Caches/CocoaPods/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.go.build-cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "Go build cache",
+      "why_safe": "Compiled Go packages. Go rebuilds them on the next build.",
+      "paths": ["~/Library/Caches/go-build/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.cargo.registry-cache",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "Cargo registry downloads",
+      "why_safe": "Downloaded crate archives. Cargo downloads them again when a build needs them.",
+      "paths": ["~/.cargo/registry/cache/*"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "dev.gradle.caches",
+      "module": "devCleanup",
+      "group": "packages",
+      "title": "Gradle caches",
+      "why_safe": "Downloaded dependencies and build caches. Gradle fetches them again, which can take a long time on big projects.",
+      "rebuild_hint": "Next Gradle build downloads dependencies again",
+      "paths": ["~/.gradle/caches/*"],
+      "min_age_days": 30,
+      "default_selected": false
+    }
+  ]
+}

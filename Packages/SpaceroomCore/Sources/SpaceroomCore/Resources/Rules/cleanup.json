@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "system.user-caches",
+      "module": "cleanup",
+      "group": "caches",
+      "title": "User app caches",
+      "why_safe": "Temporary data apps keep to load faster. Apps recreate it automatically when needed.",
+      "rebuild_hint": "Some apps may start a little slower the first time",
+      "paths": ["~/Library/Caches/*"],
+      "exclude": ["com.apple.*", "CloudKit", "GeoServices", "FamilyCircle", "familycircled", "PassKit", "PFSceneTaxonomyData.index", "io.github.spaceroom-app.*", "Spaceroom"],
+      "skip_if_owner_running": true,
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "system.user-logs",
+      "module": "cleanup",
+      "group": "logs",
+      "title": "User logs & crash reports",
+      "why_safe": "Diagnostic text files written by apps. Only needed when you are reporting a bug.",
+      "paths": ["~/Library/Logs/*"],
+      "exclude": ["Spaceroom"],
+      "min_age_days": 7,
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "browser.safari-cache",
+      "module": "cleanup",
+      "group": "browsers",
+      "title": "Safari cache",
+      "why_safe": "Copies of web pages and images. Safari downloads them again when you visit a site. History, bookmarks and logins are not touched.",
+      "paths": ["~/Library/Caches/com.apple.Safari/*"],
+      "skip_if_running": ["com.apple.Safari"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "browser.chrome-cache",
+      "module": "cleanup",
+      "group": "browsers",
+      "title": "Google Chrome cache",
+      "why_safe": "Copies of web pages and images. Chrome downloads them again when you visit a site. History, bookmarks and logins are not touched.",
+      "paths": ["~/Library/Caches/Google/Chrome/*"],
+      "skip_if_running": ["com.google.Chrome"],
+      "default_selected": true,
+      "smart_care": true
+    },
+    {
+      "id": "trash.user",
+      "module": "cleanup",
+      "group": "trash",
+      "title": "Trash",
+      "why_safe": "Files you already moved to the Trash. They stay restorable from the Restore Center for the retention period.",
+      "paths": ["~/.Trash/*"],
+      "default_selected": true,
+      "smart_care": true
+    }
+  ]
+}
