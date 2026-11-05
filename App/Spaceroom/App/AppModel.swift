@@ -37,6 +37,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var applications = ApplicationsModel(app: self)
     @ObservationIgnored private(set) lazy var clutter = ClutterModel(app: self)
     @ObservationIgnored private(set) lazy var status = StatusModel()
+    @ObservationIgnored private(set) lazy var startup = StartupModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 

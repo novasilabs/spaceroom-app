@@ -122,6 +122,12 @@ enum DebugSnapshots {
         capture("21-status", in: directory)
 
         app.selection = .startup
+        app.startup.loadIfNeeded()
+        await waitUntil(timeout: 60) { app.startup.hasLoaded }
+        await pause(1.0)
+        capture("22-startup", in: directory)
+
+        app.selection = .performance
         await pause(1.0)
         capture("08-placeholder", in: directory)
 

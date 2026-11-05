@@ -60,6 +60,8 @@ struct RootView: View {
                 ClutterView(model: app.clutter)
             } else if module == .status {
                 StatusView(model: app.status)
+            } else if module == .startup {
+                StartupView(model: app.startup)
             } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {
