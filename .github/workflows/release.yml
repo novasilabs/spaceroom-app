@@ -41,7 +41,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/Spaceroom-*.dmg dist/Spaceroom-*.dmg.sha256 \
             dist/spaceroom-*-macos.tar.gz dist/spaceroom-*-macos.tar.gz.sha256 \
             --draft --prerelease --title "Spaceroom $VERSION" --notes-file notes.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Spaceroom-dmg
           path: dist/
