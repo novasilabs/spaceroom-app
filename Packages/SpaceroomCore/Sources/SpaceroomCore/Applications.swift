@@ -198,7 +198,7 @@ public struct OrphanFinder: Sendable {
     ]
 
     /// Our own data and identifiers that look like apps but aren't.
-    static let ignoredPrefixes = ["com.apple.", "group.", "io.github.spaceroom-app", "com.spaceroom"]
+    static let ignoredPrefixes = ["com.apple.", "group.", "com.novasilabs.spaceroom", "io.github.spaceroom-app", "com.spaceroom"]
 
     /// - Parameter isInstalled: asks LaunchServices whether *any* copy of an app exists.
     public func find(installedBundleIDs: Set<String>, now: Date = .now,

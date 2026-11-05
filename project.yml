@@ -1,6 +1,6 @@
 name: Spaceroom
 options:
-  bundleIdPrefix: io.github.spaceroom-app
+  bundleIdPrefix: com.novasilabs
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -45,7 +45,7 @@ targets:
         CFBundleLocalizations: [en, id]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.github.spaceroom-app.spaceroom
+        PRODUCT_BUNDLE_IDENTIFIER: com.novasilabs.spaceroom
         PRODUCT_NAME: Spaceroom
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

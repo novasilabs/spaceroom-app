@@ -9,9 +9,22 @@ struct SpaceroomApp: App {
     @State private var menuBar: MenuBarModel
 
     init() {
+        Self.migrateLegacyDefaults()
         let app = AppModel()
         _app = State(initialValue: app)
         _menuBar = State(initialValue: MenuBarModel(app: app))
+    }
+
+    /// Builds before 0.9.0 used the bundle ID `io.github.spaceroom-app.spaceroom`. Carry their
+    /// settings over once so testers don't lose them. Keys already set are left alone.
+    private static func migrateLegacyDefaults() {
+        guard ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_DIR"] == nil else { return }
+        let defaults = UserDefaults.standard
+        let marker = "migratedLegacyDefaults"
+        guard !defaults.bool(forKey: marker),
+              let legacy = defaults.persistentDomain(forName: "io.github.spaceroom-app.spaceroom") else { return }
+        for (key, value) in legacy where defaults.object(forKey: key) == nil { defaults.set(value, forKey: key) }
+        defaults.set(true, forKey: marker)
     }
 
     var body: some Scene {

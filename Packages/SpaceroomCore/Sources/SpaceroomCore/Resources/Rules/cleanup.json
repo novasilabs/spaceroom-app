@@ -9,7 +9,7 @@
       "why_safe": "Temporary data apps keep to load faster. Apps recreate it automatically when needed.",
       "rebuild_hint": "Some apps may start a little slower the first time",
       "paths": ["~/Library/Caches/*"],
-      "exclude": ["com.apple.*", "CloudKit", "GeoServices", "FamilyCircle", "familycircled", "PassKit", "PFSceneTaxonomyData.index", "io.github.spaceroom-app.*", "Spaceroom"],
+      "exclude": ["com.apple.*", "CloudKit", "GeoServices", "FamilyCircle", "familycircled", "PassKit", "PFSceneTaxonomyData.index", "com.novasilabs.spaceroom*", "io.github.spaceroom-app.*", "Spaceroom"],
       "skip_if_owner_running": true,
       "default_selected": true,
       "smart_care": true
