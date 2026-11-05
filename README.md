@@ -27,7 +27,8 @@
 | System Status: health score with what to fix, CPU (per core, load), memory and swap, network, disk, battery health and cycles, thermal state, busiest processes with Quit for apps; samples only while visible | ✅ (v0.5) |
 | Startup & Background: launch agents, daemons and in-app helpers with signature badges and audit findings (program missing, app removed, empty job, unsigned, unusual location); remove your own agents via the Restore Center; SIP / Gatekeeper / FileVault / Firewall / XProtect overview | ✅ (v0.5) |
 | Performance: maintenance tasks (Quick Look, “Open With” list, font caches, startup disk check) with when-it-helps notes, last run and live status; admin tasks (DNS, Spotlight, purge) shown but never run until the privileged helper exists | ✅ (v0.5) |
-| Other modules (Privacy, Automations) | Placeholders for v0.5+ |
+| Privacy: clear browser history, cookies, form autofill and download history (Safari, Chrome, Dia, Arc, Edge, Brave, Vivaldi, Firefox) plus recent-items lists, undoable from the Restore Center; never touches saved passwords or bookmarks, refuses while the browser is open; read-only review of which apps hold camera, microphone, screen recording and other permissions | ✅ (v0.5) |
+| Automations | Placeholder for v1.0 |
 
 ## Requirements
 

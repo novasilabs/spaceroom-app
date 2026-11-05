@@ -39,6 +39,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var status = StatusModel()
     @ObservationIgnored private(set) lazy var startup = StartupModel(app: self)
     @ObservationIgnored private(set) lazy var performance = PerformanceModel()
+    @ObservationIgnored private(set) lazy var privacy = PrivacyModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 

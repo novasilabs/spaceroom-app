@@ -64,6 +64,8 @@ struct RootView: View {
                 StartupView(model: app.startup)
             } else if module == .performance {
                 PerformanceView(model: app.performance)
+            } else if module == .privacy {
+                PrivacyView(model: app.privacy)
             } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {

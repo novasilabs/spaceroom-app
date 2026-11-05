@@ -132,6 +132,13 @@ enum DebugSnapshots {
         capture("23-performance", in: directory)
 
         app.selection = .privacy
+        app.privacy.loadIfNeeded()
+        await waitUntil(timeout: 60) { app.privacy.hasLoaded }
+        await pause(1.2)
+        capture("24-privacy", in: directory)
+        await captureTall(PrivacyView(model: app.privacy).environment(app), name: "24b-privacy-full", in: directory)
+
+        app.selection = .automations
         await pause(1.0)
         capture("08-placeholder", in: directory)
 
@@ -256,6 +263,21 @@ enum DebugSnapshots {
                     .write(to: iconSet.appendingPathComponent(name))
             }
         }
+    }
+
+    /// Renders a scrolling screen in a tall offscreen window so the part below the fold can be checked too.
+    private static func captureTall(_ view: some View, name: String, in directory: URL) async {
+        let host = NSHostingView(rootView: view.background(Color.hex(0x2B4A5C)).preferredColorScheme(.dark))
+        let window = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 760, height: 1900),
+                              styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = host
+        window.orderFrontRegardless()
+        await pause(1.2)
+        if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+            host.cacheDisplay(in: host.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("\(name).png"))
+        }
+        window.orderOut(nil)
     }
 
     private static func pause(_ seconds: Double) async {
