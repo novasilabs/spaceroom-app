@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import AppKit
+import ImageIO
 import SpaceroomCore
 import SwiftUI
 
-/// My Clutter: the user's own forgotten files, in three tabs.
+/// My Clutter: the user's own forgotten files, in four tabs.
 struct ClutterView: View {
     @Bindable var model: ClutterModel
     @Environment(AppModel.self) private var app
@@ -82,6 +83,7 @@ struct ClutterView: View {
                 case .large: fileList(model.largeFiles, empty: String(localized: "No files match these filters"))
                 case .installers: fileList(model.installers, empty: String(localized: "No installer downloads found"))
                 case .duplicates: duplicateList
+                case .similar: similarList
                 }
             }
             .padding(.horizontal, 28)
@@ -124,11 +126,13 @@ struct ClutterView: View {
                 Text("Large & Old · \(model.largeFiles.count)").tag(ClutterModel.Tab.large)
                 Text(model.isFindingDuplicates ? "Duplicates…" : "Duplicates · \(model.duplicatesWaste.bytesText)")
                     .tag(ClutterModel.Tab.duplicates)
+                Text(model.isFindingSimilar ? "Similar Photos…" : "Similar Photos · \(model.similarReclaimable.bytesText)")
+                    .tag(ClutterModel.Tab.similar)
                 Text("Installers · \(model.installersSize.bytesText)").tag(ClutterModel.Tab.installers)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 420)
+            .frame(maxWidth: 560)
             Button { model.newScan() } label: { Image(systemName: "arrow.clockwise") }
                 .buttonStyle(GhostButtonStyle())
                 .help("New Scan")
@@ -174,6 +178,18 @@ struct ClutterView: View {
                 Button("Tick All Extras") { model.tickAllExtras() }
                     .buttonStyle(GhostButtonStyle())
                     .help("Ticks every copy except the one marked Keep")
+            }
+            if model.tab == .similar, !model.visibleSimilar.isEmpty {
+                Button("Tick All but the Best") { model.tickAllButBest() }
+                    .buttonStyle(GhostButtonStyle())
+                    .help("Ticks every photo except the one marked Keep in each group")
+                Picker("Match", selection: $model.strictness) {
+                    Text("Nearly identical").tag(SimilarPhotoFinder.Strictness.nearlyIdentical)
+                    Text("Similar").tag(SimilarPhotoFinder.Strictness.similar)
+                    Text("Loosely similar").tag(SimilarPhotoFinder.Strictness.loose)
+                }
+                .fixedSize()
+                .help("How alike photos must be to be grouped")
             }
             Text(model.selectedInTab.isEmpty
                  ? String(localized: "Tick files to remove them")
@@ -261,6 +277,160 @@ struct ClutterView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassSurface(cornerRadius: 20)
+    }
+}
+
+extension ClutterView {
+    var similarList: some View {
+        Group {
+            if model.isFindingSimilar {
+                VStack(spacing: 10) {
+                    ProgressView(value: Double(model.similarProgress.done), total: Double(max(model.similarProgress.total, 1)))
+                        .frame(width: 260)
+                    Text("Comparing photos… \(model.similarProgress.done.formatted()) of \(model.similarProgress.total.formatted())")
+                        .foregroundStyle(.textSecondary).monospacedDigit()
+                    Text("On this Mac, with Apple's Vision framework. Nothing is uploaded.")
+                        .font(.caption).foregroundStyle(.textTertiary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if model.visibleSimilar.isEmpty {
+                VStack(spacing: 8) {
+                    GlassGlyph(symbol: "checkmark.seal", tint: module.palette.accent, size: 52)
+                    Text("No similar photos").font(.title3.weight(.semibold))
+                    Text("Photos in your Photos library aren't included. Photos has its own Duplicates album.")
+                        .font(.callout).foregroundStyle(.textSecondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        if model.similarIndex?.wasLimited == true {
+                            Text("Only your \(SimilarPhotoFinder.limit.formatted()) newest photos were compared.")
+                                .font(.caption).foregroundStyle(.textTertiary)
+                        }
+                        ForEach(model.visibleSimilar) { group in
+                            SimilarGroupCard(group: group, selection: model.selection,
+                                             toggle: { model.toggle($0) }, ignore: { model.ignore($0) })
+                        }
+                    }
+                    .padding(8)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .glassSurface(cornerRadius: 20)
+    }
+}
+
+/// One group of similar photos as a strip of thumbnails. The best one is marked Keep and
+/// can't be ticked.
+private struct SimilarGroupCard: View {
+    let group: SimilarPhotoGroup
+    let selection: Set<String>
+    let toggle: (ClutterFile) -> Void
+    let ignore: (ClutterFile) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("\(group.photos.count) similar photos").font(.system(size: 13, weight: .semibold))
+                Text(group.keeper.date, format: .dateTime.day().month(.abbreviated).year())
+                    .font(.caption).foregroundStyle(.textTertiary)
+                Spacer()
+                Text("\(group.reclaimable.bytesText) besides the best one")
+                    .font(.caption).foregroundStyle(.textSecondary).monospacedDigit()
+            }
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(group.photos) { photo in
+                        let isKeeper = photo.id == group.keeper.id
+                        PhotoTile(photo: photo, isKeeper: isKeeper, isSelected: !isKeeper && selection.contains(photo.id)) {
+                            if !isKeeper { toggle(photo.file) }
+                        }
+                        .contextMenu {
+                            Button("Show in Finder") { Finder.reveal(photo.file.url) }
+                            Button("Always Ignore", systemImage: "eye.slash") { ignore(photo.file) }
+                        }
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+        }
+        .padding(10)
+        .glassSurface(cornerRadius: 16)
+    }
+}
+
+private struct PhotoTile: View {
+    let photo: SimilarPhoto
+    let isKeeper: Bool
+    let isSelected: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            VStack(alignment: .leading, spacing: 4) {
+                ZStack(alignment: .topLeading) {
+                    PhotoThumbnail(url: photo.file.url)
+                        .frame(width: 132, height: 99)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(isSelected ? Color.white : .white.opacity(0.12), lineWidth: isSelected ? 2 : 1))
+                    if isKeeper {
+                        Pill(text: Text("Keep"), tint: .green)
+                            .background(Capsule().fill(.black.opacity(0.55)))
+                            .padding(6)
+                    } else {
+                        Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                            .shadow(radius: 2)
+                            .padding(6)
+                    }
+                }
+                Text(photo.file.name).font(.caption).lineLimit(1).truncationMode(.middle).frame(width: 132, alignment: .leading)
+                Text("\(photo.pixelWidth)×\(photo.pixelHeight) · \(photo.file.size.bytesText)")
+                    .font(.system(size: 10)).foregroundStyle(.textTertiary).monospacedDigit()
+            }
+        }
+        .buttonStyle(.plain)
+        .help(isKeeper ? String(localized: "The best photo of the group is kept") : photo.file.url.path.abbreviatingHome)
+        .accessibilityLabel(Text(photo.file.name))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// A small thumbnail read with ImageIO off the main thread, cached for the session.
+private struct PhotoThumbnail: View {
+    let url: URL
+    @State private var image: NSImage?
+
+    private static let cache = NSCache<NSURL, NSImage>()
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.white.opacity(0.06))
+            if let image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                ProgressView().controlSize(.small)
+            }
+        }
+        .task(id: url) {
+            if let cached = Self.cache.object(forKey: url as NSURL) { image = cached; return }
+            let url = url
+            let cgImage = await Task.detached(priority: .utility) { () -> CGImage? in
+                guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+                let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                                kCGImageSourceCreateThumbnailWithTransform: true,
+                                                kCGImageSourceThumbnailMaxPixelSize: 300]
+                return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+            }.value
+            guard let cgImage else { return }
+            let result = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            Self.cache.setObject(result, forKey: url as NSURL)
+            image = result
+        }
     }
 }
 

@@ -10,7 +10,7 @@ import SwiftUI
 @Observable
 final class ClutterModel {
     enum Phase: Equatable { case intro, scanning, results }
-    enum Tab: Hashable { case large, duplicates, installers }
+    enum Tab: Hashable { case large, duplicates, similar, installers }
 
     enum MinimumSize: Int64, CaseIterable, Identifiable {
         case mb50 = 50_000_000, mb100 = 100_000_000, mb500 = 500_000_000, gb1 = 1_000_000_000
@@ -38,6 +38,13 @@ final class ClutterModel {
     private(set) var report: ClutterReport?
     private(set) var duplicates: [DuplicateGroup] = []
     private(set) var isFindingDuplicates = false
+    private(set) var similarIndex: SimilarPhotoIndex?
+    private(set) var similarGroups: [SimilarPhotoGroup] = []
+    private(set) var isFindingSimilar = false
+    private(set) var similarProgress: (done: Int, total: Int) = (0, 0)
+    var strictness: SimilarPhotoFinder.Strictness = .similar {
+        didSet { if let similarIndex { similarGroups = similarIndex.groups(threshold: strictness.threshold) } }
+    }
     var tab: Tab = .large
     var minimumSize: MinimumSize = .mb100
     var age: Age = .any
@@ -47,6 +54,8 @@ final class ClutterModel {
     /// Files removed this session (hidden from the lists without rescanning).
     private var removedIDs: Set<String> = []
 
+    /// Snapshot tour only: scan a fixture folder instead of the home folder.
+    @ObservationIgnored var debugRoot: URL?
     @ObservationIgnored private var pendingItems = 0
     @ObservationIgnored private var lastPublish = Date.distantPast
     private var scanTask: Task<Void, Never>?
@@ -63,15 +72,20 @@ final class ClutterModel {
         pendingItems = 0
         report = nil
         duplicates = []
+        similarIndex = nil
+        similarGroups = []
         selection = []
         removedIDs = []
         lastResult = nil
         withAnimation(Motion.phaseChange) { phase = .scanning }
 
         let (stream, continuation) = AsyncStream<Int>.makeStream()
+        var config = ClutterScanConfig()
+        if let debugRoot { config.roots = [debugRoot] }
+        let scanner = ClutterScanner(config: config)
         scanTask = Task { [weak self] in
             let scan = Task.detached(priority: .userInitiated) {
-                await ClutterScanner().scan { continuation.yield($0) }
+                await scanner.scan { continuation.yield($0) }
             }
             let consume = Task { [weak self] in
                 for await items in stream {
@@ -97,6 +111,7 @@ final class ClutterModel {
             self.selection = Set(result.installers.map(\.id))
             withAnimation(Motion.phaseChange) { self.phase = .results }
             await self.findDuplicates(in: result.duplicateCandidates)
+            await self.findSimilar(in: result.photos)
         }
     }
 
@@ -119,6 +134,43 @@ final class ClutterModel {
         // The copy to keep is never ticked.
         selection.formUnion(groups.flatMap(\.extras).filter { Self.isLikelyAccidental($0) }.map(\.id))
         isFindingDuplicates = false
+    }
+
+    /// Vision compares photos after the duplicate check. Nothing here is ticked for you:
+    /// similar isn't identical, so you choose which ones go.
+    private func findSimilar(in photos: [ClutterFile]) async {
+        guard !Task.isCancelled else { return }
+        isFindingSimilar = true
+        similarProgress = (0, photos.filter(SimilarPhotoFinder.isPhoto).count)
+        let (stream, continuation) = AsyncStream<(Int, Int)>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let listen = Task { [weak self] in
+            for await value in stream { self?.similarProgress = value }
+        }
+        let index = await Task.detached(priority: .utility) {
+            await SimilarPhotoFinder.index(photos, progress: { continuation.yield(($0, $1)) },
+                                           isCancelled: { Task.isCancelled })
+        }.value
+        continuation.finish()
+        await listen.value
+        similarIndex = index
+        similarGroups = index.groups(threshold: strictness.threshold)
+        isFindingSimilar = false
+    }
+
+    /// Groups without removed or ignored photos. If the best one is gone, the next best is kept,
+    /// so a group can never be emptied from this tab.
+    var visibleSimilar: [SimilarPhotoGroup] {
+        similarGroups.compactMap { group in
+            let remaining = group.photos.filter { isVisible($0.file) }
+            return remaining.count > 1 ? SimilarPhotoGroup(photos: remaining) : nil
+        }
+    }
+
+    var similarReclaimable: Int64 { visibleSimilar.reduce(0) { $0 + $1.reclaimable } }
+
+    /// Ticks every photo except the best of each group.
+    func tickAllButBest() {
+        selection.formUnion(visibleSimilar.flatMap(\.others).map(\.id))
     }
 
     // MARK: Lists
@@ -155,6 +207,7 @@ final class ClutterModel {
         case .large: largeFiles
         case .installers: installers
         case .duplicates: visibleDuplicates.flatMap(\.extras)
+        case .similar: visibleSimilar.flatMap(\.others).map(\.file)
         }
         var seen = Set<String>()
         return files.filter { selection.contains($0.id) && seen.insert($0.id).inserted }

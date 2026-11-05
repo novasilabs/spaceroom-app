@@ -7,6 +7,7 @@ All notable changes to Spaceroom are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **My Clutter › Similar Photos:** groups bursts, retakes and edited copies using Apple's Vision feature prints, entirely on the Mac. It compares photos in the same folder taken within a day of each other, from 200 KB up, the 8,000 newest. You can choose how alike they must be: *Nearly identical*, *Similar* or *Loosely similar*. The best photo of each group (most pixels, then largest file) is marked Keep and can't be ticked. Nothing is ticked for you; *Tick All but the Best* does it in one click. Photos inside the Photos library aren't included.
 - **Space Lens growth history:** each complete scan saves folder sizes (three levels deep, 10 MB and up, the last 30 scans per folder) to `~/Library/Application Support/Spaceroom/SpaceLens`. The next scan shows what grew or shrank since then, in the header and on every row, and marks new folders.
 - **Space Lens on external drives:** items on local, writable external drives can be removed too. They go to that drive's Trash and are tracked by the Restore Center. Time Machine drives, a drive's system folders and its hidden top-level folders are refused.
 - **Space Lens › Treemap:** switch between the sunburst and a squarified treemap with two levels of nesting. Both charts outline the items you've ticked.
@@ -16,6 +17,7 @@ All notable changes to Spaceroom are documented here. The format follows
 - **Space Lens:** tick files and folders in the list and choose *Review and Remove*. They go to the Restore Center like every other clean, and Undo puts the map back. Only items in your home folder can be removed. Its top-level folders, the folders directly inside `~/Library`, Keychains and Spaceroom's own data stay locked, with the reason shown.
 
 ### Fixed
+- Command-line tools (Git, Docker) write their output to a temporary file instead of a pipe, so a tool started at the same moment elsewhere can't hold the pipe open and stall the scan.
 - Categories inside folders that macOS protects (such as Mail's container) now show *Needs Full Disk Access* instead of disappearing.
 - **Space Lens:** a fast double-click could open the same folder twice ("Library › Library"), and clicking an outer ring skipped the folders in between in the breadcrumb.
 

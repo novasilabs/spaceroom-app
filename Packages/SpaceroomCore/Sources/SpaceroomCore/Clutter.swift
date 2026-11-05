@@ -57,7 +57,18 @@ public struct ClutterReport: Sendable {
     public let installers: [ClutterFile]
     /// Files that share their exact size with another file (input for `DuplicateFinder`).
     public let duplicateCandidates: [ClutterFile]
+    /// Photos of at least the duplicate minimum (input for `SimilarPhotoFinder`).
+    public let photos: [ClutterFile]
     public let scannedItems: Int
+
+    public init(largeFiles: [ClutterFile], installers: [ClutterFile], duplicateCandidates: [ClutterFile],
+                photos: [ClutterFile] = [], scannedItems: Int) {
+        self.largeFiles = largeFiles
+        self.installers = installers
+        self.duplicateCandidates = duplicateCandidates
+        self.photos = photos
+        self.scannedItems = scannedItems
+    }
 }
 
 public struct ClutterScanConfig: Sendable {
@@ -69,6 +80,8 @@ public struct ClutterScanConfig: Sendable {
     public var skipsHiddenItems: Bool
     public var largeFileThreshold: Int64
     public var duplicateMinimumSize: Int64
+    /// Smallest photo compared for similarity.
+    public var photoMinimumSize: Int64 = 200_000
 
     public static let defaultSkippedFolderNames: Set<String> = [
         "node_modules", ".git", "build", "DerivedData", "Pods", "target", ".build", "dist", ".next",
@@ -138,7 +151,8 @@ public struct ClutterScanner: Sendable {
         var bySize: [Int64: [ClutterFile]] = [:]
         for file in all where file.size >= config.duplicateMinimumSize { bySize[file.size, default: []].append(file) }
         let candidates = bySize.values.filter { $0.count > 1 }.flatMap { $0 }
-        return ClutterReport(largeFiles: large, installers: installers, duplicateCandidates: candidates, scannedItems: items)
+        return ClutterReport(largeFiles: large, installers: installers, duplicateCandidates: candidates,
+                             photos: all.filter(SimilarPhotoFinder.isPhoto), scannedItems: items)
     }
 }
 
@@ -230,8 +244,11 @@ struct CatalogWalker {
                 case 1: // VREG (symlinks are skipped: they aren't the user's data)
                     if linkCount > 1, !seenInodes.insert(fileID).inserted { continue }
                     let url = URL(fileURLWithPath: base + "/" + name)
-                    let isInstaller = ["dmg", "pkg", "mpkg", "iso", "xip"].contains((name as NSString).pathExtension.lowercased())
-                    guard allocated >= config.duplicateMinimumSize || isInstaller else { continue }
+                    let ext = (name as NSString).pathExtension.lowercased()
+                    let isInstaller = ["dmg", "pkg", "mpkg", "iso", "xip"].contains(ext)
+                    // Photos are kept from 200 KB, for the similar-photo check.
+                    let isPhoto = SimilarPhotoFinder.extensions.contains(ext) && allocated >= config.photoMinimumSize
+                    guard allocated >= config.duplicateMinimumSize || isInstaller || isPhoto else { continue }
                     let modified = Date(timeIntervalSince1970: TimeInterval(seconds) + TimeInterval(nanoseconds) / 1e9)
                     files.append(ClutterFile(url: url, size: allocated, modified: modified, fileID: fileID))
                 default:

@@ -157,7 +157,7 @@ final class GitProbe: Sendable {
 
     static func findGit() -> URL? {
         var candidates: [String] = []
-        if let developer = run(URL(fileURLWithPath: "/usr/bin/xcode-select"), ["-p"])?
+        if let developer = run(URL(fileURLWithPath: "/usr/bin/xcode-select"), ["-p"])?.output
             .trimmingCharacters(in: .whitespacesAndNewlines), !developer.isEmpty {
             candidates.append(developer + "/usr/bin/git")
         }
@@ -179,37 +179,16 @@ final class GitProbe: Sendable {
     /// `true` when Git tracks anything inside `url`, `false` when it tracks nothing there, and
     /// `nil` when that can't be known (no Git, or Git failed).
     func isTracked(_ url: URL, in repository: URL) -> Bool? {
-        guard let executable else { return nil }
-        guard let output = Self.run(executable, ["-C", repository.path, "ls-files", "--cached", "-z", "--", url.path],
-                                    firstBytesOnly: true) else { return nil }
-        return !output.isEmpty
+        guard let executable,
+              let result = Self.run(executable, ["-C", repository.path, "ls-files", "--cached", "-z", "--", url.path]),
+              result.status == 0 else { return nil }
+        return !result.output.isEmpty
     }
 
-    /// Runs a tool and returns its output, or nil if it failed. With `firstBytesOnly`, stops
-    /// after the first chunk (enough to know whether there is any output at all).
-    static func run(_ executable: URL, _ arguments: [String], firstBytesOnly: Bool = false) -> String? {
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = arguments
+    /// Runs Git (or `xcode-select`) without ever letting it take locks in the repository.
+    static func run(_ executable: URL, _ arguments: [String]) -> Tool.Result? {
         var environment = ProcessInfo.processInfo.environment
-        environment["GIT_OPTIONAL_LOCKS"] = "0"   // never write to the repository
-        process.environment = environment
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-        process.standardInput = FileHandle.nullDevice
-        do { try process.run() } catch { return nil }
-        let data: Data
-        if firstBytesOnly {
-            data = pipe.fileHandleForReading.availableData
-            if process.isRunning { process.terminate() }
-        } else {
-            data = pipe.fileHandleForReading.readDataToEndOfFile()
-        }
-        process.waitUntilExit()
-        if !firstBytesOnly || data.isEmpty {
-            guard process.terminationStatus == 0 else { return nil }
-        }
-        return String(decoding: data, as: UTF8.self)
+        environment["GIT_OPTIONAL_LOCKS"] = "0"
+        return Tool.run(executable, arguments, timeout: 30, environment: environment)
     }
 }

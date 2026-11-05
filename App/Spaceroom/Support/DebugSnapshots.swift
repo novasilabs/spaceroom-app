@@ -139,6 +139,9 @@ enum DebugSnapshots {
         await pause(1.0)
         capture("17-clutter-intro", in: directory)
         let clutter = app.clutter
+        if let path = ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_CLUTTER_PATH"] {
+            clutter.debugRoot = URL(fileURLWithPath: path)
+        }
         clutter.start()
         await waitUntil(timeout: 600) { clutter.phase == .results && !clutter.isFindingDuplicates }
         await pause(1.0)
@@ -146,6 +149,12 @@ enum DebugSnapshots {
         clutter.tab = .duplicates
         await pause(1.0)
         capture("19-clutter-duplicates", in: directory)
+        clutter.tab = .similar
+        await waitUntil(timeout: 600) { !clutter.isFindingSimilar }
+        clutter.tickAllButBest()
+        await pause(2.0)
+        capture("19b-clutter-similar", in: directory)
+        clutter.selection = []
         clutter.tab = .installers
         await pause(1.0)
         capture("20-clutter-installers", in: directory)

@@ -142,44 +142,42 @@ public struct Docker: Sendable {
 }
 
 /// Runs a command-line tool with a time limit and collects its output.
+///
+/// Output goes to a temporary file rather than a pipe: a pipe only reaches end-of-file once every
+/// process holding its write end has exited, and children started at the same moment elsewhere in
+/// the app can inherit it. A file can be read as soon as the tool itself is done.
 enum Tool {
     struct Result {
         let status: Int32
         let output: String
     }
 
-    static func run(_ executable: URL, _ arguments: [String], timeout: TimeInterval) -> Result? {
+    static func run(_ executable: URL, _ arguments: [String], timeout: TimeInterval,
+                    environment: [String: String]? = nil) -> Result? {
+        let outputURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("spaceroom-tool-\(UUID().uuidString)")
+        guard FileManager.default.createFile(atPath: outputURL.path, contents: nil),
+              let output = try? FileHandle(forWritingTo: outputURL) else { return nil }
+        defer {
+            try? output.close()
+            try? FileManager.default.removeItem(at: outputURL)
+        }
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
-        let pipe = Pipe()
-        process.standardOutput = pipe
+        if let environment { process.environment = environment }
+        process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         process.standardInput = FileHandle.nullDevice
         let finished = DispatchSemaphore(value: 0)
         process.terminationHandler = { _ in finished.signal() }
         do { try process.run() } catch { return nil }
-        // Read while it runs, so a large output can't fill the pipe and stall the tool.
-        let reader = OutputReader()
-        let readDone = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .utility).async {
-            reader.set(pipe.fileHandleForReading.readDataToEndOfFile())
-            readDone.signal()
-        }
         if finished.wait(timeout: .now() + timeout) == .timedOut {
             process.terminate()
             _ = finished.wait(timeout: .now() + 5)
-            _ = readDone.wait(timeout: .now() + 2)
             return nil
         }
-        _ = readDone.wait(timeout: .now() + 5)
-        return Result(status: process.terminationStatus, output: String(decoding: reader.data, as: UTF8.self))
-    }
-
-    private final class OutputReader: @unchecked Sendable {
-        private let lock = NSLock()
-        private var stored = Data()
-        func set(_ data: Data) { lock.withLock { stored = data } }
-        var data: Data { lock.withLock { stored } }
+        let data = (try? Data(contentsOf: outputURL)) ?? Data()
+        return Result(status: process.terminationStatus, output: String(decoding: data, as: UTF8.self))
     }
 }

@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ besides the best one": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ selain foto terbaik"
+          }
+        }
+      }
+    },
     "%@ can be cleaned": {
       "localizations": {
         "id": {
@@ -703,6 +713,16 @@
         }
       }
     },
+    "%lld similar photos": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld foto mirip"
+          }
+        }
+      }
+    },
     "%lld sources · %@ of traces": {
       "localizations": {
         "en": {
@@ -795,6 +815,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld%% terpakai"
+          }
+        }
+      }
+    },
+    "%lld×%lld · %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld×%lld · %@"
           }
         }
       }
@@ -1991,6 +2021,16 @@
         }
       }
     },
+    "Comparing photos… %@ of %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membandingkan foto… %@ dari %@"
+          }
+        }
+      }
+    },
     "Contacts": {
       "localizations": {
         "id": {
@@ -3133,6 +3173,16 @@
         }
       }
     },
+    "How alike photos must be to be grouped": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seberapa mirip foto harus ada agar dikelompokkan"
+          }
+        }
+      }
+    },
     "If your Mac is asleep then, it runs once when it wakes.": {
       "localizations": {
         "id": {
@@ -3675,6 +3725,16 @@
         }
       }
     },
+    "Loosely similar": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agak mirip"
+          }
+        }
+      }
+    },
     "Mail attachments": {
       "localizations": {
         "id": {
@@ -3712,6 +3772,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Petakan disk saya"
+          }
+        }
+      }
+    },
+    "Match": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kemiripan"
           }
         }
       }
@@ -3942,6 +4012,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nama"
+          }
+        }
+      }
+    },
+    "Nearly identical": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hampir sama"
           }
         }
       }
@@ -4182,6 +4262,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak ada hasil untuk “%@”"
+          }
+        }
+      }
+    },
+    "No similar photos": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak ada foto mirip"
           }
         }
       }
@@ -4446,6 +4536,16 @@
         }
       }
     },
+    "On this Mac, with Apple's Vision framework. Nothing is uploaded.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di Mac ini, dengan framework Vision dari Apple. Tidak ada yang diunggah."
+          }
+        }
+      }
+    },
     "One Undo brings everything back": {
       "localizations": {
         "id": {
@@ -4522,6 +4622,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hanya data aman yang bisa dibuat ulang — tidak pernah dokumen atau proyek"
+          }
+        }
+      }
+    },
+    "Only your %@ newest photos were compared.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hanya %@ foto terbaru Anda yang dibandingkan."
           }
         }
       }
@@ -4742,6 +4852,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cache Foto"
+          }
+        }
+      }
+    },
+    "Photos in your Photos library aren't included. Photos has its own Duplicates album.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto di perpustakaan Foto tidak disertakan. Aplikasi Foto punya album Duplikat sendiri."
           }
         }
       }
@@ -5928,6 +6048,36 @@
         }
       }
     },
+    "Similar": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mirip"
+          }
+        }
+      }
+    },
+    "Similar Photos · %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto Mirip · %@"
+          }
+        }
+      }
+    },
+    "Similar Photos…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto Mirip…"
+          }
+        }
+      }
+    },
     "Simulators": {
       "localizations": {
         "id": {
@@ -6384,6 +6534,16 @@
         }
       }
     },
+    "The best photo of the group is kept": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto terbaik di grup ini disimpan"
+          }
+        }
+      }
+    },
     "The ignore list can't be read, so cleaning is off until it's fixed: %@": {
       "localizations": {
         "id": {
@@ -6604,6 +6764,16 @@
         }
       }
     },
+    "Tick All but the Best": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centang Semua Kecuali yang Terbaik"
+          }
+        }
+      }
+    },
     "Tick files to remove them": {
       "localizations": {
         "id": {
@@ -6650,6 +6820,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mencentang setiap salinan kecuali yang ditandai Simpan"
+          }
+        }
+      }
+    },
+    "Ticks every photo except the one marked Keep in each group": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mencentang semua foto kecuali yang bertanda Simpan di setiap grup"
           }
         }
       }
