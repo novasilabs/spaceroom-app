@@ -302,7 +302,10 @@ private struct AppDetail: View {
                                  size: item.size, isPersonal: item.isPersonal) {
                             model.toggle(item)
                         }
-                        .contextMenu { Button("Show in Finder") { Finder.reveal(item.url) } }
+                        .contextMenu {
+                            Button("Show in Finder") { Finder.reveal(item.url) }
+                            Button("Always Ignore", systemImage: "eye.slash") { model.ignore(item) }
+                        }
                     }
                 }
                 .padding(6)
@@ -405,6 +408,10 @@ private struct OrphanRow: View {
                 .accessibilityLabel(Text(isExpanded ? "Hide items" : "Show items"))
             }
             .padding(10)
+            .contentShape(Rectangle())
+            .contextMenu {
+                Button("Always Ignore This App's Data", systemImage: "eye.slash") { model.ignoreApp(group.bundleID) }
+            }
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(group.items) { item in

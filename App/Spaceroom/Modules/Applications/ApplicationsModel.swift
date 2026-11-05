@@ -44,7 +44,13 @@ final class ApplicationsModel {
     var selectedLeftoverIDs: Set<String> = []
     var removesApp = true
 
-    private(set) var orphans: [OrphanGroup] = []
+    private var foundOrphans: [OrphanGroup] = []
+    /// Leftover groups, minus apps and items on the ignore list.
+    var orphans: [OrphanGroup] {
+        foundOrphans.filter { group in
+            !app.ignoreList.ignoresApp(group.bundleID) && group.items.contains { !app.ignoreList.ignoresItem(at: $0.url) }
+        }
+    }
     var selectedOrphanItemIDs: Set<String> = []
 
     private(set) var isWorking = false
@@ -110,7 +116,7 @@ final class ApplicationsModel {
                 NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) != nil
             }
         }.value
-        orphans = found
+        foundOrphans = found
         selectedOrphanItemIDs = Set(found.flatMap(\.items).filter { !$0.isPersonal }.map(\.id))
     }
 
@@ -128,7 +134,7 @@ final class ApplicationsModel {
                 LeftoverFinder(home: home).leftovers(bundleID: bundleID, appName: name)
             }.value
             guard let self, !Task.isCancelled, self.selectedRow?.app.bundleID == bundleID else { return }
-            self.leftovers = found
+            self.leftovers = found.filter { !self.app.ignoreList.ignoresItem(at: $0.url) }
             // Mole's rule: keep personal data (settings, documents an app keeps) unless asked.
             self.selectedLeftoverIDs = Set(found.filter { !$0.isPersonal }.map(\.id))
             self.isLoadingLeftovers = false
@@ -136,6 +142,21 @@ final class ApplicationsModel {
     }
 
     // MARK: Derived
+
+    // MARK: Ignore
+
+    func ignore(_ leftover: Leftover) {
+        app.ignore(.path(leftover.url))
+        leftovers.removeAll { $0.id == leftover.id }
+        selectedLeftoverIDs.remove(leftover.id)
+        selectedOrphanItemIDs.remove(leftover.id)
+    }
+
+    func ignoreApp(_ bundleID: String) {
+        app.ignore(.app(bundleID))
+        let ids = Set(foundOrphans.first { $0.bundleID == bundleID }?.items.map(\.id) ?? [])
+        selectedOrphanItemIDs.subtract(ids)
+    }
 
     var sortedRows: [Row] {
         let query = search.trimmingCharacters(in: .whitespaces).lowercased()
@@ -163,7 +184,9 @@ final class ApplicationsModel {
         NSWorkspace.shared.runningApplications.contains { $0.bundleIdentifier == app.bundleID }
     }
 
-    var selectedOrphanItems: [Leftover] { orphans.flatMap(\.items).filter { selectedOrphanItemIDs.contains($0.id) } }
+    var selectedOrphanItems: [Leftover] {
+        orphans.flatMap(\.items).filter { selectedOrphanItemIDs.contains($0.id) && !app.ignoreList.ignoresItem(at: $0.url) }
+    }
     var selectedOrphanSize: Int64 { selectedOrphanItems.reduce(0) { $0 + $1.size } }
     var orphansSize: Int64 { orphans.reduce(0) { $0 + $1.size } }
 

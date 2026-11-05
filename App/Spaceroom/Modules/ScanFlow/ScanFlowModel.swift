@@ -216,6 +216,25 @@ final class ScanFlowModel {
         if !deselectedItemIDs.contains(item.id) { selectedRuleIDs.insert(item.ruleID) }
     }
 
+    // MARK: Ignore
+
+    func ignore(_ item: ScanItem) { app.ignore(.path(item.url)) }
+    func ignoreRule(_ ruleID: String) { app.ignore(.rule(ruleID)) }
+
+    /// Re-marks results after the ignore list changed, so ignored items can't stay ticked.
+    func applyIgnore(_ list: IgnoreList) {
+        results = results.compactMap { result in
+            if list.ignoresRule(result.rule.id) {
+                selectedRuleIDs.remove(result.rule.id)
+                return nil
+            }
+            let items = result.items.map { item in
+                item.skipReason == nil && list.ignoresItem(at: item.url) ? item.withSkipReason(.ignored) : item
+            }
+            return RuleScanResult(rule: result.rule, items: items, accessDenied: result.accessDenied)
+        }
+    }
+
     func clean() {
         guard let store = app.store, let catalog = app.catalog, !selectedItems.isEmpty else { return }
         let items = selectedItems
@@ -269,5 +288,12 @@ final class ScanFlowModel {
         lastOutcome = nil
         results = []
         withAnimation(Motion.phaseChange) { phase = .intro }
+    }
+}
+
+extension ScanItem {
+    func withSkipReason(_ reason: SkipReason?) -> ScanItem {
+        ScanItem(url: url, ruleID: ruleID, root: root, size: size, fileCount: fileCount, lastModified: lastModified,
+                 isDirectory: isDirectory, identity: identity, skipReason: reason)
     }
 }

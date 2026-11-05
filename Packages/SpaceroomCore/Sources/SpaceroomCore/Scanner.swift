@@ -77,10 +77,14 @@ public struct ScanContext: Sendable {
     /// Cache folders are often named after the app ("Dia", "Slack") rather than its bundle ID.
     public var runningAppNames: Set<String>
     public var now: Date
+    /// Things the user never wants cleaned. Matches are reported with `.ignored`.
+    public var ignore: IgnoreList
 
     public init(home: URL = FileManager.default.homeDirectoryForCurrentUser,
-                runningBundleIDs: Set<String> = [], runningAppNames: Set<String> = [], now: Date = .now) {
+                runningBundleIDs: Set<String> = [], runningAppNames: Set<String> = [], now: Date = .now,
+                ignore: IgnoreList = IgnoreList()) {
         self.home = home
+        self.ignore = ignore
         self.runningBundleIDs = runningBundleIDs
         self.runningAppNames = Set(runningAppNames.map { $0.lowercased() })
         self.now = now
@@ -166,6 +170,8 @@ public struct Scanner: Sendable {
     }
 
     static func scanRule(_ rule: Rule, claims: [(ruleID: String, path: String)], context: ScanContext) -> RuleScanResult {
+        // An ignored category isn't scanned at all.
+        if context.ignore.ignoresRule(rule.id) { return RuleScanResult(rule: rule, items: []) }
         let guardrail = SafetyGuard(home: context.home)
         let ruleInUse = rule.skipIfRunning.first { context.runningBundleIDs.contains($0) }
         var items: [ScanItem] = []
@@ -190,7 +196,8 @@ public struct Scanner: Sendable {
 
                 guard let m = FileStat.measure(url, isCancelled: { Task.isCancelled }) else { continue }
 
-                var reason = guardrail.check(url, root: root)
+                var reason: SkipReason? = context.ignore.ignoresItem(at: url) ? .ignored : nil
+                if reason == nil { reason = guardrail.check(url, root: root) }
                 if reason == nil, let app = ruleInUse { reason = .inUse(bundleID: app) }
                 if reason == nil, rule.skipIfOwnerRunning, let owner = context.runningOwner(of: url.lastPathComponent) {
                     reason = .inUse(bundleID: owner)

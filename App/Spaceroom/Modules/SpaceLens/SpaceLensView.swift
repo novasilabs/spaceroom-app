@@ -205,6 +205,7 @@ private struct TargetCard: View {
 
 private struct FolderList: View {
     @Bindable var model: SpaceLensModel
+    @Environment(AppModel.self) private var app
     let folder: DiskNode
 
     var body: some View {
@@ -227,6 +228,8 @@ private struct FolderList: View {
                             if case .other = child.kind {} else {
                                 Button("Show in Finder") { model.reveal(child) }
                                 Button("Copy Path") { model.copyPath(child) }
+                                Divider()
+                                Button("Always Ignore", systemImage: "eye.slash") { app.ignore(.path(child.url)) }
                             }
                         }
                     }

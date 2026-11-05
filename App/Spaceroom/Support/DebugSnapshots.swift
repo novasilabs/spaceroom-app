@@ -2,6 +2,7 @@
 
 #if DEBUG
 import AppKit
+import SpaceroomCore
 import SwiftUI
 
 /// Debug-only UI tour: `SPACEROOM_SNAPSHOT_DIR=/some/dir` makes the app step through its main
@@ -148,6 +149,16 @@ enum DebugSnapshots {
             await pause(1.2)
             capture("27b-protection-results", in: directory)
         }
+
+        // Settings with a sample ignore list, in memory only.
+        let realIgnoreList = app.ignoreList
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        app.showIgnoreListForSnapshot(IgnoreList(entries: [
+            .path(home.appendingPathComponent("development")), .path(home.appendingPathComponent("Downloads/Keep me.dmg")),
+            .app("com.apple.dt.Xcode"), .rule("browser.chrome-cache")]))
+        await captureTall(SettingsView().environment(app).environment(menuBar), name: "28-settings", in: directory,
+                          height: 1400, width: 520)
+        app.showIgnoreListForSnapshot(realIgnoreList)
 
         app.selection = .automations
         await waitUntil(timeout: 10) { app.automations.hasLoaded }

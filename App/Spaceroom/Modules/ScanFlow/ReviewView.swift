@@ -68,6 +68,9 @@ struct ReviewView: View {
                     .padding(.horizontal, 10).padding(.vertical, 8)
                     .background(RoundedRectangle(cornerRadius: 8).fill(.white.opacity(isFocused ? 0.14 : 0)))
                     .contentShape(Rectangle())
+                    .contextMenu {
+                        Button("Always Ignore This Category", systemImage: "eye.slash") { flow.ignoreRule(result.rule.id) }
+                    }
                     .onTapGesture { flow.focusedRuleID = result.rule.id }
                 }
             }
@@ -122,6 +125,12 @@ private struct ItemPane: View {
                                 isSelected: item.isCleanable && flow.selectedRuleIDs.contains(item.ruleID)
                                     && !flow.deselectedItemIDs.contains(item.id)) {
                             flow.toggleItem(item)
+                        }
+                        .contextMenu {
+                            Button("Show in Finder", systemImage: "folder") { Finder.reveal(item.url) }
+                            if item.skipReason != .ignored {
+                                Button("Always Ignore", systemImage: "eye.slash") { flow.ignore(item) }
+                            }
                         }
                     }
                 }

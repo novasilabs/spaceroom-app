@@ -93,12 +93,15 @@ public enum RestoreStoreError: Error, CustomStringConvertible {
     case operationNotFound(UUID)
     /// Some items could not be deleted; they stay in the Restore Center.
     case purgeIncomplete([String])
+    /// The ignore list couldn't be read, so nothing may be moved (fail-closed).
+    case ignoreListUnavailable(String)
 
     public var description: String {
         switch self {
         case .unreadableIndex(let url, let underlying): "Restore Center index at \(url.path) is unreadable: \(underlying)"
         case .operationNotFound(let id): "Operation \(id) not found"
         case .purgeIncomplete(let paths): "\(paths.count) item(s) could not be deleted and are still in the Restore Center"
+        case .ignoreListUnavailable(let reason): "The ignore list can't be read, so nothing is moved: \(reason)"
         }
     }
 }
@@ -111,8 +114,16 @@ extension RestoreStoreError: LocalizedError {
 ///
 /// Layout: `<directory>/Quarantine/<operation-id>/<n>-<name>` plus `<directory>/operations.json`.
 public actor RestoreStore {
+    /// Whether moves may happen, and what they must leave alone.
+    public enum IgnoreGate: Sendable {
+        case list(IgnoreList)
+        /// The list exists but couldn't be read: refuse every move.
+        case unavailable(String)
+    }
+
     public let directory: URL
     private var records: [OperationRecord]
+    private var ignoreGate: IgnoreGate
     private let fileManager = FileManager.default
     /// Moves an item to the user's Trash. Replaceable in tests so they never touch the real Trash.
     var trashHandler: @Sendable (URL) throws -> Void = { url in
@@ -131,8 +142,9 @@ public actor RestoreStore {
 
     /// Loads the index. Throws (fail-closed) if an existing index can't be read, so callers
     /// never overwrite history they couldn't parse.
-    public init(directory: URL = RestoreStore.defaultDirectory) throws {
+    public init(directory: URL = RestoreStore.defaultDirectory, ignore: IgnoreGate = .list(IgnoreList())) throws {
         self.directory = directory
+        self.ignoreGate = ignore
         let index = directory.appendingPathComponent("operations.json")
         if FileManager.default.fileExists(atPath: index.path) {
             do {
@@ -152,6 +164,10 @@ public actor RestoreStore {
 
     public func operation(_ id: UUID) -> OperationRecord? { records.first { $0.id == id } }
 
+    // MARK: Ignore list
+
+    public func setIgnore(_ gate: IgnoreGate) { ignoreGate = gate }
+
     // MARK: Quarantine
 
     /// Moves items out of place. Items that fail are reported, the rest still move.
@@ -159,13 +175,23 @@ public actor RestoreStore {
     public func quarantine(_ moves: [PlannedMove], module: String, now: Date = .now)
         throws -> (record: OperationRecord?, failures: [MoveFailure])
     {
+        // Every module's removal passes through here, so this is where the ignore list is enforced.
+        guard case .list(let ignore) = ignoreGate else {
+            if case .unavailable(let reason) = ignoreGate { throw RestoreStoreError.ignoreListUnavailable(reason) }
+            return (nil, [])
+        }
+        let refused = moves.filter { ignore.ignoresItem(at: $0.url) || ignore.ignoresRule($0.ruleID) }
+        let refusedPaths = Set(refused.map(\.url.path))
+        let moves = moves.filter { !refusedPaths.contains($0.url.path) }
+        var failures = refused.map { MoveFailure(path: $0.url.path, reason: .ignored) }
+        guard !moves.isEmpty else { return (nil, failures) }
+
         let opID = UUID()
         let opFolder = quarantineRoot.appendingPathComponent(opID.uuidString, isDirectory: true)
         try fileManager.createDirectory(at: opFolder, withIntermediateDirectories: true)
         let quarantineDevice = FileStat.device(of: opFolder)
 
         var items: [QuarantinedItem] = []
-        var failures: [MoveFailure] = []
 
         for (index, move) in moves.enumerated() {
             do {

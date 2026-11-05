@@ -26,9 +26,6 @@ final class ProtectionModel {
     private(set) var lastScanDate: Date?
     private(set) var lastScanCount: Int
 
-    private var ignored: Set<String> {
-        didSet { UserDefaults.standard.set(Array(ignored), forKey: Keys.ignored) }
-    }
     @ObservationIgnored private var cancelFlag = OSAllocatedUnfairLock(initialState: false)
     @ObservationIgnored private var scanTask: Task<Void, Never>?
     /// Snapshot tour only: scan a fixture folder instead of the real personal folders.
@@ -43,20 +40,28 @@ final class ProtectionModel {
     init(app: AppModel) {
         self.app = app
         let defaults = UserDefaults.standard
-        ignored = Set(defaults.stringArray(forKey: Keys.ignored) ?? [])
         lastScanDate = defaults.object(forKey: Keys.lastScan) as? Date
         lastScanCount = defaults.integer(forKey: Keys.lastCount)
     }
 
     var findings: [ThreatFinding] {
-        (report?.findings ?? []).filter { !ignored.contains($0.url.path) && FileManager.default.fileExists(atPath: $0.url.path) }
+        (report?.findings ?? []).filter { !app.ignoreList.ignores($0.url) && FileManager.default.fileExists(atPath: $0.url.path) }
     }
 
     func findings(_ severity: ThreatSeverity) -> [ThreatFinding] { findings.filter { $0.severity == severity } }
 
     var selectedFindings: [ThreatFinding] { findings.filter { selection.contains($0.id) } }
     var selectedSize: Int64 { selectedFindings.reduce(0) { $0 + $1.size } }
-    var ignoredCount: Int { ignored.count }
+    /// Findings of the last scan hidden by the ignore list.
+    var ignoredCount: Int { (report?.findings ?? []).filter { app.ignoreList.ignores($0.url) }.count }
+
+    /// Protection kept its own ignore list before the app-wide one existed; fold it in once.
+    func migrateLegacyIgnores() {
+        let defaults = UserDefaults.standard
+        guard let paths = defaults.stringArray(forKey: Keys.ignored), !paths.isEmpty else { return }
+        for path in paths { app.ignore(.path(URL(fileURLWithPath: path))) }
+        defaults.removeObject(forKey: Keys.ignored)
+    }
 
     // MARK: Scanning
 
@@ -109,13 +114,12 @@ final class ProtectionModel {
     func reveal(_ finding: ThreatFinding) { Finder.reveal(finding.url) }
 
     func ignore(_ finding: ThreatFinding) {
-        ignored.insert(finding.url.path)
+        app.ignore(.path(finding.url))
         selection.remove(finding.id)
         lastScanCount = findings.count
         UserDefaults.standard.set(lastScanCount, forKey: Keys.lastCount)
     }
 
-    func clearIgnored() { ignored = [] }
 
     func removeSelected() {
         guard let store = app.store else { return }

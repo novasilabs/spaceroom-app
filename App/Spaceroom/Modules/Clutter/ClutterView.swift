@@ -201,7 +201,8 @@ struct ClutterView: View {
                     LazyVStack(spacing: 2) {
                         ForEach(files) { file in
                             FileRow(file: file, isSelected: model.selection.contains(file.id),
-                                    source: model.tab == .installers ? model.downloadSource(of: file) : nil) {
+                                    source: model.tab == .installers ? model.downloadSource(of: file) : nil,
+                                    onIgnore: { model.ignore(file) }) {
                                 model.toggle(file)
                             }
                         }
@@ -243,7 +244,7 @@ struct ClutterView: View {
                                 ForEach(group.files) { file in
                                     let isKeeper = file.id == group.keeper.id
                                     FileRow(file: file, isSelected: !isKeeper && model.selection.contains(file.id),
-                                            source: nil, isKeeper: isKeeper) {
+                                            source: nil, isKeeper: isKeeper, onIgnore: { model.ignore(file) }) {
                                         model.toggle(file)
                                     }
                                     .disabled(isKeeper)
@@ -268,6 +269,7 @@ private struct FileRow: View {
     let isSelected: Bool
     let source: String?
     var isKeeper = false
+    var onIgnore: (() -> Void)?
     let toggle: () -> Void
     @State private var isHovering = false
 
@@ -305,6 +307,10 @@ private struct FileRow: View {
         .contextMenu {
             Button("Show in Finder") { Finder.reveal(file.url) }
             Button("Open") { NSWorkspace.shared.open(file.url) }
+            if let onIgnore {
+                Divider()
+                Button("Always Ignore", systemImage: "eye.slash", action: onIgnore)
+            }
         }
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

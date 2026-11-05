@@ -68,6 +68,8 @@ public struct CleanupEngine: Sendable {
         if let reason = item.skipReason { return reason }
         // Unknown rule: refuse. Items may only be cleaned on behalf of a loaded, validated rule.
         guard let rule else { return .outsideRoot }
+        // Re-checked at clean time: the list may have changed since the scan.
+        if context.ignore.ignoresRule(rule.id) || context.ignore.ignoresItem(at: item.url) { return .ignored }
         if let reason = guardrail.check(item.url, root: item.root) { return reason }
         if let app = rule.skipIfRunning.first(where: context.runningBundleIDs.contains) { return .inUse(bundleID: app) }
         if rule.skipIfOwnerRunning, let owner = context.runningOwner(of: item.url.lastPathComponent) {

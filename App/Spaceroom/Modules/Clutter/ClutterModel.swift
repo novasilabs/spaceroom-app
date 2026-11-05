@@ -126,15 +126,24 @@ final class ClutterModel {
     var largeFiles: [ClutterFile] {
         let cutoff = Date.now.addingTimeInterval(-TimeInterval(age.rawValue) * 86_400)
         return (report?.largeFiles ?? []).filter {
-            !removedIDs.contains($0.id) && $0.size >= minimumSize.rawValue && (age == .any || $0.modified < cutoff)
+            isVisible($0) && $0.size >= minimumSize.rawValue && (age == .any || $0.modified < cutoff)
         }
     }
 
-    var installers: [ClutterFile] { (report?.installers ?? []).filter { !removedIDs.contains($0.id) } }
+    var installers: [ClutterFile] { (report?.installers ?? []).filter { isVisible($0) } }
+
+    private func isVisible(_ file: ClutterFile) -> Bool {
+        !removedIDs.contains(file.id) && !app.ignoreList.ignores(file.url)
+    }
+
+    func ignore(_ file: ClutterFile) {
+        app.ignore(.path(file.url))
+        selection.remove(file.id)
+    }
 
     var visibleDuplicates: [DuplicateGroup] {
         duplicates.compactMap { group in
-            let remaining = group.files.filter { !removedIDs.contains($0.id) }
+            let remaining = group.files.filter { isVisible($0) }
             return remaining.count > 1 ? group : nil
         }
     }

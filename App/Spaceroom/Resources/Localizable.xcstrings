@@ -243,6 +243,16 @@
         }
       }
     },
+    "%@ · no longer exists": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · sudah tidak ada"
+          }
+        }
+      }
+    },
     "%@, %@": {
       "localizations": {
         "en": {
@@ -451,6 +461,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld item sudah tidak ada di Pusat Pemulihan atau tidak bisa dikembalikan."
+          }
+        }
+      }
+    },
+    "%lld items are on your ignore list · Manage in Settings": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld item ada di daftar abaikan · Kelola di Pengaturan"
           }
         }
       }
@@ -829,6 +849,16 @@
         }
       }
     },
+    "Add Files or Folders…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambah File atau Folder…"
+          }
+        }
+      }
+    },
     "After this period, cleaned items are deleted permanently. You can also delete them sooner from the Restore Center.": {
       "localizations": {
         "id": {
@@ -905,6 +935,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sudah bersih"
+          }
+        }
+      }
+    },
+    "Always Ignore": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selalu Abaikan"
+          }
+        }
+      }
+    },
+    "Always Ignore This App's Data": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selalu Abaikan Data Aplikasi Ini"
+          }
+        }
+      }
+    },
+    "Always Ignore This Category": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selalu Abaikan Kategori Ini"
           }
         }
       }
@@ -1501,6 +1561,16 @@
         }
       }
     },
+    "Cleaning category": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategori pembersihan"
+          }
+        }
+      }
+    },
     "Cleaning failed": {
       "localizations": {
         "id": {
@@ -1847,6 +1917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak bisa menyimpan hasil otomatisasi"
+          }
+        }
+      }
+    },
+    "Couldn't save the ignore list": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak bisa menyimpan daftar abaikan"
           }
         }
       }
@@ -2689,6 +2769,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abaikan"
+          }
+        }
+      }
+    },
+    "Ignore List": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daftar Abaikan"
+          }
+        }
+      }
+    },
+    "Ignored": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diabaikan"
           }
         }
       }
@@ -3622,6 +3722,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Belum ada apa-apa di sini"
+          }
+        }
+      }
+    },
+    "Nothing ignored yet. Right-click an item anywhere in Spaceroom and choose Always Ignore, or add folders here.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum ada yang diabaikan. Klik kanan item di mana saja di Spaceroom lalu pilih Selalu Abaikan, atau tambahkan folder di sini."
           }
         }
       }
@@ -5008,16 +5118,6 @@
         }
       }
     },
-    "Show %lld ignored items again": {
-      "localizations": {
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tampilkan lagi %lld item yang diabaikan"
-          }
-        }
-      }
-    },
     "Show CPU usage": {
       "localizations": {
         "id": {
@@ -5084,6 +5184,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tampilkan penyimpanan"
+          }
+        }
+      }
+    },
+    "Show the File in Finder": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan File di Finder"
           }
         }
       }
@@ -5318,12 +5428,32 @@
         }
       }
     },
+    "Spaceroom never cleans, uninstalls or moves anything here, and scans show it as Ignored. A folder protects everything inside it.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom tidak pernah membersihkan, menghapus instalan, atau memindahkan apa pun di sini, dan pemindaian menampilkannya sebagai Diabaikan. Folder melindungi semua isinya."
+          }
+        }
+      }
+    },
     "Spaceroom stops it now and moves its launch file to the Restore Center. Restoring it brings it back at your next login.": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
             "value": "Spaceroom menghentikannya sekarang dan memindahkan file launch-nya ke Pusat Pemulihan. Memulihkannya akan menjalankannya lagi saat login berikutnya."
+          }
+        }
+      }
+    },
+    "Spaceroom will never clean, uninstall or move what you choose.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom tidak akan pernah membersihkan, menghapus instalan, atau memindahkan yang Anda pilih."
           }
         }
       }
@@ -5364,6 +5494,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Berhenti"
+          }
+        }
+      }
+    },
+    "Stop ignoring": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berhenti mengabaikan"
+          }
+        }
+      }
+    },
+    "Stop ignoring %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berhenti mengabaikan %@"
           }
         }
       }
@@ -5444,6 +5594,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Butuh satu atau dua menit"
+          }
+        }
+      }
+    },
+    "The ignore list can't be read, so cleaning is off until it's fixed: %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daftar abaikan tidak bisa dibaca, jadi pembersihan dimatikan sampai diperbaiki: %@"
+          }
+        }
+      }
+    },
+    "The ignore list can't be read, so cleaning is off.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daftar abaikan tidak bisa dibaca, jadi pembersihan dimatikan."
           }
         }
       }
@@ -5574,6 +5744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hal-hal yang Anda ketik di formulir web"
+          }
+        }
+      }
+    },
+    "This app's data · %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data aplikasi ini · %@"
           }
         }
       }

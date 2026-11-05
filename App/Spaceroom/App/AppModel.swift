@@ -21,6 +21,11 @@ final class AppModel {
     let store: RestoreStore?
     let storeError: String?
 
+    /// Things the user never wants cleaned. Enforced by every scan and by the Restore Center.
+    private(set) var ignoreList = IgnoreList()
+    /// Set when `ignore.json` exists but can't be read: nothing may be moved (fail-closed).
+    let ignoreError: String?
+
     private(set) var operations: [OperationRecord] = []
     private(set) var fullDiskAccess: FullDiskAccess.Status = .unknown
 
@@ -70,8 +75,18 @@ final class AppModel {
             catalog = nil
             catalogError = error.description
         }
+        let gate: RestoreStore.IgnoreGate
         do {
-            store = try RestoreStore()
+            let list = try IgnoreListFile.load()
+            ignoreList = list
+            ignoreError = nil
+            gate = .list(list)
+        } catch {
+            ignoreError = String(describing: error)
+            gate = .unavailable(String(describing: error))
+        }
+        do {
+            store = try RestoreStore(ignore: gate)
             storeError = nil
         } catch {
             store = nil
@@ -94,6 +109,7 @@ final class AppModel {
     var cleaningBlockedReason: String? {
         if let catalogError { return String(localized: "Cleaning rules failed to load: \(catalogError)") }
         if let storeError { return String(localized: "Restore Center is unavailable: \(storeError)") }
+        if let ignoreError { return String(localized: "The ignore list can't be read, so cleaning is off until it's fixed: \(ignoreError)") }
         return nil
     }
 
@@ -112,7 +128,8 @@ final class AppModel {
         ScanContext(home: FileManager.default.homeDirectoryForCurrentUser,
                     runningBundleIDs: AppNames.runningBundleIDs(),
                     runningAppNames: AppNames.runningAppNames(),
-                    now: .now)
+                    now: .now,
+                    ignore: ignoreList)
     }
 
     // MARK: Lifecycle
@@ -245,6 +262,39 @@ final class AppModel {
         alert = AlertMessage(
             title: String(localized: "Moved \(result.movedToTrashSize.bytesText) to the Trash"),
             message: String(localized: "macOS doesn't let apps delete some protected items in place, such as apps inside caches. Spaceroom moved them to the Trash instead. Empty the Trash in Finder to free the space."))
+    }
+
+    // MARK: Ignore list
+
+    func ignore(_ entry: IgnoreEntry) {
+        var list = ignoreList
+        list.add(entry)
+        setIgnoreList(list)
+    }
+
+    func unignore(_ id: String) {
+        var list = ignoreList
+        list.remove(id: id)
+        setIgnoreList(list)
+    }
+
+    #if DEBUG
+    /// Snapshot tour only: show a sample list without saving it or changing what may be cleaned.
+    func showIgnoreListForSnapshot(_ list: IgnoreList) { ignoreList = list }
+    #endif
+
+    private func setIgnoreList(_ list: IgnoreList) {
+        // An unreadable list is never overwritten: the user may want to repair it.
+        guard ignoreError == nil, list != ignoreList else { return }
+        do {
+            try IgnoreListFile.save(list)
+        } catch {
+            show(String(localized: "Couldn't save the ignore list"), error)
+            return
+        }
+        ignoreList = list
+        if let store { Task { await store.setIgnore(.list(list)) } }
+        for flow in flows.values { flow.applyIgnore(list) }
     }
 
     func show(_ title: String, _ error: any Error) {

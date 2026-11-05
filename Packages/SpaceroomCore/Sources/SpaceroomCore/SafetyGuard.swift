@@ -20,6 +20,8 @@ public enum SkipReason: Codable, Sendable, Hashable {
     case notPermitted
     /// Moving the item failed for another reason.
     case moveFailed(String)
+    /// On the user's ignore list.
+    case ignored
 }
 
 /// Last line of defence before anything is moved. Pure path logic, no side effects.

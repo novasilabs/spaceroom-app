@@ -69,6 +69,7 @@ extension SkipReason {
         case .missing: String(localized: "No longer exists")
         case .notPermitted: String(localized: "Needs Full Disk Access")
         case .moveFailed(let message): message
+        case .ignored: String(localized: "Ignored")
         }
     }
 
@@ -81,6 +82,7 @@ extension SkipReason {
         case .missing: "questionmark.folder"
         case .notPermitted: "lock"
         case .moveFailed: "exclamationmark.triangle"
+        case .ignored: "eye.slash"
         }
     }
 }

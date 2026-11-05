@@ -31,7 +31,10 @@ struct ProtectionView: View {
             footer.padding(.horizontal, 28).padding(.vertical, 16)
         }
         .animation(Motion.hover, value: model.lastResult?.message)
-        .onAppear { app.startup.loadIfNeeded() }
+        .onAppear {
+            app.startup.loadIfNeeded()
+            model.migrateLegacyIgnores()
+        }
         .sheet(isPresented: $isConfirming) {
             let chosen = model.selectedFindings
             ConfirmSheet(
@@ -157,7 +160,7 @@ struct ProtectionView: View {
                     .font(.caption).foregroundStyle(.textTertiary)
             }
             if model.ignoredCount > 0 {
-                Button("Show \(model.ignoredCount) ignored items again") { model.clearIgnored() }
+                SettingsLink { Text("\(model.ignoredCount) items are on your ignore list · Manage in Settings") }
                     .buttonStyle(.plain).font(.caption).foregroundStyle(.textSecondary)
             }
         }
