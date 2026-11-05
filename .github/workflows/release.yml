@@ -25,6 +25,12 @@ jobs:
         # set SIGN_IDENTITY, then run `xcrun notarytool submit dist/*.dmg --wait` and
         # `xcrun stapler staple dist/*.dmg` before uploading.
         run: ./scripts/make-dmg.sh
+      - name: Build the command-line tool
+        run: |
+          make cli
+          VERSION="$(ls -d dist/spaceroom-* | head -1 | sed 's|dist/spaceroom-||')"
+          tar -C dist -czf "dist/spaceroom-$VERSION-macos.tar.gz" "spaceroom-$VERSION"
+          (cd dist && shasum -a 256 "spaceroom-$VERSION-macos.tar.gz" > "spaceroom-$VERSION-macos.tar.gz.sha256")
       - name: Draft the release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -33,6 +39,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on {print}' CHANGELOG.md > notes.md
           gh release create "$GITHUB_REF_NAME" dist/Spaceroom-*.dmg dist/Spaceroom-*.dmg.sha256 \
+            dist/spaceroom-*-macos.tar.gz dist/spaceroom-*-macos.tar.gz.sha256 \
             --draft --prerelease --title "Spaceroom $VERSION" --notes-file notes.md
       - uses: actions/upload-artifact@v4
         with:

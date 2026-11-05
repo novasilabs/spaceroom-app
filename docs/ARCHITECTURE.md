@@ -47,6 +47,10 @@ Every other module that removes files (My Clutter, Space Lens, Applications, Pri
 Startup, Automations, the menu bar and the command palette) has its own remover with its
 own re-checks, but **all of them end in `RestoreStore.quarantine`**.
 
+## Command line
+
+`Sources/SpaceroomCLI` holds the commands behind the `spaceroom` executable. Its outside world (home folder, store folder, running apps, terminal) is injected, so the tests drive it against a sandbox. It opens the same `RestoreStore` folder as the app. The index is rewritten whole, so a CLI that writes while the app is running could lose the other's records. That's why `clean` and `restore` refuse while the app runs; reading commands and `--dry-run` are always allowed.
+
 ## The ignore list: a single choke point
 
 `IgnoreList` holds path, app (bundle ID) and rule entries in `ignore.json`. It's enforced

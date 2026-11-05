@@ -6,8 +6,12 @@ SCHEME   := Spaceroom
 DERIVED  := build/DerivedData
 DEBUG_APP := $(DERIVED)/Build/Products/Debug/Spaceroom.app
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination 'platform=macOS' -derivedDataPath $(DERIVED)
+VERSION  := $(shell sed -n 's/.*MARKETING_VERSION: "\(.*\)"/\1/p' project.yml | head -1)
+PREFIX   ?= /usr/local
+CLI_BUILD := Packages/SpaceroomCore/.build/apple/Products/Release
+CLI_DIR  := dist/spaceroom-$(VERSION)
 
-.PHONY: help bootstrap project open build release run test snapshots check-translations dmg clean
+.PHONY: help bootstrap project open build release run test snapshots check-translations dmg cli install-cli clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -46,6 +50,24 @@ check-translations: ## Fail if any string, engine text or rule lacks Bahasa Indo
 
 dmg: ## Release build packaged as dist/Spaceroom-<version>.dmg
 	./scripts/make-dmg.sh
+
+cli: ## Build the `spaceroom` command (universal) into dist/spaceroom-<version>/
+	swift build --package-path Packages/SpaceroomCore -c release --product spaceroom --arch arm64 --arch x86_64
+	mkdir -p $(CLI_DIR)
+	cp -f $(CLI_BUILD)/spaceroom $(CLI_DIR)/spaceroom
+	ditto $(CLI_BUILD)/SpaceroomCore_SpaceroomCore.bundle $(CLI_DIR)/SpaceroomCore_SpaceroomCore.bundle
+	codesign --force --sign - --options runtime $(CLI_DIR)/spaceroom
+	@echo "✓ $(CLI_DIR)/spaceroom ($$(lipo -archs $(CLI_DIR)/spaceroom))"
+
+install-cli: cli ## Install `spaceroom` into $(PREFIX) (default /usr/local; may need sudo)
+	@test -n "$(PREFIX)" || { echo "PREFIX is empty"; exit 1; }
+	install -d "$(PREFIX)/lib/spaceroom" "$(PREFIX)/bin"
+	cp -f $(CLI_DIR)/spaceroom "$(PREFIX)/lib/spaceroom/spaceroom"
+	ditto $(CLI_DIR)/SpaceroomCore_SpaceroomCore.bundle "$(PREFIX)/lib/spaceroom/SpaceroomCore_SpaceroomCore.bundle"
+	@# A wrapper, not a symlink: the binary finds its rules next to its real location.
+	printf '#!/bin/sh\nexec "%s/lib/spaceroom/spaceroom" "$$@"\n' "$(PREFIX)" > "$(PREFIX)/bin/spaceroom"
+	chmod 755 "$(PREFIX)/bin/spaceroom"
+	@echo "✓ installed $(PREFIX)/bin/spaceroom"
 
 clean: ## Remove build products (keeps dist/)
 	rm -rf build $(PROJECT)

@@ -84,6 +84,10 @@ Cek keaslian unduhan dengan `shasum -a 256 Spaceroom-x.y.z.dmg`, lalu bandingkan
 
 **Menghapus Spaceroom:** keluar dari aplikasi, hapus aplikasinya, lalu hapus `~/Library/Application Support/Spaceroom`. Ini juga menghapus permanen isi Pusat Pemulihan.
 
+## Command line
+
+`spaceroom` menjalankan engine yang sama dari terminal, dan semua yang dibersihkannya masuk ke Pusat Pemulihan di app: `spaceroom scan`, `spaceroom clean --dry-run`, `spaceroom clean`, `spaceroom history`, `spaceroom restore <id>`, dan `spaceroom status --json`. `clean` selalu bertanya dulu (atau pakai `--yes`) dan menolak berjalan selama app Spaceroom terbuka. Unduh dari halaman rilis, atau pasang dengan `make install-cli`.
+
 ## Build dari sumber
 
 Butuh Xcode 16 atau lebih baru dan [XcodeGen](https://github.com/yonaskolb/XcodeGen).
@@ -101,7 +105,6 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 
 - Helper dengan hak admin: cache dan log sistem, flush DNS, Spotlight
 - Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
-- CLI `spaceroom`
 
 Rencana lengkap ada di [docs/PRD.md](docs/PRD.md), dan riwayat rilis di [CHANGELOG.md](CHANGELOG.md).
 

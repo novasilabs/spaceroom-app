@@ -9,6 +9,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "SpaceroomCore", targets: ["SpaceroomCore"]),
+        .executable(name: "spaceroom", targets: ["spaceroom"]),
     ],
     targets: [
         // Library code is deliberately `nonisolated` (no default main-actor isolation):
@@ -21,5 +22,9 @@ let package = Package(
             name: "SpaceroomCoreTests",
             dependencies: ["SpaceroomCore"]
         ),
+        // The `spaceroom` command: commands live in a library so they can be tested.
+        .target(name: "SpaceroomCLI", dependencies: ["SpaceroomCore"]),
+        .executableTarget(name: "spaceroom", dependencies: ["SpaceroomCLI"]),
+        .testTarget(name: "SpaceroomCLITests", dependencies: ["SpaceroomCLI", "SpaceroomCore"]),
     ]
 )

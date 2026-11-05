@@ -115,6 +115,21 @@ Each release includes a `.sha256` file. Check your download with `shasum -a 256 
 
 **Uninstalling Spaceroom:** quit it, delete the app, then delete `~/Library/Application Support/Spaceroom` (this also permanently deletes anything still in the Restore Center).
 
+## Command line
+
+`spaceroom` runs the same engine from the terminal. Everything it cleans lands in the app's Restore Center.
+
+```bash
+spaceroom scan            # what can be cleaned (changes nothing)
+spaceroom clean --dry-run # what clean would move
+spaceroom clean           # asks, then moves it to the Restore Center
+spaceroom history         # recent cleans
+spaceroom restore 3ab1bbe2
+spaceroom status --json
+```
+
+`clean` uses the categories ticked by default in the app. It asks before moving anything (or pass `--yes`), and it refuses to run while the app is open, so the Restore Center is never written by two programs at once. Get it from the release page (`spaceroom-<version>-macos.tar.gz`), or build and install it with `make install-cli` (`PREFIX=/usr/local` by default).
+
 ## Requirements
 
 - macOS 14 Sonoma or later, on Apple Silicon or Intel (universal build)
@@ -154,7 +169,6 @@ project.yml                    XcodeGen project definition
 
 - **Privileged helper:** system caches and logs, plus the admin maintenance tasks (DNS, Spotlight, memory purge)
 - **Signed and notarized releases** with Sparkle updates and a Homebrew cask
-- **`spaceroom` CLI** (`scan`, `clean`, `status`, `--json`, `--dry-run`) on the same engine
 
 The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.
 
