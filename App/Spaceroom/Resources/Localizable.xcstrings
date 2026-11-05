@@ -137,6 +137,16 @@
         }
       }
     },
+    "%@ since %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sejak %@"
+          }
+        }
+      }
+    },
     "%@ smaller items": {
       "localizations": {
         "id": {
@@ -1469,6 +1479,16 @@
         }
       }
     },
+    "Change since your previous scan": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perubahan sejak pemindaian sebelumnya"
+          }
+        }
+      }
+    },
     "Changed since the scan": {
       "localizations": {
         "id": {
@@ -1947,6 +1967,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Di-commit ke Git"
+          }
+        }
+      }
+    },
+    "Compared with your scan of this folder on %@.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dibandingkan dengan pemindaian folder ini pada %@."
           }
         }
       }
@@ -3986,6 +4016,16 @@
         }
       }
     },
+    "New": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baru"
+          }
+        }
+      }
+    },
     "New Automation": {
       "localizations": {
         "id": {
@@ -4182,6 +4222,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Belum diperiksa"
+          }
+        }
+      }
+    },
+    "Not there in your previous scan": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum ada di pemindaian sebelumnya"
           }
         }
       }

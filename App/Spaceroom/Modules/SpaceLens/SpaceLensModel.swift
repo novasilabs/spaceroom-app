@@ -53,6 +53,8 @@ final class SpaceLensModel {
     private(set) var lastResult: (message: String, operationID: UUID?)?
     /// The map before the last removal, so Undo can put it back without a rescan.
     @ObservationIgnored private var rootBeforeRemoval: DiskNode?
+    /// The previous scan of the same folder (at least an hour older), for "what grew".
+    private(set) var baseline: LensSnapshot?
     /// External drives items may be removed from, refreshed with the target list.
     @ObservationIgnored private var removableVolumes: [URL] = []
 
@@ -121,6 +123,7 @@ final class SpaceLensModel {
         selection = [:]
         lastResult = nil
         rootBeforeRemoval = nil
+        baseline = nil
         scanDuration = nil
         scanStarted = .now
         withAnimation(Motion.phaseChange) { phase = .scanning }
@@ -140,12 +143,60 @@ final class SpaceLensModel {
                 case .finished(let node):
                     self.publishProgress()
                     self.root = node
+                    self.recordHistory(node, target: target)
                     self.scanDuration = self.scanStarted.map { Date.now.timeIntervalSince($0) }
                     withAnimation(Motion.phaseChange) { self.phase = .results }
                 }
             }
         }
     }
+
+    private var isTooling: Bool { ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_DIR"] != nil }
+
+    private var history: LensHistory? {
+        app.store.map { LensHistory(directory: $0.directory.appendingPathComponent("SpaceLens", isDirectory: true)) }
+    }
+
+    /// Loads the comparison scan, then saves this one. Only complete scans are saved, and the
+    /// snapshot tour never saves anything.
+    private func recordHistory(_ node: DiskNode, target: Target) {
+        guard let history else { return }
+        let root = target.url.path
+        let save = !node.isPartial && !isTooling
+        let scan = scanStarted
+        Task { [weak self] in
+            let baseline = await Task.detached(priority: .utility) { () -> LensSnapshot? in
+                let baseline = history.baseline(root: root)
+                if save { try? history.record(LensSnapshot.make(from: node), root: root) }
+                return baseline
+            }.value
+            // A newer scan may have started meanwhile.
+            guard let self, self.scanStarted == scan else { return }
+            self.baseline = baseline
+        }
+    }
+
+    /// Growth of `node` since the previous scan, when it's worth mentioning (10 MB or more).
+    func change(of node: DiskNode) -> Int64? {
+        guard let baseline, let root = scannedTarget?.url.path,
+              let change = baseline.change(of: node, root: root), abs(change) >= 10_000_000 else { return nil }
+        return change
+    }
+
+    func isNew(_ node: DiskNode) -> Bool {
+        guard let baseline, let root = scannedTarget?.url.path else { return false }
+        return baseline.isNew(node, root: root)
+    }
+
+    #if DEBUG
+    /// Snapshot tour: compare with a made-up earlier scan (sizes scaled down) to show growth.
+    func useDebugBaseline(scale: Double) {
+        guard let root else { return }
+        let earlier = LensSnapshot.make(from: root, minimumSize: 1)
+        baseline = LensSnapshot(date: .now.addingTimeInterval(-5 * 86_400), total: Int64(Double(earlier.total) * scale),
+                                sizes: earlier.sizes.mapValues { Int64(Double($0) * scale) }, depth: earlier.depth)
+    }
+    #endif
 
     private func publishProgress() {
         scannedItems += pendingItems

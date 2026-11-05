@@ -7,6 +7,7 @@ All notable changes to Spaceroom are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Space Lens growth history:** each complete scan saves folder sizes (three levels deep, 10 MB and up, the last 30 scans per folder) to `~/Library/Application Support/Spaceroom/SpaceLens`. The next scan shows what grew or shrank since then, in the header and on every row, and marks new folders.
 - **Space Lens on external drives:** items on local, writable external drives can be removed too. They go to that drive's Trash and are tracked by the Restore Center. Time Machine drives, a drive's system folders and its hidden top-level folders are refused.
 - **Space Lens › Treemap:** switch between the sunburst and a squarified treemap with two levels of nesting. Both charts outline the items you've ticked.
 - **Cleanup:** three new categories. **Mail attachments** are copies of attachments you opened; the originals stay in your mailboxes. **Photos caches** are the face and scene analysis working files. **Broken preferences** are preference files that are empty or don't parse; Apple's own are never included, and none are ticked by default. A new `content_check` rule field supports the last one. Files macOS won't let Spaceroom read are never counted as broken.

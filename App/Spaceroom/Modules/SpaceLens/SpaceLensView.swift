@@ -184,9 +184,15 @@ struct SpaceLensView: View {
                     if model.phase == .scanning {
                         ScanProgressLabel(model: model)
                     } else if let folder = model.path.last, let root = model.breadcrumb.first {
-                        Text("\(folder.size.bytesText) · \(Int((Double(folder.size) / Double(max(root.size, 1)) * 100).rounded()))% of \(model.displayName)")
+                        HStack(spacing: 8) {
+                            Text("\(folder.size.bytesText) · \(Int((Double(folder.size) / Double(max(root.size, 1)) * 100).rounded()))% of \(model.displayName)")
+                            growthLabel(for: folder)
+                        }
                     } else if let root = model.breadcrumb.first {
-                        Text(summary(root))
+                        HStack(spacing: 8) {
+                            Text(summary(root))
+                            growthLabel(for: root)
+                        }
                     }
                 }
                 .font(.callout)
@@ -230,6 +236,19 @@ struct SpaceLensView: View {
         .opacity(0)
         .frame(width: 0, height: 0)
         .accessibilityHidden(true)
+    }
+
+    /// "▲ 2.1 GB since 3 Nov" when the previous scan of this folder is known.
+    @ViewBuilder private func growthLabel(for node: DiskNode) -> some View {
+        if let change = model.change(of: node), let date = model.baseline?.date {
+            Label {
+                Text("\(GrowthBadge.text(change)) since \(date.formatted(.dateTime.day().month(.abbreviated)))")
+            } icon: {
+                Image(systemName: change > 0 ? "arrow.up.right" : "arrow.down.right")
+            }
+            .foregroundStyle(GrowthBadge.color(change))
+            .help("Compared with your scan of this folder on \(date.formatted(date: .long, time: .shortened)).")
+        }
     }
 
     private func summary(_ root: DiskNode) -> String {
@@ -303,6 +322,7 @@ private struct FolderList: View {
                     ForEach(Array(folder.children.enumerated()), id: \.element.id) { index, child in
                         Row(node: child, parentSize: folder.size, family: index,
                             isHovered: model.hoveredID == child.id, tick: tick(for: child),
+                            change: model.change(of: child), isNew: model.isNew(child),
                             toggle: { model.toggle(child) }) {
                             withAnimation(Easing.out(0.22)) { model.drill(into: child) }
                         }
@@ -383,6 +403,8 @@ private struct FolderList: View {
         let family: Int
         let isHovered: Bool
         let tick: Tick
+        var change: Int64?
+        var isNew = false
         let toggle: () -> Void
         let open: () -> Void
 
@@ -404,6 +426,15 @@ private struct FolderList: View {
                                         .help("Some items inside couldn't be read, so this size may be larger.")
                                 }
                                 Spacer(minLength: 6)
+                                if let change {
+                                    Text(GrowthBadge.text(change))
+                                        .font(.system(size: 10, weight: .semibold)).monospacedDigit()
+                                        .foregroundStyle(GrowthBadge.color(change))
+                                        .help("Change since your previous scan")
+                                } else if isNew {
+                                    Pill(text: Text("New"), tint: .orange)
+                                        .help("Not there in your previous scan")
+                                }
                                 Text((node.isPartial ? "≈ " : "") + node.size.bytesText)
                                     .font(.system(size: 12, weight: .semibold)).monospacedDigit()
                             }
@@ -467,5 +498,16 @@ private struct FolderList: View {
             if case .other = node.kind { return .white.opacity(0.5) }
             return SunburstChart.palette[family % SunburstChart.palette.count]
         }
+    }
+}
+
+/// How growth since the previous scan is written and coloured.
+enum GrowthBadge {
+    static func text(_ change: Int64) -> String {
+        (change > 0 ? "+" : "−") + abs(change).bytesText
+    }
+
+    static func color(_ change: Int64) -> Color {
+        change > 0 ? .hex(0xFFB35C) : .hex(0x6FDDA8)
     }
 }

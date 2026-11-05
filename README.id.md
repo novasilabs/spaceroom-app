@@ -47,7 +47,7 @@
   - **Pembersihan** dan **Pembersihan Dev:** cache, log, salinan lampiran Mail, cache analisis Foto, file preferensi rusak, Xcode, simulator, cache package manager, dan folder build (`node_modules`, `target`, `.build`, `.venv`, …) di proyek yang tidak diubah selama 30 hari. Folder yang di-commit ke Git tidak pernah ditawarkan. Tool yang sedang berjalan dilewati. Kartu Docker terpisah mengosongkan build cache dan image tanpa tag lewat Docker sendiri, dengan peringatan bahwa ini tidak bisa diurungkan.
   - **File Berantakan:** file besar dan lama, duplikat yang dipastikan dari isinya, dan installer yang sudah tidak diperlukan.
 - **Pahami**
-  - **Space Lens:** peta sunburst atau treemap interaktif dari folder atau disk mana pun. Centang item lalu pilih *Tinjau dan Hapus*, dan item akan masuk ke Pusat Pemulihan.
+  - **Space Lens:** peta sunburst atau treemap interaktif dari folder atau disk mana pun, plus apa saja yang membesar sejak pemindaian sebelumnya. Centang item lalu pilih *Tinjau dan Hapus*, dan item akan masuk ke Pusat Pemulihan.
   - **Status Sistem:** skor kesehatan; CPU, memori, jaringan, disk, dan baterai secara langsung; dan proses tersibuk.
 - **Kelola**
   - **Aplikasi:** hapus instalan sampai bersih, termasuk sisanya.
@@ -102,7 +102,7 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 - Helper dengan hak admin: cache dan log sistem, flush DNS, Spotlight
 - Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
 - CLI `spaceroom`
-- Foto yang mirip dan riwayat pertumbuhan storage di Space Lens
+- Foto yang mirip
 - Pembaru aplikasi dan "slim apps"
 
 Rencana lengkap ada di [docs/PRD.md](docs/PRD.md), dan riwayat rilis di [CHANGELOG.md](CHANGELOG.md).

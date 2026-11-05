@@ -54,7 +54,7 @@
 ### Understand
 | | |
 |---|---|
-| **Space Lens** | An interactive sunburst or treemap of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. Tick items (in your home folder or on an external drive) and choose *Review and Remove*. They go to the Restore Center. |
+| **Space Lens** | An interactive sunburst or treemap of any folder or disk that grows while it scans, with drill-in, a breadcrumb, a linked size list and what grew since your previous scan. Tick items (in your home folder or on an external drive) and choose *Review and Remove*. They go to the Restore Center. |
 | **System Status** | A health score with what to fix; live CPU (per core), memory and swap, network, disk, battery health and thermal state; and the busiest processes. |
 
 ### Manage
@@ -156,7 +156,6 @@ project.yml                    XcodeGen project definition
 - **Signed and notarized releases** with Sparkle updates and a Homebrew cask
 - **`spaceroom` CLI** (`scan`, `clean`, `status`, `--json`, `--dry-run`) on the same engine
 - **My Clutter:** similar photos
-- **Space Lens:** storage-growth history
 - **Applications:** an app updater and "slim apps" (strip unused architectures)
 
 The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.

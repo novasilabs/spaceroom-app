@@ -119,6 +119,9 @@ enum DebugSnapshots {
             await pause(1.0)
             capture("13d-spacelens-treemap", in: directory)
             lens.chartStyle = .sunburst
+            lens.useDebugBaseline(scale: 0.8)
+            await pause(1.0)
+            capture("13e-spacelens-growth", in: directory)
         }
 
         app.selection = .applications
