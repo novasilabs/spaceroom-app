@@ -127,20 +127,18 @@ struct PrivacyView: View {
             }
             .padding(.top, 8)
             if model.grants == nil {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Allow Full Disk Access to see which apps have each permission here. Meanwhile, open each list directly:")
                         .font(.callout).foregroundStyle(.textSecondary)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 8, alignment: .leading)], alignment: .leading, spacing: 8) {
+                        .fixedSize(horizontal: false, vertical: true)
+                    // Equal tiles in an even grid: 9 services → 3 × 3.
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
                         ForEach(PermissionService.allCases, id: \.self) { service in
-                            Button { model.openSettings(service) } label: {
-                                Label { Text(service.title) } icon: { Image(systemName: service.symbol) }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .buttonStyle(GhostButtonStyle())
+                            PermissionShortcut(service: service) { model.openSettings(service) }
                         }
                     }
                 }
-                .padding(14)
+                .padding(16)
                 .glassSurface()
             } else {
                 VStack(spacing: 2) {
@@ -242,6 +240,43 @@ private struct ItemRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// One "open this list in System Settings" tile. Fills its grid cell so every tile lines up.
+private struct PermissionShortcut: View {
+    let service: PermissionService
+    let open: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 10) {
+                Image(systemName: service.symbol)
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(width: 20)
+                    .foregroundStyle(.textSecondary)
+                Text(service.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Spacer(minLength: 4)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.textTertiary)
+                    .opacity(isHovering ? 1 : 0.6)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 38, alignment: .leading)
+            // Concentric with the card: 16 pt inset inside a ~28 pt radius → 12 pt.
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(isHovering ? 0.13 : 0.07)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.08)))
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(PressableStyle())
+        .onHover { isHovering = $0 }
+        .animation(Motion.hover, value: isHovering)
+        .help(Text("Open \(service.title) in System Settings"))
     }
 }
 
