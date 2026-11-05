@@ -235,7 +235,7 @@ private struct QuickActionButton: View {
             HStack(spacing: 8) {
                 Image(systemName: action.symbol).frame(width: 18)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(action.title).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+                    Text(action.title).font(.system(size: 12, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                     detail.font(.caption2).foregroundStyle(.white.opacity(0.65)).monospacedDigit()
                 }
                 Spacer(minLength: 0)

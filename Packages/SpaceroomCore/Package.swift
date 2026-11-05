@@ -15,7 +15,7 @@ let package = Package(
         // callers decide where work runs.
         .target(
             name: "SpaceroomCore",
-            resources: [.copy("Resources/Rules")]
+            resources: [.copy("Resources/Rules"), .process("Resources/Localization")]
         ),
         .testTarget(
             name: "SpaceroomCoreTests",

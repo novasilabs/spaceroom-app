@@ -115,7 +115,7 @@ struct ScanFlowView: View {
                         ForEach(flow.results.suffix(4)) { result in
                             HStack {
                                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                                Text(result.rule.title)
+                                Text(result.rule.localizedTitle)
                                 Spacer()
                                 Text(result.cleanableSize.bytesText).monospacedDigit().foregroundStyle(.textSecondary)
                             }

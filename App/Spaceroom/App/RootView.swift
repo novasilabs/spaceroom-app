@@ -40,7 +40,7 @@ struct RootView: View {
                          title: String(localized: "\(pending.title): \(pending.plan.size.bytesText)?"),
                          message: String(localized: "It moves to the Restore Center, so you can bring it back for \(app.retentionDays) days."),
                          details: [.init(symbol: "doc.on.doc", text: String(localized: "\(pending.plan.items.count) items")),
-                                   .init(symbol: "checkmark.shield", text: pending.plan.rules.first?.whySafe ?? "")]
+                                   .init(symbol: "checkmark.shield", text: pending.plan.rules.first?.localizedWhySafe ?? "")]
                              + (pending.plan.skippedCount > 0
                                 ? [.init(symbol: "hand.raised", text: String(localized: "\(pending.plan.skippedCount) items in use or too new are left alone"))]
                                 : []),

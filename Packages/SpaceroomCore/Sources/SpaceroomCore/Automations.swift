@@ -257,7 +257,7 @@ public struct AutomationRunner: Sendable {
         var run = AutomationRun(automationID: automation.id, date: context.now, action: automation.action)
         let plan = await plan(automation.action, context: context)
         guard !plan.rules.isEmpty else {
-            run.error = "No cleaning rules are available for this action."
+            run.error = String(localized: "No cleaning rules are available for this action.", bundle: .module)
             return run
         }
         run.foundBytes = plan.size

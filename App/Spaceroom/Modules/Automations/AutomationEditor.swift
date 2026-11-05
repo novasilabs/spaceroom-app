@@ -131,16 +131,16 @@ struct AutomationEditor: View {
                             DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute).labelsHidden()
                             Spacer()
                         }
-                        hint("If your Mac is asleep then, it runs once when it wakes.")
+                        hint(String(localized: "If your Mac is asleep then, it runs once when it wakes."))
                     case .lowDisk:
                         Stepper(value: $gigabytes, in: 1...200) {
                             Text("Free space below \(gigabytes) GB").monospacedDigit()
                         }
-                        hint("Checked every minute; runs at most every 12 hours.")
+                        hint(String(localized: "Checked every minute; runs at most every 12 hours."))
                     case .atLogin:
-                        hint("Runs when Spaceroom opens, at most once an hour. Set it to open at login to run at every login.")
+                        hint(String(localized: "Runs when Spaceroom opens, at most once an hour. Set it to open at login to run at every login."))
                     case .pluggedIn:
-                        hint("Runs when a laptop is connected to power, at most every 6 hours.")
+                        hint(String(localized: "Runs when a laptop is connected to power, at most every 6 hours."))
                     }
                 }
 

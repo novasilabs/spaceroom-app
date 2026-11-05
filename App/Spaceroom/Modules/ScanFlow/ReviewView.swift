@@ -54,9 +54,9 @@ struct ReviewView: View {
                                 .font(.system(size: 15))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(Text(isSelected ? "Deselect \(result.rule.title)" : "Select \(result.rule.title)"))
+                        .accessibilityLabel(Text(isSelected ? "Deselect \(result.rule.localizedTitle)" : "Select \(result.rule.localizedTitle)"))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(result.rule.title).font(.system(size: 13, weight: .medium)).lineLimit(1)
+                            Text(result.rule.localizedTitle).font(.system(size: 13, weight: .medium)).lineLimit(1)
                             Text(GroupInfo.forGroup(result.rule.group).title)
                                 .font(.caption).foregroundStyle(.white.opacity(0.55))
                         }
@@ -98,15 +98,15 @@ private struct ItemPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(result.rule.title).font(.title3.weight(.semibold))
+                Text(result.rule.localizedTitle).font(.title3.weight(.semibold))
                 Label {
-                    Text(result.rule.whySafe)
+                    Text(result.rule.localizedWhySafe)
                 } icon: {
                     Image(systemName: "lightbulb").foregroundStyle(.yellow)
                 }
                 .font(.callout)
                 .foregroundStyle(.white.opacity(0.85))
-                if let hint = result.rule.rebuildHint {
+                if let hint = result.rule.localizedRebuildHint {
                     Label(hint, systemImage: "arrow.clockwise")
                         .font(.caption).foregroundStyle(.white.opacity(0.6))
                 }

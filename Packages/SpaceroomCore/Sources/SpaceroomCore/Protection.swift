@@ -73,17 +73,17 @@ public enum DetectedType: Sendable, Equatable {
 
     public var label: String {
         switch self {
-        case .machO: "a Mac program (Mach-O)"
-        case .script: "a shell script (#!)"
-        case .compiledAppleScript: "a compiled AppleScript"
-        case .elf: "a Linux program (ELF)"
-        case .windowsProgram: "a Windows program"
-        case .zip: "a zip archive"
-        case .jpeg: "a JPEG image"
-        case .png: "a PNG image"
-        case .gif: "a GIF image"
-        case .pdf: "a PDF"
-        case .other: "unknown data"
+        case .machO: String(localized: "a Mac program (Mach-O)", bundle: .module)
+        case .script: String(localized: "a shell script (#!)", bundle: .module)
+        case .compiledAppleScript: String(localized: "a compiled AppleScript", bundle: .module)
+        case .elf: String(localized: "a Linux program (ELF)", bundle: .module)
+        case .windowsProgram: String(localized: "a Windows program", bundle: .module)
+        case .zip: String(localized: "a zip archive", bundle: .module)
+        case .jpeg: String(localized: "a JPEG image", bundle: .module)
+        case .png: String(localized: "a PNG image", bundle: .module)
+        case .gif: String(localized: "a GIF image", bundle: .module)
+        case .pdf: String(localized: "a PDF", bundle: .module)
+        case .other: String(localized: "unknown data", bundle: .module)
         }
     }
 }
@@ -178,7 +178,7 @@ public struct ProtectionScanner: Sendable {
         guard needsHeader, size > 0, size <= maxInspectedSize, let header = Self.read(url, range: .head(64)) else {
             if Self.scriptExtensions.contains(ext) && fromInternet {
                 findings.append(ThreatFinding(url: url, kind: .downloadedScript, severity: .low,
-                                              evidence: "A .\(ext) file downloaded from the internet", size: size,
+                                              evidence: String(localized: "A .\(ext) file downloaded from the internet", bundle: .module), size: size,
                                               isFromInternet: true))
             }
             return findings
@@ -190,25 +190,25 @@ public struct ProtectionScanner: Sendable {
             let isScriptText = detected == .script && ["txt", "csv", "rtf"].contains(ext)
             if !isScriptText || Self.isExecutable(url) {
                 findings.append(ThreatFinding(url: url, kind: .disguisedProgram, severity: isScriptText ? .medium : .high,
-                                              evidence: "Named .\(ext) but it is \(detected.label)", size: size,
+                                              evidence: String(localized: "Named .\(ext) but it is \(detected.label)", bundle: .module), size: size,
                                               isFromInternet: fromInternet))
             }
         } else if name.hasPrefix(".") && [.machO, .elf, .compiledAppleScript].contains(detected) {
             findings.append(ThreatFinding(url: url, kind: .hiddenProgram, severity: .medium,
-                                          evidence: "A hidden file that is \(detected.label)", size: size, isFromInternet: fromInternet))
+                                          evidence: String(localized: "A hidden file that is \(detected.label)", bundle: .module), size: size, isFromInternet: fromInternet))
         }
 
         if Self.imageExtensions.contains(ext), [.jpeg, .png, .gif].contains(detected),
            let tail = Self.read(url, range: .tail(256 * 1024)),
            let payload = Self.appendedPayload(tail, type: detected) {
             findings.append(ThreatFinding(url: url, kind: .hiddenPayload, severity: payload.isProgram ? .high : .medium,
-                                          evidence: "\(payload.label.prefix(1).uppercased() + payload.label.dropFirst()) is hidden after the end of the image",
+                                          evidence: String(localized: "Hidden after the end of the image: \(payload.label)", bundle: .module),
                                           size: size, isFromInternet: fromInternet))
         }
 
-        if ext == "pdf", detected == .pdf, let reasons = Self.activePDFReasons(url, size: size) {
-            findings.append(ThreatFinding(url: url, kind: .activePDF, severity: reasons.contains("launches") ? .high : .medium,
-                                          evidence: "Contains \(reasons)", size: size, isFromInternet: fromInternet))
+        if ext == "pdf", detected == .pdf, let active = Self.activePDF(url, size: size) {
+            findings.append(ThreatFinding(url: url, kind: .activePDF, severity: active.launches ? .high : .medium,
+                                          evidence: active.evidence, size: size, isFromInternet: fromInternet))
         }
         return findings
     }
@@ -221,12 +221,12 @@ public struct ProtectionScanner: Sendable {
         let fromInternet = Self.isFromInternet(url)
         let evidence: String? = switch CodeSignature.status(of: url.path) {
         case .apple, .developer: nil
-        case .adHoc: "Signed only ad hoc, so nobody vouches for who made it"
-        case .unsigned: "Not signed at all"
-        case .invalid: "Its signature is broken: the app was changed after it was signed"
+        case .adHoc: String(localized: "Signed only ad hoc, so nobody vouches for who made it", bundle: .module)
+        case .unsigned: String(localized: "Not signed at all", bundle: .module)
+        case .invalid: String(localized: "Its signature is broken: the app was changed after it was signed", bundle: .module)
         }
         if let evidence {
-            let note = fromInternet ? "" : ". Its download flag is missing, so macOS never checked it"
+            let note = fromInternet ? "" : String(localized: ". Its download flag is missing, so macOS never checked it", bundle: .module)
             findings.append(ThreatFinding(url: url, kind: .unsignedApp, severity: fromInternet ? .low : .medium,
                                           evidence: evidence + note, size: DiskUsage.size(of: url),
                                           isDirectory: true, isFromInternet: fromInternet))
@@ -249,7 +249,7 @@ public struct ProtectionScanner: Sendable {
     /// Why a name is misleading, or `nil` if it looks honest.
     public static func deceptiveName(_ name: String) -> String? {
         if name.unicodeScalars.contains(where: bidiControls.contains) {
-            return "The name contains hidden characters that reverse how it's displayed"
+            return String(localized: "The name contains hidden characters that reverse how it's displayed", bundle: .module)
         }
         let parts = name.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
         guard parts.count >= 3 else { return nil }
@@ -257,11 +257,11 @@ public struct ProtectionScanner: Sendable {
         guard runnableExtensions.contains(last) else { return nil }
         let previous = parts[parts.count - 2]
         if previous.hasSuffix("   ") || previous.hasSuffix("\u{00A0}\u{00A0}") {
-            return "Spaces hide the real .\(last) ending"
+            return String(localized: "Spaces hide the real .\(last) ending", bundle: .module)
         }
         let claimed = previous.trimmingCharacters(in: .whitespaces).lowercased()
         if documentExtensions.contains(claimed) {
-            return "Looks like a .\(claimed) file but is really a .\(last)"
+            return String(localized: "Looks like a .\(claimed) file but is really a .\(last)", bundle: .module)
         }
         return nil
     }
@@ -310,19 +310,34 @@ public struct ProtectionScanner: Sendable {
         return nil
     }
 
-    static func activePDFReasons(_ url: URL, size: Int64) -> String? {
+    struct ActivePDF {
+        let javaScript: Bool
+        let launches: Bool
+        let runsOnOpen: Bool
+
+        var evidence: String {
+            switch (javaScript, launches, runsOnOpen) {
+            case (true, true, true): String(localized: "Contains JavaScript and an action that launches a program, run when it opens", bundle: .module)
+            case (true, true, false): String(localized: "Contains JavaScript and an action that launches a program", bundle: .module)
+            case (true, false, true): String(localized: "Contains JavaScript that runs when it opens", bundle: .module)
+            case (true, false, false): String(localized: "Contains JavaScript", bundle: .module)
+            case (false, _, true): String(localized: "Contains an action that launches a program when it opens", bundle: .module)
+            case (false, _, false): String(localized: "Contains an action that launches a program", bundle: .module)
+            }
+        }
+    }
+
+    static func activePDF(_ url: URL, size: Int64) -> ActivePDF? {
         // Look at the whole file when it's small, else its start and end, where actions usually sit.
         let data: Data? = size <= 8_000_000
             ? read(url, range: .head(Int(size)))
             : [read(url, range: .head(2_000_000)), read(url, range: .tail(2_000_000))].compactMap { $0 }.reduce(Data(), +)
         guard let data else { return nil }
         func has(_ token: String) -> Bool { data.range(of: Data(token.utf8)) != nil }
-        var reasons: [String] = []
-        if has("/JavaScript") || has("/JS ") || has("/JS(") || has("/JS<") { reasons.append("JavaScript") }
-        if has("/Launch") { reasons.append("an action that launches a program") }
-        guard !reasons.isEmpty else { return nil }
-        let runsOnOpen = has("/OpenAction") || has("/AA")
-        return reasons.joined(separator: " and ") + (runsOnOpen ? " that runs when it opens" : "")
+        let javaScript = has("/JavaScript") || has("/JS ") || has("/JS(") || has("/JS<")
+        let launches = has("/Launch")
+        guard javaScript || launches else { return nil }
+        return ActivePDF(javaScript: javaScript, launches: launches, runsOnOpen: has("/OpenAction") || has("/AA"))
     }
 
     // MARK: Helpers

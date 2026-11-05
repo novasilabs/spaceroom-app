@@ -256,8 +256,9 @@ public struct HealthReport: Sendable, Hashable {
 
     public init(_ input: Inputs) {
         var factors: [Factor] = []
-        func add(_ area: Area, _ penalty: Int, _ summary: String, _ advice: String) {
-            factors.append(Factor(area: area, penalty: penalty, summary: summary, advice: advice))
+        func add(_ area: Area, _ penalty: Int, _ summary: String.LocalizationValue, _ advice: String.LocalizationValue) {
+            factors.append(Factor(area: area, penalty: penalty, summary: String(localized: summary, bundle: .module),
+                                  advice: String(localized: advice, bundle: .module)))
         }
         if let free = input.diskFreeFraction {
             let percent = Int((free * 100).rounded())
@@ -284,7 +285,7 @@ public struct HealthReport: Sendable, Hashable {
         default: break
         }
         if let health = input.batteryHealth, health < 0.8 {
-            add(.battery, 10, "Battery holds \(Int((health * 100).rounded()))% of its original charge", "Apple recommends a service below 80%.")
+            add(.battery, 10, "Battery holds \(Int((health * 100).rounded()))% of its original charge", "Apple recommends a battery service at this level.")
         }
         if let uptime = input.uptime, uptime > 14 * 86_400 {
             add(.uptime, 5, "Running for \(Int(uptime / 86_400)) days without a restart", "A restart applies updates and clears memory.")

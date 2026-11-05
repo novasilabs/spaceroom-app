@@ -58,7 +58,7 @@ struct SidebarView: View {
                 Button { app.isShowingOnboarding = true } label: {
                     HStack(spacing: 9) {
                         GlassGlyph(symbol: "lock.shield", tint: .hex(0xE0A93A), size: 22, isCompact: true)
-                        Text("Allow Full Disk Access").font(.system(size: 12, weight: .semibold))
+                        Text("Allow Full Disk Access").font(.system(size: 12, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.75)
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.textTertiary)

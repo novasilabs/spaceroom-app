@@ -99,48 +99,48 @@ public enum MaintenanceCatalog {
 
     public static let all: [MaintenanceTask] = [
         MaintenanceTask(
-            id: "quicklook", title: "Refresh Quick Look previews",
-            summary: "Resets Quick Look's preview plug-ins and thumbnail cache.",
-            helpsWhen: "Previews or Finder thumbnails are blank, wrong or slow.",
+            id: "quicklook", title: String(localized: "Refresh Quick Look previews", bundle: .module),
+            summary: String(localized: "Resets Quick Look's preview plug-ins and thumbnail cache.", bundle: .module),
+            helpsWhen: String(localized: "Previews or Finder thumbnails are blank, wrong or slow.", bundle: .module),
             symbol: "eye", commands: [Command("/usr/bin/qlmanage", ["-r"]), Command("/usr/bin/qlmanage", ["-r", "cache"])],
             requiresAdmin: false, requiresQuit: [], afterNote: nil, estimate: .seconds),
         MaintenanceTask(
-            id: "launchservices", title: "Rebuild the “Open With” list",
-            summary: "Re-registers your apps with Launch Services.",
-            helpsWhen: "“Open With” shows duplicates or old apps, or files open in the wrong app.",
+            id: "launchservices", title: String(localized: "Rebuild the “Open With” list", bundle: .module),
+            summary: String(localized: "Re-registers your apps with Launch Services.", bundle: .module),
+            helpsWhen: String(localized: "“Open With” shows duplicates or old apps, or files open in the wrong app.", bundle: .module),
             symbol: "arrow.up.forward.app",
             commands: [Command(lsregister, ["-r", "-domain", "local", "-domain", "system", "-domain", "user"], timeout: 300)],
             requiresAdmin: false, requiresQuit: [], afterNote: nil, estimate: .minute),
         MaintenanceTask(
-            id: "fonts", title: "Clear your font caches",
-            summary: "Removes your user font caches; macOS rebuilds them.",
-            helpsWhen: "Text renders oddly or fonts show as missing.",
+            id: "fonts", title: String(localized: "Clear your font caches", bundle: .module),
+            summary: String(localized: "Removes your user font caches; macOS rebuilds them.", bundle: .module),
+            helpsWhen: String(localized: "Text renders oddly or fonts show as missing.", bundle: .module),
             symbol: "textformat", commands: [Command("/usr/bin/atsutil", ["databases", "-removeUser"])],
-            requiresAdmin: false, requiresQuit: [], afterNote: "Restart your apps (or log out) to finish.", estimate: .seconds),
+            requiresAdmin: false, requiresQuit: [], afterNote: String(localized: "Restart your apps (or log out) to finish.", bundle: .module), estimate: .seconds),
         MaintenanceTask(
-            id: "verifydisk", title: "Check the startup disk",
-            summary: "Verifies the startup disk's file system without changing anything.",
-            helpsWhen: "Your Mac crashes, files misbehave, or before a big update.",
+            id: "verifydisk", title: String(localized: "Check the startup disk", bundle: .module),
+            summary: String(localized: "Verifies the startup disk's file system without changing anything.", bundle: .module),
+            helpsWhen: String(localized: "Your Mac crashes, files misbehave, or before a big update.", bundle: .module),
             symbol: "internaldrive", commands: [Command("/usr/sbin/diskutil", ["verifyVolume", "/"], timeout: 900)],
             requiresAdmin: false, requiresQuit: [], afterNote: nil, estimate: .minute),
         MaintenanceTask(
-            id: "dns", title: "Flush the DNS cache",
-            summary: "Forgets cached website addresses.",
-            helpsWhen: "A website won't load after it moved, or after changing networks.",
+            id: "dns", title: String(localized: "Flush the DNS cache", bundle: .module),
+            summary: String(localized: "Forgets cached website addresses.", bundle: .module),
+            helpsWhen: String(localized: "A website won't load after it moved, or after changing networks.", bundle: .module),
             symbol: "network", commands: [Command("/usr/bin/dscacheutil", ["-flushcache"]), Command("/usr/bin/killall", ["-HUP", "mDNSResponder"])],
             requiresAdmin: true, requiresQuit: [], afterNote: nil, estimate: .seconds),
         MaintenanceTask(
-            id: "spotlight", title: "Rebuild the Spotlight index",
-            summary: "Erases and rebuilds the search index of the startup disk.",
-            helpsWhen: "Spotlight can't find files you know are there.",
+            id: "spotlight", title: String(localized: "Rebuild the Spotlight index", bundle: .module),
+            summary: String(localized: "Erases and rebuilds the search index of the startup disk.", bundle: .module),
+            helpsWhen: String(localized: "Spotlight can't find files you know are there.", bundle: .module),
             symbol: "magnifyingglass", commands: [Command("/usr/bin/mdutil", ["-E", "/"])],
-            requiresAdmin: true, requiresQuit: [], afterNote: "Indexing continues in the background for a while.", estimate: .minutes),
+            requiresAdmin: true, requiresQuit: [], afterNote: String(localized: "Indexing continues in the background for a while.", bundle: .module), estimate: .minutes),
         MaintenanceTask(
-            id: "purge", title: "Free up memory",
-            summary: "Clears inactive memory macOS is holding on to.",
-            helpsWhen: "Rarely needed: macOS manages memory well. Try it only if apps stall under memory pressure.",
+            id: "purge", title: String(localized: "Free up memory", bundle: .module),
+            summary: String(localized: "Clears inactive memory macOS is holding on to.", bundle: .module),
+            helpsWhen: String(localized: "Rarely needed: macOS manages memory well. Try it only if apps stall under memory pressure.", bundle: .module),
             symbol: "memorychip", commands: [Command("/usr/sbin/purge")],
-            requiresAdmin: true, requiresQuit: [], afterNote: "The effect is temporary.", estimate: .seconds),
+            requiresAdmin: true, requiresQuit: [], afterNote: String(localized: "The effect is temporary.", bundle: .module), estimate: .seconds),
     ]
 }
 
@@ -174,8 +174,8 @@ public struct MaintenanceRunner: Sendable {
         if let app = task.requiresQuit.first(where: runningBundleIDs.contains) { return .skipped(.appRunning(app)) }
         for command in task.commands {
             guard let result = runner.run(command) else { return .skipped(.unavailable) }
-            if result.timedOut { return .failed("Stopped after \(Int(command.timeout)) seconds") }
-            if result.status != 0 { return .failed(Self.lastLine(of: result.output) ?? "Exit code \(result.status)") }
+            if result.timedOut { return .failed(String(localized: "Stopped after \(Int(command.timeout)) seconds", bundle: .module)) }
+            if result.status != 0 { return .failed(Self.lastLine(of: result.output) ?? String(localized: "Exit code \(Int(result.status))", bundle: .module)) }
         }
         return .done(note: task.afterNote)
     }

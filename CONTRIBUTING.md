@@ -58,6 +58,23 @@ PRs that touch `CleanupEngine`, `SafetyGuard`, `RestoreStore`, or rule files nee
 - Include screenshots for UI changes.
 - CI must be green: core tests and the app build.
 
+## Translations
+
+Spaceroom ships in English and Bahasa Indonesia (`id`).
+
+- **App text** lives in `App/Spaceroom/Resources/Localizable.xcstrings`. Use `Text("…")`, `String(localized: "…")` or `LocalizedStringResource` — never a plain `String` literal for anything users read. After adding strings, build once, then pull them into the catalog:
+
+  ```bash
+  xcrun xcstringstool sync App/Spaceroom/Resources/Localizable.xcstrings \
+    $(find build/DerivedData/Build/Intermediates.noindex/Spaceroom.build/Debug -name '*.stringsdata' \
+      | grep -v -e DebugSnapshots -e DesignTuningPanel | sed 's/^/--stringsdata /')
+  ```
+
+  and add the Indonesian value for each new key (keep every `%@`/`%lld` in the same order).
+- **Engine text** (maintenance tasks, health advice, Protection evidence, errors) uses `String(localized: "…", bundle: .module)` in SpaceroomCore; Indonesian goes in `Packages/SpaceroomCore/Sources/SpaceroomCore/Resources/Localization/id.lproj/Localizable.strings`.
+- **Cleaning rules** are data: their title, `why_safe` and `rebuild_hint` are translated in `…/id.lproj/Rules.strings`, keyed by the English text. A new rule needs its three lines there too.
+- Check a language without changing your Mac: append `-AppleLanguages '(id)' -AppleLocale id_ID` to the snapshot tour command below. Users pick the app's language in System Settings › General › Language & Region › Applications.
+
 ## UI snapshot tour (Debug builds)
 
 To check the main screens without clicking through them by hand:

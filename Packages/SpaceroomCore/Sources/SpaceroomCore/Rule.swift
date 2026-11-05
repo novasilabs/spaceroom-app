@@ -106,3 +106,15 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         sourceRef = try c.decodeIfPresent(String.self, forKey: .sourceRef)
     }
 }
+
+extension Rule {
+    /// Title, explanation and rebuild hint in the user's language. Rules are data, so their
+    /// translations live in the `Rules` table, keyed by the English text.
+    public var localizedTitle: String { Self.translate(title) }
+    public var localizedWhySafe: String { Self.translate(whySafe) }
+    public var localizedRebuildHint: String? { rebuildHint.map(Self.translate) }
+
+    static func translate(_ english: String) -> String {
+        Bundle.module.localizedString(forKey: english, value: english, table: "Rules")
+    }
+}

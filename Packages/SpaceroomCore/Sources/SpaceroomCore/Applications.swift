@@ -238,8 +238,8 @@ public enum UninstallError: Error, Equatable, CustomStringConvertible, Localized
 
     public var description: String {
         switch self {
-        case .protectedApp(let name): "\(name) is part of macOS and can't be removed."
-        case .appIsRunning(let name): "Quit \(name) before uninstalling it."
+        case .protectedApp(let name): String(localized: "\(name) is part of macOS and can't be removed.", bundle: .module)
+        case .appIsRunning(let name): String(localized: "Quit \(name) before uninstalling it.", bundle: .module)
         }
     }
 

@@ -106,7 +106,7 @@ struct PrivacyView: View {
         HStack(spacing: 12) {
             GlassGlyph(symbol: "lock.shield", tint: .hex(0xE0A93A), size: 34, isCompact: true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(model.lockedOwners.joined(separator: " and ")) need Full Disk Access").font(.system(size: 13, weight: .semibold))
+                Text("\(model.lockedOwners.formatted(.list(type: .and))) need Full Disk Access").font(.system(size: 13, weight: .semibold))
                 Text("macOS protects this data until you allow it.").font(.caption).foregroundStyle(.textTertiary)
             }
             Spacer()
@@ -180,7 +180,7 @@ private struct OwnerCard: View {
                 }
                 Spacer()
                 if running {
-                    Label("Open", systemImage: "exclamationmark.circle").font(.caption.weight(.semibold)).foregroundStyle(.yellow)
+                    Label("Still open", systemImage: "exclamationmark.circle").font(.caption.weight(.semibold)).foregroundStyle(.yellow)
                     Button("Quit \(owner.name)") { model.quit(owner) }.buttonStyle(GhostButtonStyle())
                 }
             }
@@ -302,7 +302,7 @@ private struct PermissionRow: View {
                         .help(PrivacyModel.clientName(grant.client))
                     }
                 }
-                Text(grants.count == 1 ? PrivacyModel.clientName(grants[0].client) : "\(grants.count) apps")
+                Text(grants.count == 1 ? PrivacyModel.clientName(grants[0].client) : String(localized: "\(grants.count) apps"))
                     .font(.caption).foregroundStyle(.textSecondary).lineLimit(1)
             }
             Spacer()

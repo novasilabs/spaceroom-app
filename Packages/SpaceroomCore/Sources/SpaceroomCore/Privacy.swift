@@ -99,7 +99,7 @@ public enum PrivacyScanner {
         }
         let recents = library.appendingPathComponent("Application Support/com.apple.sharedfilelist")
         if FileStat.exists(recents) {
-            if let item = recentItems(recents) { items.append(item) } else if !readable(recents) { locked.append("Recent items") }
+            if let item = recentItems(recents) { items.append(item) } else if !readable(recents) { locked.append(String(localized: "Recent items", bundle: .module)) }
         }
         return PrivacyScanResult(items: items, lockedOwners: locked)
     }
@@ -171,7 +171,7 @@ public enum PrivacyError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .browserRunning(let name): "Quit \(name) first: clearing a browser's data while it's open can damage it."
+        case .browserRunning(let name): String(localized: "Quit \(name) first: clearing a browser's data while it's open can damage it.", bundle: .module)
         }
     }
 }

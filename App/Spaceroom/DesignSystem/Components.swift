@@ -156,6 +156,8 @@ struct Pill: View {
     var body: some View {
         text
             .font(.system(size: 11, weight: .semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(Capsule().fill(tint.opacity(0.18)))
