@@ -40,6 +40,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var startup = StartupModel(app: self)
     @ObservationIgnored private(set) lazy var performance = PerformanceModel()
     @ObservationIgnored private(set) lazy var privacy = PrivacyModel(app: self)
+    @ObservationIgnored private(set) lazy var automations = AutomationsModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 
@@ -81,6 +82,10 @@ final class AppModel {
         }
         refreshFullDiskAccess()
         isShowingOnboarding = !hasCompletedOnboarding
+        // Debug tooling (snapshot tour, icon export) must never run automations on the real Mac.
+        let environment = ProcessInfo.processInfo.environment
+        let isTooling = environment["SPACEROOM_SNAPSHOT_DIR"] != nil || environment["SPACEROOM_EXPORT_ICON"] != nil
+        automations.start(schedules: !isTooling)
     }
 
     /// Why cleaning is disabled, if it is.

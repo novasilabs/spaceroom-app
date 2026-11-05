@@ -117,13 +117,8 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
     }
 
     /// Milestone that delivers a module not built yet (PRD §11).
-    var plannedMilestone: LocalizedStringResource? {
-        switch self {
-        case .smartCare, .cleanup, .devCleanup, .clutter, .spaceLens, .status, .applications, .startup, .performance, .privacy, .restoreCenter: nil
-
-        case .automations: "Coming in v1.0"
-        }
-    }
+    /// Every module is built; a new one returns its milestone here until it ships.
+    var plannedMilestone: LocalizedStringResource? { nil }
 
     var isAvailable: Bool { plannedMilestone == nil }
 

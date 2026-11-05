@@ -139,8 +139,12 @@ enum DebugSnapshots {
         await captureTall(PrivacyView(model: app.privacy).environment(app), name: "24b-privacy-full", in: directory)
 
         app.selection = .automations
-        await pause(1.0)
-        capture("08-placeholder", in: directory)
+        await waitUntil(timeout: 10) { app.automations.hasLoaded }
+        await pause(1.2)
+        capture("25-automations", in: directory)
+        await captureTall(AutomationEditor(original: AutomationsModel.templates[1], isNew: true, retentionDays: app.retentionDays,
+                                           onSave: { _ in }, onCancel: {}),
+                          name: "25b-automation-editor", in: directory, height: 760, width: 500)
 
         NSApp.terminate(nil)
     }
@@ -266,9 +270,10 @@ enum DebugSnapshots {
     }
 
     /// Renders a scrolling screen in a tall offscreen window so the part below the fold can be checked too.
-    private static func captureTall(_ view: some View, name: String, in directory: URL) async {
+    private static func captureTall(_ view: some View, name: String, in directory: URL,
+                                    height: CGFloat = 1900, width: CGFloat = 760) async {
         let host = NSHostingView(rootView: view.background(Color.hex(0x2B4A5C)).preferredColorScheme(.dark))
-        let window = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 760, height: 1900),
+        let window = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: width, height: height),
                               styleMask: [.borderless], backing: .buffered, defer: false)
         window.contentView = host
         window.orderFrontRegardless()
