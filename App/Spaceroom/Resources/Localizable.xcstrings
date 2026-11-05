@@ -1209,6 +1209,16 @@
         }
       }
     },
+    "Apps, startup items, malware, speed and privacy": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplikasi, item startup, malware, kecepatan, dan privasi"
+          }
+        }
+      }
+    },
     "At login": {
       "localizations": {
         "id": {
@@ -1225,6 +1235,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Otomatisasi"
+          }
+        }
+      }
+    },
+    "Automations can keep your Mac tidy on a schedule.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatisasi bisa menjaga Mac tetap rapi sesuai jadwal."
           }
         }
       }
@@ -1349,6 +1369,16 @@
         }
       }
     },
+    "CPU usage": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pemakaian CPU"
+          }
+        }
+      }
+    },
     "Caches": {
       "localizations": {
         "id": {
@@ -1405,6 +1435,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Berubah sejak pemindaian"
+          }
+        }
+      }
+    },
+    "Changed your mind? The Restore Center brings it back.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berubah pikiran? Pusat Pemulihan mengembalikannya."
           }
         }
       }
@@ -2487,6 +2527,16 @@
         }
       }
     },
+    "Explore on My Own": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelajahi Sendiri"
+          }
+        }
+      }
+    },
     "FileVault": {
       "localizations": {
         "id": {
@@ -2593,6 +2643,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gratis dan open source. Terinspirasi oleh Mole (tw93/mole). Tidak berafiliasi dengan Apple atau MacPaw."
+          }
+        }
+      }
+    },
+    "Free space": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruang kosong"
           }
         }
       }
@@ -3063,6 +3123,16 @@
         }
       }
     },
+    "Keep running after the window closes": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tetap berjalan setelah jendela ditutup"
+          }
+        }
+      }
+    },
     "Keep running in the menu bar when the window is closed": {
       "localizations": {
         "id": {
@@ -3145,6 +3215,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terakhir jalan %@ · %@"
+          }
+        }
+      }
+    },
+    "Later": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nanti"
           }
         }
       }
@@ -3406,6 +3486,16 @@
         }
       }
     },
+    "Memory usage": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pemakaian memori"
+          }
+        }
+      }
+    },
     "Menu Bar": {
       "localizations": {
         "id": {
@@ -3652,6 +3742,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Belum pernah dijalankan"
+          }
+        }
+      }
+    },
+    "Never touch what matters": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jangan sentuh yang penting"
           }
         }
       }
@@ -4076,6 +4176,16 @@
         }
       }
     },
+    "One item with the readings you pick. Click it for storage, quick cleans and your Mac's health.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satu ikon dengan informasi yang Anda pilih. Klik untuk melihat penyimpanan, pembersihan cepat, dan kesehatan Mac."
+          }
+        }
+      }
+    },
     "Only DerivedData of projects you haven't built for that long. Xcode rebuilds it when needed.": {
       "localizations": {
         "id": {
@@ -4352,6 +4462,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tercolok"
+          }
+        }
+      }
+    },
+    "Press ⌘K to find any screen or run any action.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekan ⌘K untuk membuka layar mana pun atau menjalankan tindakan apa pun."
           }
         }
       }
@@ -4832,12 +4952,32 @@
         }
       }
     },
+    "Review first": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinjau dulu"
+          }
+        }
+      }
+    },
     "Review in %@": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
             "value": "Tinjau di %@"
+          }
+        }
+      }
+    },
+    "Right-click anything and choose Always Ignore. Ignored items are never cleaned.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klik kanan apa saja lalu pilih Selalu Abaikan. Item yang diabaikan tidak pernah dibersihkan."
           }
         }
       }
@@ -5018,6 +5158,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "SIP"
+          }
+        }
+      }
+    },
+    "Safe by design": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aman sejak awal"
           }
         }
       }
@@ -5228,16 +5378,6 @@
         }
       }
     },
-    "See everything": {
-      "localizations": {
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lihat semuanya"
-          }
-        }
-      }
-    },
     "See what's taking up your disk, at a glance.": {
       "localizations": {
         "id": {
@@ -5358,6 +5498,26 @@
         }
       }
     },
+    "Show Welcome Tour": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan Tur Selamat Datang"
+          }
+        }
+      }
+    },
+    "Show Welcome Tour Again": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan Lagi Tur Selamat Datang"
+          }
+        }
+      }
+    },
     "Show in Finder": {
       "localizations": {
         "id": {
@@ -5448,6 +5608,16 @@
         }
       }
     },
+    "Skip Tour": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lewati Tur"
+          }
+        }
+      }
+    },
     "Skipped: needs admin rights": {
       "localizations": {
         "id": {
@@ -5494,6 +5664,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Smart Care"
+          }
+        }
+      }
+    },
+    "Smart Care checks everything safe to clean in one go. Nothing is removed until you press Clean.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Care memeriksa semua yang aman dibersihkan sekaligus. Tidak ada yang dihapus sampai Anda menekan Bersihkan."
           }
         }
       }
@@ -5628,6 +5808,16 @@
         }
       }
     },
+    "Spaceroom in your menu bar": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom di bar menu Anda"
+          }
+        }
+      }
+    },
     "Spaceroom looks for data of apps that are no longer installed and haven't been touched for 30 days.": {
       "localizations": {
         "id": {
@@ -5644,6 +5834,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spaceroom tidak pernah membersihkan, menghapus instalan, atau memindahkan apa pun di sini, dan pemindaian menampilkannya sebagai Diabaikan. Folder melindungi semua isinya."
+          }
+        }
+      }
+    },
+    "Spaceroom only removes what it can explain, and everything can come back.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom hanya menghapus yang bisa dijelaskan, dan semuanya bisa dikembalikan."
           }
         }
       }
@@ -5668,22 +5868,28 @@
         }
       }
     },
-    "Start Using Spaceroom": {
-      "localizations": {
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mulai Pakai Spaceroom"
-          }
-        }
-      }
-    },
     "Startup & Background": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
             "value": "Startup & Latar Belakang"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langkah %lld dari %lld"
           }
         }
       }
@@ -5784,6 +5990,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status Sistem"
+          }
+        }
+      }
+    },
+    "System and developer junk, and your forgotten files": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sampah sistem dan developer, serta file yang terlupakan"
           }
         }
       }
@@ -6405,6 +6621,26 @@
         }
       }
     },
+    "What Spaceroom does and how it keeps you safe": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apa yang dilakukan Spaceroom dan cara menjaga Anda tetap aman"
+          }
+        }
+      }
+    },
+    "What fills your disk and how your Mac is doing": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apa yang memenuhi disk dan bagaimana kondisi Mac Anda"
+          }
+        }
+      }
+    },
     "What the scan looks for": {
       "localizations": {
         "id": {
@@ -6555,6 +6791,16 @@
         }
       }
     },
+    "You can do this later: locked places are marked, and the rest works without it.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisa dilakukan nanti: lokasi yang terkunci ditandai, dan sisanya tetap berfungsi tanpanya."
+          }
+        }
+      }
+    },
     "You won't be able to restore them": {
       "localizations": {
         "id": {
@@ -6571,6 +6817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anda akan logout dari website"
+          }
+        }
+      }
+    },
+    "You're all set": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semuanya siap"
           }
         }
       }

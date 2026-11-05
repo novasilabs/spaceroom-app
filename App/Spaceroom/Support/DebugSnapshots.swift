@@ -27,8 +27,14 @@ enum DebugSnapshots {
         app.isShowingOnboarding = true
         await pause(1.2)
         capture("01-onboarding", in: directory, sheet: true)
-
         app.isShowingOnboarding = false
+
+        for step in OnboardingView.Step.allCases {
+            await captureTall(OnboardingView(initialStep: step).environment(app).environment(menuBar),
+                              name: "01\(["a", "b", "c", "d", "e"][step.rawValue])-onboarding-\(step)", in: directory,
+                              height: 620, width: 680)
+        }
+
         app.selection = .smartCare
         await pause(1.2)
         capture("02a-smartcare-intro", in: directory)

@@ -173,6 +173,13 @@ final class CommandPaletteModel {
                 app.selection = .spaceLens
                 if app.spaceLens.phase == .intro { app.spaceLens.start() }
             },
+            PaletteCommand(id: "action.tour", title: String(localized: "Show Welcome Tour"),
+                           subtitle: String(localized: "What Spaceroom does and how it keeps you safe"),
+                           symbol: "hand.wave", tint: SidebarModule.smartCare.palette.accent,
+                           keywords: ["onboarding", "welcome", "help", "tour"], kind: .action) { [app] in
+                app.hasCompletedOnboarding = false
+                app.isShowingOnboarding = true
+            },
             PaletteCommand(id: "action.settings", title: String(localized: "Settings…"),
                            symbol: "gearshape", tint: .hex(0x8E8E98),
                            keywords: ["preferences", "retention", "menu bar"], kind: .action, shortcut: "⌘,") { [weak self] in

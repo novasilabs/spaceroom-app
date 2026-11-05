@@ -71,6 +71,11 @@ struct SettingsView: View {
             }
 
             Section("About") {
+                Button("Show Welcome Tour Again") {
+                    app.hasCompletedOnboarding = false
+                    app.isShowingOnboarding = true
+                    AppDelegate.showMainWindow()
+                }
                 LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
                 LabeledContent("License", value: "GPL-3.0-or-later")
                 Text("Free and open source. Inspired by Mole (tw93/mole). Not affiliated with Apple or MacPaw.")
