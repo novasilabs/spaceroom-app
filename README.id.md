@@ -47,7 +47,7 @@
   - **Pembersihan** dan **Pembersihan Dev:** cache, log, Xcode, simulator, dan cache package manager. Tool yang sedang berjalan dilewati.
   - **File Berantakan:** file besar dan lama, duplikat yang dipastikan dari isinya, dan installer yang sudah tidak diperlukan.
 - **Pahami**
-  - **Space Lens:** peta sunburst interaktif dari folder atau disk mana pun.
+  - **Space Lens:** peta sunburst interaktif dari folder atau disk mana pun. Centang item lalu pilih *Tinjau dan Hapus*, dan item akan masuk ke Pusat Pemulihan.
   - **Status Sistem:** skor kesehatan; CPU, memori, jaringan, disk, dan baterai secara langsung; dan proses tersibuk.
 - **Kelola**
   - **Aplikasi:** hapus instalan sampai bersih, termasuk sisanya.
@@ -103,7 +103,7 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 - Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
 - CLI `spaceroom`
 - Bahasa aplikasi yang tidak dipakai, lampiran Mail, folder build per proyek, Docker
-- Foto yang mirip, hapus dari peta di Space Lens, dan riwayat pertumbuhan storage
+- Foto yang mirip, tampilan treemap di Space Lens, dan riwayat pertumbuhan storage
 - Pembaru aplikasi dan "slim apps"
 
 Rencana lengkap ada di [docs/PRD.md](docs/PRD.md), dan riwayat rilis di [CHANGELOG.md](CHANGELOG.md).

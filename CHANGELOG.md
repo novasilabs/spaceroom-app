@@ -6,6 +6,12 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Space Lens:** tick files and folders in the list and choose *Review and Remove*. They go to the Restore Center like every other clean, and Undo puts the map back. Only items in your home folder can be removed. Its top-level folders, the folders directly inside `~/Library`, Keychains and Spaceroom's own data stay locked, with the reason shown.
+
+### Fixed
+- **Space Lens:** a fast double-click could open the same folder twice ("Library › Library"), and clicking an outer ring skipped the folders in between in the breadcrumb.
+
 ## [0.9.0] - 2026-11-05
 
 First public beta. Ad-hoc signed and not yet notarized (see the README for the

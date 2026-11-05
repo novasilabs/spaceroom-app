@@ -43,7 +43,7 @@ against sandboxed fake home folders (`Tests/SpaceroomCoreTests/TestSupport.swift
    the user chooses *Delete Now*. Deleting makes read-only trees writable first and falls
    back to the Trash for app bundles protected by App Management.
 
-Every other module that removes files (My Clutter, Applications, Privacy, Protection,
+Every other module that removes files (My Clutter, Space Lens, Applications, Privacy, Protection,
 Startup, Automations, the menu bar and the command palette) has its own remover with its
 own re-checks, but **all of them end in `RestoreStore.quarantine`**.
 

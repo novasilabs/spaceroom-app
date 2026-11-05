@@ -121,7 +121,7 @@ public actor RestoreStore {
         case unavailable(String)
     }
 
-    public let directory: URL
+    public nonisolated let directory: URL
     private var records: [OperationRecord]
     private var ignoreGate: IgnoreGate
     private let fileManager = FileManager.default

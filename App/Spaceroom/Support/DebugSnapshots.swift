@@ -98,6 +98,15 @@ enum DebugSnapshots {
             await pause(1.0)
             capture("13-spacelens-drilled", in: directory)
         }
+        // Ticks a couple of items to show the selection bar. Nothing is removed.
+        for node in (lens.current?.children ?? []).filter({ lens.verdict(for: $0) == .allowed }).prefix(2) {
+            lens.toggle(node)
+        }
+        if !lens.selection.isEmpty {
+            await pause(1.0)
+            capture("13b-spacelens-selected", in: directory)
+            lens.clearSelection()
+        }
 
         app.selection = .applications
         let apps = app.applications

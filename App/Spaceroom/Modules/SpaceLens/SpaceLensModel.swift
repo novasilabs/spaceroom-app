@@ -38,6 +38,13 @@ final class SpaceLensModel {
     private(set) var path: [DiskNode] = []
     var hoveredID: String?
 
+    /// Items ticked for removal, by path. Kept while drilling around, like a shopping basket.
+    private(set) var selection: [String: DiskNode] = [:]
+    private(set) var isRemoving = false
+    private(set) var lastResult: (message: String, operationID: UUID?)?
+    /// The map before the last removal, so Undo can put it back without a rescan.
+    @ObservationIgnored private var rootBeforeRemoval: DiskNode?
+
     private var scanTask: Task<Void, Never>?
     private var scannedTarget: Target?
     // Progress arrives thousands of times a minute; publish it at most 4× a second.
@@ -99,6 +106,9 @@ final class SpaceLensModel {
         root = nil
         path = []
         hoveredID = nil
+        selection = [:]
+        lastResult = nil
+        rootBeforeRemoval = nil
         scanDuration = nil
         scanStarted = .now
         withAnimation(Motion.phaseChange) { phase = .scanning }
@@ -175,10 +185,27 @@ final class SpaceLensModel {
 
     var displayName: String { scannedTarget?.name ?? "" }
 
+    /// Opens `node` when it's inside the folder on screen. Clicking an outer ring adds the
+    /// folders in between, so the breadcrumb stays a real path. A tap on the chart that is
+    /// still animating out (a fast double-click) names a folder that isn't inside the current one
+    /// any more and is ignored, instead of opening the same folder twice.
     func drill(into node: DiskNode) {
-        guard node.kind == .folder, !node.children.isEmpty else { return }
+        guard node.isContainer, let current, let chain = Self.chain(from: current, to: node) else { return }
         hoveredID = nil
-        path.append(node)
+        path.append(contentsOf: chain)
+    }
+
+    /// The folders below `folder` down to and including `target`, or nil when `target` isn't
+    /// inside `folder`. Only follows children whose path contains the target's, so a miss costs
+    /// one level of children rather than a walk of the whole tree.
+    static func chain(from folder: DiskNode, to target: DiskNode) -> [DiskNode]? {
+        for child in folder.children {
+            if child.id == target.id { return [child] }
+            let prefix = child.path.hasSuffix("/") ? child.path : child.path + "/"
+            guard child.isContainer, target.path.hasPrefix(prefix) else { continue }
+            if let rest = chain(from: child, to: target) { return [child] + rest }
+        }
+        return nil
     }
 
     func goUp() {
@@ -208,5 +235,101 @@ final class SpaceLensModel {
     func copyPath(_ node: DiskNode) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(node.path, forType: .string)
+    }
+
+    // MARK: Selection and removal
+
+    private var policy: LensRemovalPolicy? {
+        app.store.map { LensRemovalPolicy(ownData: $0.directory) }
+    }
+
+    /// Whether `node` can be ticked. Only finished scans can remove anything.
+    func verdict(for node: DiskNode) -> LensVerdict {
+        guard let policy else { return .spaceroomData }
+        return policy.verdict(for: node)
+    }
+
+    var canSelect: Bool { phase == .results && app.cleaningBlockedReason == nil && !isRemoving }
+
+    func isSelected(_ node: DiskNode) -> Bool { selection[node.path] != nil }
+
+    /// Ticked because a folder above it is ticked (removing the folder takes it along).
+    func isCoveredBySelection(_ node: DiskNode) -> Bool {
+        selection.keys.contains { node.path.hasPrefix($0 + "/") }
+    }
+
+    func toggle(_ node: DiskNode) {
+        guard canSelect, verdict(for: node) == .allowed, !isCoveredBySelection(node) else { return }
+        if selection.removeValue(forKey: node.path) == nil {
+            // Ticking a folder replaces anything already ticked inside it.
+            for key in selection.keys where key.hasPrefix(node.path + "/") { selection.removeValue(forKey: key) }
+            selection[node.path] = node
+        }
+    }
+
+    func clearSelection() { selection = [:] }
+
+    var selectedNodes: [DiskNode] { selection.values.sorted { $0.size > $1.size } }
+    var selectedSize: Int64 { selection.values.reduce(0) { $0 + $1.size } }
+
+    func removeSelected() {
+        guard let store = app.store, let root, canSelect else { return }
+        let nodes = selectedNodes
+        guard !nodes.isEmpty else { return }
+        isRemoving = true
+        Task {
+            do {
+                let outcome = try await LensRemover(store: store).remove(nodes)
+                await app.refreshOperations()
+                if let operation = outcome.operation {
+                    // The store records canonical paths; map them back to the paths on the map.
+                    let moved = Set(operation.items.map(\.originalPath))
+                    let removedPaths = Set(nodes.map(\.path).filter {
+                        moved.contains(LensRemovalPolicy.canonical(URL(fileURLWithPath: $0)))
+                    })
+                    rootBeforeRemoval = root
+                    apply(root.removing(paths: removedPaths))
+                    for path in removedPaths { selection.removeValue(forKey: path) }
+                    var message = String(localized: "Moved \(operation.totalSize.bytesText) to the Restore Center")
+                    if !outcome.skipped.isEmpty { message += " " + String(localized: "(\(outcome.skipped.count) skipped)") }
+                    lastResult = (message, operation.id)
+                } else if let first = outcome.skipped.first {
+                    lastResult = (String(localized: "Nothing was removed: \(first.reason.text)"), nil)
+                }
+            } catch {
+                app.show(String(localized: "Couldn't remove files"), error)
+            }
+            isRemoving = false
+        }
+    }
+
+    func undoLast() {
+        guard let id = lastResult?.operationID else { return }
+        Task {
+            if await app.restoreAll(id) {
+                if let before = rootBeforeRemoval { apply(before) }
+                rootBeforeRemoval = nil
+                lastResult = (String(localized: "Restored. Everything is back."), nil)
+            }
+        }
+    }
+
+    func dismissResult() { lastResult = nil }
+
+    /// Swaps in an updated tree and keeps the user in the same folder (or the nearest one that
+    /// still exists).
+    private func apply(_ newRoot: DiskNode) {
+        var newPath: [DiskNode] = []
+        var parent = newRoot
+        for old in path {
+            guard let match = parent.children.first(where: { $0.id == old.id }), match.isContainer else { break }
+            newPath.append(match)
+            parent = match
+        }
+        hoveredID = nil
+        withAnimation(Easing.out(0.22)) {
+            root = newRoot
+            path = newPath
+        }
     }
 }

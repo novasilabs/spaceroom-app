@@ -7,6 +7,7 @@ import SwiftUI
 struct SpaceLensView: View {
     @Bindable var model: SpaceLensModel
     @Environment(AppModel.self) private var app
+    @State private var isConfirming = false
 
     private let module = SidebarModule.spaceLens
 
@@ -65,6 +66,9 @@ struct SpaceLensView: View {
                 .padding(.horizontal, 28)
                 .padding(.top, 40)
                 .padding(.bottom, 14)
+            if let result = model.lastResult {
+                resultBanner(result).padding(.horizontal, 28).padding(.bottom, 12).transition(.opacity)
+            }
             if let current = model.current {
                 HStack(alignment: .top, spacing: 20) {
                     SunburstChart(node: current, title: model.path.isEmpty ? model.displayName : nil,
@@ -77,7 +81,12 @@ struct SpaceLensView: View {
                         .frame(minWidth: 320, maxWidth: 420)
                 }
                 .padding(.horizontal, 28)
-                .padding(.bottom, 24)
+                .padding(.bottom, model.selection.isEmpty ? 24 : 12)
+                if !model.selection.isEmpty {
+                    selectionBar
+                        .padding(.horizontal, 28).padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             } else {
                 Spacer()
                 VStack(spacing: 10) {
@@ -87,6 +96,62 @@ struct SpaceLensView: View {
                 Spacer()
             }
         }
+        .animation(Motion.hover, value: model.selection.isEmpty)
+        .animation(Motion.hover, value: model.lastResult?.message)
+    }
+
+    private var selectionBar: some View {
+        HStack(spacing: 12) {
+            Text("\(model.selection.count) selected · \(model.selectedSize.bytesText)")
+                .font(.callout.weight(.medium)).monospacedDigit()
+            Button("Deselect All") { withAnimation(Motion.hover) { model.clearSelection() } }
+                .buttonStyle(.plain)
+                .font(.callout)
+                .foregroundStyle(.textSecondary)
+            Spacer()
+            Button("Review and Remove") { isConfirming = true }
+                .buttonStyle(FilledButtonStyle(tint: .hex(0xFF5A6E)))
+                .disabled(model.isRemoving || !model.canSelect)
+        }
+        .padding(.leading, 18).padding(.trailing, 10).padding(.vertical, 10)
+        .glassSurface(cornerRadius: 20)
+        .sheet(isPresented: $isConfirming) {
+            let nodes = model.selectedNodes
+            ConfirmSheet(
+                symbol: "trash",
+                title: nodes.count == 1
+                    ? String(localized: "Remove \(nodes[0].name)?")
+                    : String(localized: "Remove \(nodes.count) items?"),
+                message: String(localized: "They move to the Restore Center first, so you can put them back for \(app.retentionDays) days."),
+                details: nodes.prefix(3).map {
+                    .init(symbol: $0.kind == .folder ? "folder" : "doc", text: "\($0.name) · \($0.size.bytesText)")
+                } + (nodes.count > 3
+                    ? [.init(symbol: "ellipsis.circle", text: String(localized: "and \(nodes.count - 3) more · \(model.selectedSize.bytesText) in total"))]
+                    : []),
+                confirmTitle: String(localized: "Remove"),
+                onConfirm: {
+                    isConfirming = false
+                    model.removeSelected()
+                },
+                onCancel: { isConfirming = false })
+        }
+    }
+
+    private func resultBanner(_ result: (message: String, operationID: UUID?)) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            Text(result.message).font(.callout.weight(.medium))
+            Spacer()
+            if result.operationID != nil {
+                Button { model.undoLast() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
+                    .buttonStyle(GhostButtonStyle())
+            }
+            Button { model.dismissResult() } label: { Image(systemName: "xmark") }
+                .buttonStyle(.plain).foregroundStyle(.textSecondary)
+                .accessibilityLabel(Text("Dismiss"))
+        }
+        .padding(.leading, 14).padding(.trailing, 10).padding(.vertical, 8)
+        .glassSurface(cornerRadius: 18, wash: .hex(0x4FCB98))
     }
 
     private var header: some View {
@@ -218,7 +283,8 @@ private struct FolderList: View {
                 LazyVStack(spacing: 2) {
                     ForEach(Array(folder.children.enumerated()), id: \.element.id) { index, child in
                         Row(node: child, parentSize: folder.size, family: index,
-                            isHovered: model.hoveredID == child.id) {
+                            isHovered: model.hoveredID == child.id, tick: tick(for: child),
+                            toggle: { model.toggle(child) }) {
                             withAnimation(Easing.out(0.22)) { model.drill(into: child) }
                         }
                         .onHover { inside in
@@ -228,6 +294,11 @@ private struct FolderList: View {
                             if case .other = child.kind {} else {
                                 Button("Show in Finder") { model.reveal(child) }
                                 Button("Copy Path") { model.copyPath(child) }
+                                if case .unchecked = tick(for: child) {
+                                    Button("Select for Removal", systemImage: "checkmark.square") { model.toggle(child) }
+                                } else if case .checked = tick(for: child) {
+                                    Button("Deselect", systemImage: "square") { model.toggle(child) }
+                                }
                                 Divider()
                                 Button("Always Ignore", systemImage: "eye.slash") { app.ignore(.path(child.url)) }
                             }
@@ -238,6 +309,22 @@ private struct FolderList: View {
             }
         }
         .glassSurface(cornerRadius: 20)
+    }
+
+    private func tick(for node: DiskNode) -> Row.Tick {
+        guard model.canSelect else { return .hidden }
+        if model.isSelected(node) { return .checked }
+        if model.isCoveredBySelection(node) { return .covered }
+        switch model.verdict(for: node) {
+        case .allowed: return .unchecked
+        case .notAnItem: return .hidden
+        case .outsideHome:
+            return .blocked(String(localized: "Space Lens removes items inside your home folder only. To remove an app, use Applications."))
+        case .protectedFolder:
+            return .blocked(String(localized: "macOS and your apps rely on this folder, so Space Lens won't remove it. You can remove items inside it."))
+        case .spaceroomData:
+            return .blocked(String(localized: "This is Spaceroom's own data, including the Restore Center. To free it, empty the Restore Center."))
+        }
     }
 
     private var breadcrumb: some View {
@@ -261,54 +348,100 @@ private struct FolderList: View {
         .scrollIndicators(.never)
     }
 
-    private struct Row: View {
+    struct Row: View {
+        enum Tick: Equatable {
+            /// While scanning, and for the "smaller items" summary.
+            case hidden
+            case unchecked, checked
+            /// A folder above it is ticked.
+            case covered
+            /// Can't be removed here; the text says why.
+            case blocked(String)
+        }
+
         let node: DiskNode
         let parentSize: Int64
         let family: Int
         let isHovered: Bool
+        let tick: Tick
+        let toggle: () -> Void
         let open: () -> Void
 
         var body: some View {
             let fraction = parentSize > 0 ? Double(node.size) / Double(parentSize) : 0
-            let canOpen = node.kind == .folder && !node.children.isEmpty
-            Button(action: open) {
-                HStack(spacing: 10) {
-                    Image(systemName: SpaceLensFormat.symbol(for: node))
-                        .foregroundStyle(swatch)
-                        .frame(width: 18)
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(SpaceLensFormat.name(of: node)).font(.system(size: 13, weight: .medium)).lineLimit(1)
-                            if node.isPartial {
-                                Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.yellow.opacity(0.8))
-                                    .help("Some items inside couldn't be read, so this size may be larger.")
+            let canOpen = node.isContainer
+            HStack(spacing: 8) {
+                checkbox
+                Button(action: open) {
+                    HStack(spacing: 10) {
+                        Image(systemName: SpaceLensFormat.symbol(for: node))
+                            .foregroundStyle(swatch)
+                            .frame(width: 18)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(SpaceLensFormat.name(of: node)).font(.system(size: 13, weight: .medium)).lineLimit(1)
+                                if node.isPartial {
+                                    Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.yellow.opacity(0.8))
+                                        .help("Some items inside couldn't be read, so this size may be larger.")
+                                }
+                                Spacer(minLength: 6)
+                                Text((node.isPartial ? "≈ " : "") + node.size.bytesText)
+                                    .font(.system(size: 12, weight: .semibold)).monospacedDigit()
                             }
-                            Spacer(minLength: 6)
-                            Text((node.isPartial ? "≈ " : "") + node.size.bytesText)
-                                .font(.system(size: 12, weight: .semibold)).monospacedDigit()
-                        }
-                        GeometryReader { proxy in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(.white.opacity(0.08))
-                                Capsule().fill(swatch.opacity(0.9)).frame(width: max(2, proxy.size.width * fraction))
+                            GeometryReader { proxy in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(.white.opacity(0.08))
+                                    Capsule().fill(swatch.opacity(0.9)).frame(width: max(2, proxy.size.width * fraction))
+                                }
                             }
+                            .frame(height: 3)
                         }
-                        .frame(height: 3)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.textTertiary)
+                            .opacity(canOpen ? 1 : 0)
                     }
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.textTertiary)
-                        .opacity(canOpen ? 1 : 0)
+                    .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 10).padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.white.opacity(isHovered ? 0.09 : 0)))
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .disabled(!canOpen)
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(canOpen ? Text("Opens this folder") : Text(""))
             }
-            .buttonStyle(.plain)
-            .disabled(!canOpen)
-            .accessibilityElement(children: .combine)
-            .accessibilityHint(canOpen ? Text("Opens this folder") : Text(""))
+            .padding(.leading, tick == .hidden ? 10 : 6).padding(.trailing, 10).padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.white.opacity(tick == .checked ? 0.12 : (isHovered ? 0.09 : 0))))
+        }
+
+        @ViewBuilder private var checkbox: some View {
+            switch tick {
+            case .hidden:
+                EmptyView()
+            case .unchecked, .checked:
+                Button(action: toggle) {
+                    IconSwap(isOn: tick == .checked, on: "checkmark.square.fill", off: "square")
+                        .font(.system(size: 15))
+                        .foregroundStyle(tick == .checked ? .white : .textTertiary)
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Select \(SpaceLensFormat.name(of: node))"))
+                .accessibilityAddTraits(tick == .checked ? .isSelected : [])
+            case .covered:
+                Image(systemName: "checkmark.square.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(width: 22, height: 22)
+                    .help("Included because the folder that contains it is selected.")
+            case .blocked(let reason):
+                Image(systemName: "lock.square")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.white.opacity(0.22))
+                    .frame(width: 22, height: 22)
+                    .help(reason)
+                    .accessibilityLabel(Text(reason))
+            }
         }
 
         private var swatch: Color {

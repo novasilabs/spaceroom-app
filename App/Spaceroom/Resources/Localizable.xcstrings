@@ -2171,6 +2171,16 @@
         }
       }
     },
+    "Deselect All": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batal Pilih Semua"
+          }
+        }
+      }
+    },
     "Design Tuning": {
       "localizations": {
         "id": {
@@ -2969,6 +2979,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dipakai oleh %@"
+          }
+        }
+      }
+    },
+    "Included because the folder that contains it is selected.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikut terpilih karena folder di atasnya dipilih."
           }
         }
       }
@@ -4736,6 +4756,16 @@
         }
       }
     },
+    "Remove %lld items?": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hapus %lld item?"
+          }
+        }
+      }
+    },
     "Remove Data · %@": {
       "localizations": {
         "id": {
@@ -4938,6 +4968,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tinjau Detail"
+          }
+        }
+      }
+    },
+    "Review and Remove": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinjau dan Hapus"
           }
         }
       }
@@ -5418,6 +5458,16 @@
         }
       }
     },
+    "Select for Removal": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih untuk Dihapus"
+          }
+        }
+      }
+    },
     "Selected": {
       "localizations": {
         "id": {
@@ -5784,6 +5834,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Space Lens"
+          }
+        }
+      }
+    },
+    "Space Lens removes items inside your home folder only. To remove an app, use Applications.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space Lens hanya menghapus item di dalam folder Home Anda. Untuk menghapus aplikasi, gunakan Aplikasi."
           }
         }
       }
@@ -6210,6 +6270,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ini menghapus item yang dibersihkan secara permanen agar ruangnya langsung kosong."
+          }
+        }
+      }
+    },
+    "This is Spaceroom's own data, including the Restore Center. To free it, empty the Restore Center.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ini data milik Spaceroom sendiri, termasuk Pusat Pemulihan. Untuk mengosongkannya, kosongkan Pusat Pemulihan."
           }
         }
       }
@@ -6871,6 +6941,22 @@
         }
       }
     },
+    "and %lld more · %@ in total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "and %1$lld more · %2$@ in total"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dan %lld lainnya · total %@"
+          }
+        }
+      }
+    },
     "busy for %@": {
       "localizations": {
         "id": {
@@ -6943,6 +7029,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "macOS %lld.%lld.%lld · menyala %@"
+          }
+        }
+      }
+    },
+    "macOS and your apps rely on this folder, so Space Lens won't remove it. You can remove items inside it.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS dan aplikasi Anda bergantung pada folder ini, jadi Space Lens tidak akan menghapusnya. Anda tetap bisa menghapus item di dalamnya."
           }
         }
       }

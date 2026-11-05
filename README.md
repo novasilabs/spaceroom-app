@@ -54,7 +54,7 @@
 ### Understand
 | | |
 |---|---|
-| **Space Lens** | An interactive sunburst map of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. |
+| **Space Lens** | An interactive sunburst map of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. Tick items and choose *Review and Remove*. They go to the Restore Center. |
 | **System Status** | A health score with what to fix; live CPU (per core), memory and swap, network, disk, battery health and thermal state; and the busiest processes. |
 
 ### Manage
@@ -158,7 +158,7 @@ project.yml                    XcodeGen project definition
 - **Cleanup:** unused app languages, broken preferences, Mail attachments, Photos caches
 - **Dev Cleanup:** per-project build folders (`node_modules`, `target`, …), git-aware, plus Docker
 - **My Clutter:** similar photos
-- **Space Lens:** delete from the map, a treemap view, storage-growth history
+- **Space Lens:** a treemap view, storage-growth history
 - **Applications:** an app updater and "slim apps" (strip unused architectures)
 
 The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.
