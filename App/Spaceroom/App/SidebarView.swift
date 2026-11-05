@@ -10,20 +10,20 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Room for the window's traffic-light buttons (hidden title bar).
-            Color.clear.frame(height: 36)
+            Color.clear.frame(height: 28)
             wordmark
                 .padding(.horizontal, 18)
-                .padding(.bottom, 10)
+                .padding(.bottom, 12)
             searchButton
                 .padding(.horizontal, 10)
-                .padding(.bottom, 6)
+                .padding(.bottom, 10)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(SidebarModule.Section.allCases, id: \.self) { section in
                         if section == .footer {
                             Rectangle().fill(.white.opacity(0.08)).frame(height: 1)
-                                .padding(.vertical, 8).padding(.horizontal, 10)
+                                .padding(.vertical, 6).padding(.horizontal, 10)
                         } else if let title = section.title {
                             Text(title)
                                 .font(.system(size: 11, weight: .semibold))
@@ -31,7 +31,7 @@ struct SidebarView: View {
                                 .textCase(.uppercase)
                                 .foregroundStyle(.textTertiary)
                                 .padding(.horizontal, 12)
-                                .padding(.top, 12)
+                                .padding(.top, 10)
                                 .padding(.bottom, 4)
                         }
                         ForEach(SidebarModule.allCases.filter { $0.section == section }) { module in
@@ -43,8 +43,16 @@ struct SidebarView: View {
                     }
                 }
                 .padding(.horizontal, 10)
+                .padding(.top, 6)
             }
             .scrollIndicators(.never)
+            // Rows fade out under the search field instead of butting against it.
+            .mask {
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 12)
+                    Color.black
+                }
+            }
 
             if app.fullDiskAccess == .denied {
                 Button { app.isShowingOnboarding = true } label: {
@@ -61,7 +69,7 @@ struct SidebarView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
-                .padding(.horizontal, 10).padding(.vertical, 10)
+                .padding(.horizontal, 10).padding(.top, 4).padding(.bottom, 10)
             }
         }
         .background {
@@ -141,7 +149,7 @@ private struct SidebarRow: View {
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.vertical, 3)
             .background {
                 // Concentric with the 24 pt icon: 8 (icon radius ≈ 7) + 5 inset ≈ 12.
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
