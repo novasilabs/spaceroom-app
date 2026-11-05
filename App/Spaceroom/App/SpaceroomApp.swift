@@ -43,25 +43,11 @@ struct SpaceroomApp: App {
             }
         }
 
-        // Menu bar items (PRD §6.12). Each opens the same popover.
-        MenuBarExtra(isInserted: binding(\.isStorageItemShown)) {
+        // One menu bar item (PRD §6.12) showing every chosen reading, opening one popover.
+        MenuBarExtra(isInserted: binding(\.isMenuBarItemShown)) {
             popover
         } label: {
-            Image(nsImage: StatusItemImage.storage(menuBar.rootVolume, style: menuBar.storageStyle))
-        }
-        .menuBarExtraStyle(.window)
-
-        MenuBarExtra(isInserted: binding(\.isCPUItemShown)) {
-            popover
-        } label: {
-            Image(nsImage: StatusItemImage.cpu(menuBar.cpuUsage, history: menuBar.cpuHistory))
-        }
-        .menuBarExtraStyle(.window)
-
-        MenuBarExtra(isInserted: binding(\.isMemoryItemShown)) {
-            popover
-        } label: {
-            Image(nsImage: StatusItemImage.memory(menuBar.memory))
+            Image(nsImage: StatusItemImage.combined(menuBarParts))
         }
         .menuBarExtraStyle(.window)
 
@@ -78,6 +64,14 @@ struct SpaceroomApp: App {
         .windowResizability(.contentSize)
         .defaultPosition(.topTrailing)
         #endif
+    }
+
+    private var menuBarParts: [NSImage] {
+        var parts: [NSImage] = []
+        if menuBar.isStorageItemShown { parts.append(StatusItemImage.storage(menuBar.rootVolume, style: menuBar.storageStyle)) }
+        if menuBar.isCPUItemShown { parts.append(StatusItemImage.cpu(menuBar.cpuUsage, history: menuBar.cpuHistory)) }
+        if menuBar.isMemoryItemShown { parts.append(StatusItemImage.memory(menuBar.memory)) }
+        return parts
     }
 
     private var popover: some View {

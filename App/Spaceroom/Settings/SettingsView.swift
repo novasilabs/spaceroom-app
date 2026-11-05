@@ -11,14 +11,20 @@ struct SettingsView: View {
         @Bindable var app = app
         @Bindable var menuBar = menuBar
         Form {
-            Section("Menu Bar") {
-                Toggle("Show storage in the menu bar", isOn: $menuBar.isStorageItemShown)
+            Section {
+                Toggle("Show storage", isOn: $menuBar.isStorageItemShown)
                 Picker("Display", selection: $menuBar.storageStyle) {
                     ForEach(MenuBarModel.StorageStyle.allCases) { Text($0.title).tag($0) }
                 }
                 .disabled(!menuBar.isStorageItemShown)
                 Toggle("Show CPU usage", isOn: $menuBar.isCPUItemShown)
                 Toggle("Show memory usage", isOn: $menuBar.isMemoryItemShown)
+            } header: {
+                Text("Menu Bar")
+            } footer: {
+                Text("Everything you turn on shares one Spaceroom item in the menu bar.")
+            }
+            Section {
                 Toggle("Keep running in the menu bar when the window is closed", isOn: $menuBar.keepsRunningInMenuBar)
                 Toggle("Open at login", isOn: Binding(get: { menuBar.opensAtLogin },
                                                        set: { menuBar.setOpensAtLogin($0) }))

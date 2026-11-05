@@ -18,7 +18,7 @@
 | Cleanup and Dev Cleanup: scan → review → clean → undo | ✅ (starter rule set) |
 | Restore Center: timeline, restore item / operation, delete now, automatic expiry | ✅ |
 | Full Disk Access onboarding with live detection | ✅ |
-| Menu bar: storage ring with free space (turns amber/red when low), optional CPU and memory items, popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, last cleanup with Undo | ✅ (M1) |
+| Menu bar: one Spaceroom item combining the readings you pick (storage ring with free space, CPU, memory; turns amber/red when low), one popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, battery, network speed, Protection status, last cleanup with Undo | ✅ (M1, v1.0) |
 | Smart Care: one scan across every module (safe, regenerable rules only), System Junk / Developer Junk / Trash tiles, disk-after-cleaning tile, single Undo; opens first and runs from the menu bar | ✅ (M1) |
 | Space Lens: map of the home folder, startup disk or external drives as an interactive sunburst (hover, click to drill in, breadcrumb, linked size list), grows live while scanning, shows "system & hidden" space the scan can't see | ✅ (M1) |
 | Applications: installed apps with size, source and last opened; uninstall with leftovers (caches, logs, settings, containers, launch agents — personal data unticked by default); leftovers of apps already removed; everything undoable via the Restore Center | ✅ (M1) |

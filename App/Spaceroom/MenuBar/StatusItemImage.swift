@@ -37,6 +37,25 @@ enum StatusItemImage {
         return compose(text: text, leading: dot(color: color), isTemplate: color == nil)
     }
 
+    /// Several readings in one menu bar item, side by side. Template only if every part is, so a
+    /// warning colour (low disk, memory pressure) survives.
+    static func combined(_ parts: [NSImage]) -> NSImage {
+        guard parts.count > 1 else { return parts.first ?? compose(text: nil, leading: dot(color: nil), isTemplate: true) }
+        let spacing: CGFloat = 10
+        let width = parts.reduce(0) { $0 + $1.size.width } + spacing * CGFloat(parts.count - 1)
+        let image = NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
+            var x: CGFloat = 0
+            for part in parts {
+                part.draw(in: NSRect(x: x, y: 0, width: part.size.width, height: height))
+                x += part.size.width + spacing
+            }
+            return true
+        }
+        image.isTemplate = parts.allSatisfy(\.isTemplate)
+        image.accessibilityDescription = parts.compactMap(\.accessibilityDescription).joined(separator: ", ")
+        return image
+    }
+
     /// "128 GB" with no decimals above 10 GB, to keep the item narrow.
     static func compactBytes(_ bytes: Int64) -> String {
         let gb = Double(bytes) / 1_000_000_000

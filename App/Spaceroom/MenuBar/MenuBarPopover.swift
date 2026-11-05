@@ -17,6 +17,8 @@ struct MenuBarPopover: View {
             ForEach(menuBar.externalVolumes) { ExternalVolumeRow(volume: $0) }
             QuickActionsCard()
             HealthCard()
+            DeviceCard()
+            ProtectionTile()
             LastCleanupCard()
             footer
         }
@@ -337,6 +339,124 @@ struct Sparkline: View {
             context.stroke(line, with: .color(color.opacity(0.9)), lineWidth: 1.5)
         }
         .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Battery & network
+
+private struct DeviceCard: View {
+    @Environment(MenuBarModel.self) private var menuBar
+
+    var body: some View {
+        HStack(spacing: 10) {
+            if let battery = menuBar.battery { batteryTile(battery) }
+            networkTile
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func batteryTile(_ battery: BatteryInfo) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 5) {
+                Image(systemName: batterySymbol(battery)).foregroundStyle(battery.percent <= 20 && !battery.isPluggedIn ? .orange : .white)
+                Text("Battery").font(.caption).foregroundStyle(.white.opacity(0.6))
+            }
+            Text("\(battery.percent)%").font(.system(size: 12, weight: .semibold)).monospacedDigit()
+            Text(battery.isCharging ? String(localized: "Charging")
+                 : battery.isPluggedIn ? String(localized: "Plugged in")
+                 : String(localized: "On battery"))
+                .font(.caption2).foregroundStyle(.white.opacity(0.6))
+            Text("Health \(Int((battery.health * 100).rounded()))%")
+                .font(.caption2).monospacedDigit()
+                .foregroundStyle(battery.needsService ? .orange : .white.opacity(0.6))
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .glassSurface(cornerRadius: 16)
+    }
+
+    private var networkTile: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 5) {
+                Image(systemName: "network")
+                Text("Network").font(.caption).foregroundStyle(.white.opacity(0.6))
+            }
+            HStack(spacing: 10) {
+                Label(rate(menuBar.network?.up), systemImage: "arrow.up").foregroundStyle(Color.hex(0x7FB6FF))
+                Label(rate(menuBar.network?.down), systemImage: "arrow.down").foregroundStyle(Color.hex(0x4FCB98))
+            }
+            .font(.system(size: 12, weight: .semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+            Sparkline(values: normalized(menuBar.networkHistory), color: .white).frame(height: 18)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .glassSurface(cornerRadius: 16)
+    }
+
+    private func rate(_ bytesPerSecond: Double?) -> String {
+        guard let bytesPerSecond else { return "–" }
+        // Short, fixed-style rates so both fit side by side: "0 KB/s", "840 KB/s", "2.4 MB/s".
+        let kilobytes = bytesPerSecond / 1000
+        if kilobytes < 1000 { return "\(Int(kilobytes.rounded())) KB/s" }
+        return "\((kilobytes / 1000).formatted(.number.precision(.fractionLength(1)))) MB/s"
+    }
+
+    private func normalized(_ values: [Double]) -> [Double] {
+        let peak = max(values.max() ?? 0, 1)
+        return values.map { $0 / peak }
+    }
+
+    private func batterySymbol(_ battery: BatteryInfo) -> String {
+        if battery.isCharging { return "battery.100percent.bolt" }
+        return switch battery.percent {
+        case ..<13: "battery.0percent"
+        case ..<38: "battery.25percent"
+        case ..<63: "battery.50percent"
+        case ..<88: "battery.75percent"
+        default: "battery.100percent"
+        }
+    }
+}
+
+// MARK: - Protection
+
+private struct ProtectionTile: View {
+    @Environment(AppModel.self) private var app
+    @Environment(MenuBarModel.self) private var menuBar
+
+    var body: some View {
+        let protection = app.protection
+        let count = protection.lastScanCount
+        HStack(spacing: 10) {
+            Image(systemName: count > 0 ? "exclamationmark.shield.fill" : "checkmark.shield.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(count > 0 ? Color.hex(0xFF8A7A) : Color.hex(0x6FD67A))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Protection").font(.system(size: 12, weight: .semibold))
+                Group {
+                    if protection.phase == .scanning {
+                        Text("Checking \(protection.scannedFiles) files…")
+                    } else if let date = protection.lastScanDate {
+                        Text(count > 0 ? String(localized: "\(count) items need a look")
+                             : String(localized: "Nothing suspicious · \(date.formatted(.relative(presentation: .named)))"))
+                    } else {
+                        Text("Not checked yet")
+                    }
+                }
+                .font(.caption2).foregroundStyle(.white.opacity(0.65)).monospacedDigit()
+            }
+            Spacer()
+            Button(count > 0 ? "Review" : "Scan") {
+                app.selection = .protection
+                if count == 0 { protection.startScan() }
+                menuBar.openMainWindow()
+            }
+            .buttonStyle(GhostButtonStyle())
+            .disabled(protection.phase == .scanning)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .glassSurface(cornerRadius: 16)
     }
 }
 

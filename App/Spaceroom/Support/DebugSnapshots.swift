@@ -230,6 +230,9 @@ enum DebugSnapshots {
         }
         images.append(StatusItemImage.cpu(menuBar.cpuUsage, history: menuBar.cpuHistory))
         images.append(StatusItemImage.memory(menuBar.memory))
+        images.append(StatusItemImage.combined([StatusItemImage.storage(menuBar.rootVolume, style: .ringAndFree),
+                                                StatusItemImage.cpu(menuBar.cpuUsage, history: menuBar.cpuHistory),
+                                                StatusItemImage.memory(menuBar.memory)]))
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             writeStrip(images, appearance: NSAppearance(named: appearance)!,
                        to: directory.appendingPathComponent("00-menubar-items-\(name).png"))

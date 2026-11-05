@@ -77,6 +77,21 @@ final class MenuBarModel {
     var isStorageItemShown: Bool { didSet { save(isStorageItemShown, .storageItem) } }
     var isCPUItemShown: Bool { didSet { save(isCPUItemShown, .cpuItem); updateSampling() } }
     var isMemoryItemShown: Bool { didSet { save(isMemoryItemShown, .memoryItem); updateSampling() } }
+    /// The one Spaceroom item in the menu bar: shown while any reading is on. Removing it from the
+    /// menu bar (⌘-drag) turns every reading off; showing it again starts with storage.
+    var isMenuBarItemShown: Bool {
+        get { isStorageItemShown || isCPUItemShown || isMemoryItemShown }
+        set {
+            guard newValue != isMenuBarItemShown else { return }
+            if newValue {
+                isStorageItemShown = true
+            } else {
+                isStorageItemShown = false
+                isCPUItemShown = false
+                isMemoryItemShown = false
+            }
+        }
+    }
     var storageStyle: StorageStyle { didSet { UserDefaults.standard.set(storageStyle.rawValue, forKey: Key.style.rawValue) } }
     /// Keep running in the menu bar when the main window closes.
     var keepsRunningInMenuBar: Bool { didSet { save(keepsRunningInMenuBar, .keepRunning) } }
@@ -88,6 +103,11 @@ final class MenuBarModel {
     private(set) var cpuHistory: [Double] = []
     private(set) var memory: MemorySnapshot?
     private(set) var memoryHistory: [Double] = []
+    /// Bytes per second, sampled only while the popover is open.
+    private(set) var network: (down: Double, up: Double)?
+    private(set) var networkHistory: [Double] = []
+    /// `nil` on Macs without a battery.
+    private(set) var battery: BatteryInfo?
     private(set) var actionStates: [QuickAction: ActionState] = [:]
     /// Confirmation after a quick action: "Freed 2.1 GB" plus the operation to undo.
     private(set) var lastAction: (message: String, operationID: UUID?)?
@@ -98,6 +118,7 @@ final class MenuBarModel {
     var externalVolumes: [VolumeInfo] { volumes.filter { !$0.isRoot } }
 
     private var cpuSampler = CPUSampler()
+    private var networkSampler = NetworkSampler()
     private var storageTask: Task<Void, Never>?
     private var sampleTask: Task<Void, Never>?
     private var sampleInterval: Duration?
@@ -175,11 +196,18 @@ final class MenuBarModel {
             memory = snapshot
             memoryHistory = Array((memoryHistory + [snapshot.usedFraction]).suffix(60))
         }
+        guard isPopoverVisible else { return }
+        if let rates = networkSampler.sample() {
+            network = rates
+            networkHistory = Array((networkHistory + [rates.down + rates.up]).suffix(60))
+        }
+        battery = BatteryInfo.current()
     }
 
     // MARK: Popover lifecycle
 
     func popoverDidAppear() {
+        battery = BatteryInfo.current()
         isPopoverVisible = true
         refreshVolumes()
         app.refreshFullDiskAccess()
