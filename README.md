@@ -48,7 +48,7 @@
 |---|---|
 | **Smart Care** | One scan for system junk, developer junk and the Trash, plus Protection, Speed and Applications tiles, each with its own toggle. One Undo brings everything back. |
 | **Cleanup** | User caches, logs and crash reports, browser caches and the Trash, all reviewable item by item. |
-| **Dev Cleanup** | Xcode DerivedData, iOS DeviceSupport and simulator caches, Homebrew, npm, Yarn, pip, CocoaPods, Go, Cargo and Gradle caches, and build folders (`node_modules`, `target`, `.build`, `.venv`, …) in projects you haven't changed for 30 days. Folders committed to Git are never offered. Skips tools that are running. |
+| **Dev Cleanup** | Xcode DerivedData, iOS DeviceSupport and simulator caches, Homebrew, npm, Yarn, pip, CocoaPods, Go, Cargo and Gradle caches, and build folders (`node_modules`, `target`, `.build`, `.venv`, …) in projects you haven't changed for 30 days. Folders committed to Git are never offered. Skips tools that are running. A separate Docker card frees build cache and untagged images through Docker itself, after a warning that this can't be undone. |
 | **My Clutter** | Large and old files, duplicates confirmed by content (one copy is always kept), and installer downloads with their source. |
 
 ### Understand
@@ -156,7 +156,6 @@ project.yml                    XcodeGen project definition
 - **Signed and notarized releases** with Sparkle updates and a Homebrew cask
 - **`spaceroom` CLI** (`scan`, `clean`, `status`, `--json`, `--dry-run`) on the same engine
 - **Cleanup:** unused app languages, broken preferences, Mail attachments, Photos caches
-- **Dev Cleanup:** Docker
 - **My Clutter:** similar photos
 - **Space Lens:** a treemap view, storage-growth history
 - **Applications:** an app updater and "slim apps" (strip unused architectures)

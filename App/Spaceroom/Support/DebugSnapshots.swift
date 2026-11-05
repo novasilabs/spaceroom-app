@@ -72,6 +72,12 @@ enum DebugSnapshots {
             await waitUntil { flow.phase == .results }
             await pause(1.0)
             capture("06-dev-results", in: directory)
+            // Sample Docker numbers to show its card; nothing is run.
+            await waitUntil(timeout: 20) { !app.docker.isChecking }
+            app.docker.showForSnapshot(DockerUsage(buildCache: 2_400_000_000, danglingImages: 1_500_000_000,
+                                                   danglingImageCount: 6, imagesTotal: 9_800_000_000))
+            await pause(0.8)
+            capture("06b-dev-docker", in: directory)
         }
 
         app.selection = .restoreCenter

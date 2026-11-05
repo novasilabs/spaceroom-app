@@ -168,6 +168,7 @@ final class ScanFlowModel {
         isReviewing = false
         withAnimation(Motion.phaseChange) { phase = .scanning }
         if kind == .smartCare { app.smartCareExtras.check() }
+        if kind == .module(.devCleanup) { app.docker.check() }
 
         let context = app.scanContext()
         let claimRules = app.catalog?.rules ?? rules

@@ -749,6 +749,16 @@
         }
       }
     },
+    "%lld untagged images %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld image tanpa tag %@"
+          }
+        }
+      }
+    },
     "%lld%%": {
       "localizations": {
         "id": {
@@ -1339,6 +1349,26 @@
         }
       }
     },
+    "Build cache %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build cache %@"
+          }
+        }
+      }
+    },
+    "Build cache and untagged images only": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hanya build cache dan image tanpa tag"
+          }
+        }
+      }
+    },
     "Build files Xcode rebuilds on the next build": {
       "localizations": {
         "id": {
@@ -1459,6 +1489,16 @@
         }
       }
     },
+    "Check Again": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periksa Lagi"
+          }
+        }
+      }
+    },
     "Check again": {
       "localizations": {
         "id": {
@@ -1547,6 +1587,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Memeriksa %lld file…"
+          }
+        }
+      }
+    },
+    "Checking Docker…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memeriksa Docker…"
           }
         }
       }
@@ -1887,6 +1937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kontak"
+          }
+        }
+      }
+    },
+    "Containers, volumes and tagged images aren't touched": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container, volume, dan image bertag tidak disentuh"
           }
         }
       }
@@ -2271,6 +2331,66 @@
         }
       }
     },
+    "Docker": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker"
+          }
+        }
+      }
+    },
+    "Docker freed %@.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker mengosongkan %@."
+          }
+        }
+      }
+    },
+    "Docker freed %@. Some steps failed: %@.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker mengosongkan %@. Beberapa langkah gagal: %@."
+          }
+        }
+      }
+    },
+    "Docker is freeing space…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker sedang mengosongkan ruang…"
+          }
+        }
+      }
+    },
+    "Docker isn't running. Open it to see its build cache and unused images.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker tidak berjalan. Buka Docker untuk melihat build cache dan image yang tidak dipakai."
+          }
+        }
+      }
+    },
+    "Docker removes these itself, so they don't go to the Restore Center and can't be restored. Docker rebuilds the cache and downloads images again when it needs them.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker menghapusnya sendiri, jadi semuanya tidak masuk ke Pusat Pemulihan dan tidak bisa dipulihkan. Docker membuat ulang cache dan mengunduh image lagi saat diperlukan."
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "id": {
@@ -2643,6 +2763,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ditemukan %@ yang bisa dibersihkan. Tidak ada yang dihapus."
+          }
+        }
+      }
+    },
+    "Free %@…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosongkan %@…"
+          }
+        }
+      }
+    },
+    "Free Space": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosongkan"
           }
         }
       }
@@ -3305,6 +3445,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sisa · %@"
+          }
+        }
+      }
+    },
+    "Let Docker free %@?": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biarkan Docker mengosongkan %@?"
           }
         }
       }
@@ -4122,6 +4272,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak ada yang perlu dibersihkan. Sudah kosong."
+          }
+        }
+      }
+    },
+    "Nothing to free. Images in use, containers and volumes are never touched.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak ada yang perlu dikosongkan. Image yang dipakai, container, dan volume tidak pernah disentuh."
           }
         }
       }

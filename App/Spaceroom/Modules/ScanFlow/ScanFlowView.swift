@@ -202,6 +202,12 @@ struct ScanFlowView: View {
                 .padding(.top, flow.kind == .smartCare ? 12 : 20)
                 .entrance(4)
             }
+            if flow.kind == .module(.devCleanup), app.docker.isVisible {
+                DockerCard(model: app.docker)
+                    .frame(maxWidth: 800)
+                    .padding(.top, 18)
+                    .entrance(4)
+            }
             Spacer(minLength: 16)
             HStack(spacing: 24) {
                 Button("Rescan") { flow.startScan() }.buttonStyle(GhostButtonStyle())
