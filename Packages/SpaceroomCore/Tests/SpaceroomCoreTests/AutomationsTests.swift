@@ -167,6 +167,20 @@ struct AutomationsTests {
         #expect(await store.storedSize == 0)
     }
 
+    @Test func planningNeverTouchesFilesAndCleaningUsesTheGivenModule() async throws {
+        let box = try Sandbox()
+        try box.file(".Trash/old.zip", bytes: 10_000)
+        let store = try box.store()
+        let runner = AutomationRunner(catalog: try catalog(), store: store)
+        let plan = await runner.plan(.emptyTrash, context: box.context())
+        #expect(plan.size > 0)
+        #expect(box.exists(".Trash/old.zip"))
+        let result = await runner.clean(plan, operationName: "cleanup", context: box.context())
+        let operationID = try #require(result.operationID)
+        #expect(await store.operation(operationID)?.module == "cleanup")
+        #expect(!box.exists(".Trash/old.zip"))
+    }
+
     // MARK: Store
 
     @Test func storeKeepsAutomationsAndCappedHistory() async throws {

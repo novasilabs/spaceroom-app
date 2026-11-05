@@ -14,6 +14,9 @@ struct SidebarView: View {
             wordmark
                 .padding(.horizontal, 18)
                 .padding(.bottom, 10)
+            searchButton
+                .padding(.horizontal, 10)
+                .padding(.bottom, 6)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
@@ -70,6 +73,23 @@ struct SidebarView: View {
                 }
                 .ignoresSafeArea()
         }
+    }
+
+    private var searchButton: some View {
+        Button { app.palette.open() } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").font(.system(size: 12, weight: .medium))
+                Text("Search").font(.system(size: 13))
+                Spacer(minLength: 0)
+                Keycap("⌘K")
+            }
+            .foregroundStyle(.textSecondary)
+            .padding(.leading, 10).padding(.trailing, 6).padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.white.opacity(0.07)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(Text("Search and commands"))
     }
 
     private var wordmark: some View {

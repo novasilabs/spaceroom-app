@@ -153,6 +153,17 @@ enum DebugSnapshots {
         await waitUntil(timeout: 10) { app.automations.hasLoaded }
         await pause(1.2)
         capture("25-automations", in: directory)
+
+        app.selection = .smartCare
+        app.palette.open()
+        await pause(1.0)
+        capture("26-palette", in: directory)
+        app.palette.query = "tra"
+        await pause(0.6)
+        capture("26b-palette-search", in: directory)
+        app.palette.close()
+        app.selection = .automations
+        await pause(0.4)
         await captureTall(AutomationEditor(original: AutomationsModel.templates[1], isNew: true, retentionDays: app.retentionDays,
                                            onSave: { _ in }, onCancel: {}),
                           name: "25b-automation-editor", in: directory, height: 760, width: 500)

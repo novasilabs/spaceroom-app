@@ -29,6 +29,9 @@ struct SpaceroomApp: App {
             CommandGroup(after: .windowArrangement) { DesignTuningCommand() }
             #endif
             CommandMenu("Modules") {
+                Button("Search and Commands…") { app.palette.toggle() }
+                    .keyboardShortcut("k", modifiers: .command)
+                Divider()
                 ForEach(Array(SidebarModule.allCases.enumerated()), id: \.element) { index, module in
                     if index < 9 {
                         Button(String(localized: module.title)) { app.selection = module }

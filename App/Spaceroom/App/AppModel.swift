@@ -41,6 +41,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var performance = PerformanceModel()
     @ObservationIgnored private(set) lazy var privacy = PrivacyModel(app: self)
     @ObservationIgnored private(set) lazy var automations = AutomationsModel(app: self)
+    @ObservationIgnored private(set) lazy var palette = CommandPaletteModel(app: self)
     @ObservationIgnored private(set) lazy var protection = ProtectionModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]

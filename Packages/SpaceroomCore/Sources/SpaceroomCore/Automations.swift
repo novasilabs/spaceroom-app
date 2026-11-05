@@ -200,35 +200,74 @@ public struct AutomationRunner: Sendable {
         }
     }
 
+    /// What an action would clean, measured but untouched.
+    public struct Plan: Sendable {
+        public let action: AutomationAction
+        public let rules: [Rule]
+        public let items: [ScanItem]
+        /// Items found but left alone (app running, too new…).
+        public let skippedCount: Int
+        public var size: Int64 { items.reduce(0) { $0 + $1.size } }
+    }
+
+    /// What happened when a plan was cleaned.
+    public struct CleanResult: Sendable {
+        public var cleanedBytes: Int64 = 0
+        public var operationID: UUID?
+        public var freedNow = false
+        public var skippedCount = 0
+        public var error: String?
+    }
+
+    /// Scans for an action. Never modifies the file system.
+    public func plan(_ action: AutomationAction, context: ScanContext) async -> Plan {
+        let rules = rules(for: action)
+        guard !rules.isEmpty else { return Plan(action: action, rules: [], items: [], skippedCount: 0) }
+        let report = await Scanner().scan(rules, claimRules: catalog.rules, context: context)
+        let items = report.results.flatMap(\.cleanableItems)
+        return Plan(action: action, rules: rules, items: items,
+                    skippedCount: report.results.flatMap(\.items).count - items.count)
+    }
+
+    /// Cleans a plan into the Restore Center (re-checking every item), optionally freeing the space at once.
+    public func clean(_ plan: Plan, operationName: String = AutomationRunner.operationName, freesSpaceNow: Bool = false,
+                      context: ScanContext) async -> CleanResult {
+        var result = CleanResult()
+        guard plan.action.removesFiles, !plan.items.isEmpty else { return result }
+        do {
+            let outcome = try await CleanupEngine(store: store)
+                .clean(plan.items, rules: plan.rules, operationName: operationName, context: context)
+            result.skippedCount = outcome.skipped.count
+            guard let operation = outcome.operation else { return result }
+            result.cleanedBytes = operation.totalSize
+            result.operationID = operation.id
+            if freesSpaceNow {
+                _ = try await store.purge(operation.id)
+                // Anything macOS wouldn't let us delete stays in the Restore Center, still undoable.
+                result.freedNow = await store.operation(operation.id)?.hasStoredItems != true
+                if result.freedNow { result.operationID = nil }
+            }
+        } catch {
+            result.error = error.localizedDescription
+        }
+        return result
+    }
+
     public func run(_ automation: Automation, context: ScanContext) async -> AutomationRun {
         var run = AutomationRun(automationID: automation.id, date: context.now, action: automation.action)
-        let rules = rules(for: automation.action)
-        guard !rules.isEmpty else {
+        let plan = await plan(automation.action, context: context)
+        guard !plan.rules.isEmpty else {
             run.error = "No cleaning rules are available for this action."
             return run
         }
-        let report = await Scanner().scan(rules, claimRules: catalog.rules, context: context)
-        let items = report.results.flatMap(\.cleanableItems)
-        run.foundBytes = items.reduce(0) { $0 + $1.size }
-        run.skippedCount = report.results.flatMap(\.items).count - items.count
-        guard automation.action.removesFiles, !items.isEmpty else { return run }
-
-        do {
-            let outcome = try await CleanupEngine(store: store)
-                .clean(items, rules: rules, operationName: Self.operationName, context: context)
-            run.skippedCount += outcome.skipped.count
-            guard let operation = outcome.operation else { return run }
-            run.cleanedBytes = operation.totalSize
-            run.operationID = operation.id
-            if automation.freesSpaceNow {
-                _ = try await store.purge(operation.id)
-                // Anything macOS wouldn't let us delete stays in the Restore Center, still undoable.
-                run.freedNow = await store.operation(operation.id)?.hasStoredItems != true
-                if run.freedNow { run.operationID = nil }
-            }
-        } catch {
-            run.error = error.localizedDescription
-        }
+        run.foundBytes = plan.size
+        run.skippedCount = plan.skippedCount
+        let cleaned = await clean(plan, freesSpaceNow: automation.freesSpaceNow, context: context)
+        run.cleanedBytes = cleaned.cleanedBytes
+        run.operationID = cleaned.operationID
+        run.freedNow = cleaned.freedNow
+        run.skippedCount += cleaned.skippedCount
+        run.error = cleaned.error
         return run
     }
 }
