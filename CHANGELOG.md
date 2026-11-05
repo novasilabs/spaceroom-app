@@ -7,11 +7,13 @@ All notable changes to Spaceroom are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Cleanup:** three new categories. **Mail attachments** are copies of attachments you opened; the originals stay in your mailboxes. **Photos caches** are the face and scene analysis working files. **Broken preferences** are preference files that are empty or don't parse; Apple's own are never included, and none are ticked by default. A new `content_check` rule field supports the last one. Files macOS won't let Spaceroom read are never counted as broken.
 - **Dev Cleanup › Docker:** a card that shows Docker's build cache and untagged ("dangling") images, then lets Docker remove them (`docker builder prune`, `docker image prune`, never `-a`). It works with Docker Desktop, OrbStack, Colima and Rancher Desktop. This is the one clean that can't go to the Restore Center, so it has its own button and says so first. Containers, volumes and tagged images are never touched, and Spaceroom never starts Docker.
 - **Dev Cleanup › Project build folders:** `node_modules`, web framework caches (`.next`, `.nuxt`, `.svelte-kit`, `.turbo`, `.parcel-cache`), Rust and Maven `target`, SwiftPM `.build`, Gradle `build`, CocoaPods `Pods` and Python virtual environments. Only projects with no changes for 30 days qualify, counting your own files and Git's index but not the build folders. Anything Git tracks is never offered. Searches `~/development`, `~/Developer`, `~/Projects`, `~/code`, `~/Documents` and similar folders. Never cleaned unattended.
 - **Space Lens:** tick files and folders in the list and choose *Review and Remove*. They go to the Restore Center like every other clean, and Undo puts the map back. Only items in your home folder can be removed. Its top-level folders, the folders directly inside `~/Library`, Keychains and Spaceroom's own data stay locked, with the reason shown.
 
 ### Fixed
+- Categories inside folders that macOS protects (such as Mail's container) now show *Needs Full Disk Access* instead of disappearing.
 - **Space Lens:** a fast double-click could open the same folder twice ("Library › Library"), and clicking an outer ring skipped the folders in between in the breadcrumb.
 
 ## [0.9.0] - 2026-11-05

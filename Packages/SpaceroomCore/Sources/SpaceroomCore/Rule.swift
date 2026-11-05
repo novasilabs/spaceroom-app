@@ -47,6 +47,9 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
     /// `package.json`). `paths` are then the folders to search, not the folders to clean, and
     /// `min_age_days` counts from the project's last change instead of the item's.
     public var projectArtifact: ProjectArtifactSpec?
+    /// Keep only items whose content fails this check (for example preference files that no
+    /// longer parse). Items that can't be read at all are left out, never treated as broken.
+    public var contentCheck: ContentCheck?
     /// "mole" when ported from Mole; `sourceRef` then holds the upstream commit.
     public var source: String?
     public var sourceRef: String?
@@ -68,6 +71,7 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         smartCare: Bool = false,
         action: CleanAction = .quarantine,
         projectArtifact: ProjectArtifactSpec? = nil,
+        contentCheck: ContentCheck? = nil,
         source: String? = nil,
         sourceRef: String? = nil
     ) {
@@ -87,6 +91,7 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         self.smartCare = smartCare
         self.action = action
         self.projectArtifact = projectArtifact
+        self.contentCheck = contentCheck
         self.source = source
         self.sourceRef = sourceRef
     }
@@ -109,8 +114,30 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         smartCare = try c.decodeIfPresent(Bool.self, forKey: .smartCare) ?? false
         action = try c.decodeIfPresent(CleanAction.self, forKey: .action) ?? .quarantine
         projectArtifact = try c.decodeIfPresent(ProjectArtifactSpec.self, forKey: .projectArtifact)
+        contentCheck = try c.decodeIfPresent(ContentCheck.self, forKey: .contentCheck)
         source = try c.decodeIfPresent(String.self, forKey: .source)
         sourceRef = try c.decodeIfPresent(String.self, forKey: .sourceRef)
+    }
+}
+
+public enum ContentCheck: String, Codable, Sendable, Hashable {
+    /// A property list that is empty or doesn't parse. The app it belongs to starts with
+    /// default settings once it's gone.
+    case brokenPropertyList = "broken_property_list"
+
+    /// Whether `url` fails the check. `false` when the file can't be read (no permission).
+    func fails(_ url: URL) -> Bool {
+        switch self {
+        case .brokenPropertyList:
+            guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+            defer { try? handle.close() }
+            // Preference files are small; a huge one isn't a settings file to judge.
+            // `read` returns nil at the end of the file (an empty file) and throws on errors.
+            let data: Data
+            do { data = try handle.read(upToCount: 8 << 20) ?? Data() } catch { return false }
+            if data.isEmpty { return true }
+            return (try? PropertyListSerialization.propertyList(from: data, format: nil)) == nil
+        }
     }
 }
 

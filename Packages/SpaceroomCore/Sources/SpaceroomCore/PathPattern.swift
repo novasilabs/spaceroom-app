@@ -107,7 +107,10 @@ public struct PathPattern: Sendable, Hashable {
     /// True when the folder to list exists but macOS refuses to read it (TCC / permissions).
     public func isAccessDenied(home: URL) -> Bool {
         let folder = hasWildcard ? rootURL(home: home) : rootURL(home: home).appendingPathComponent(leaf)
-        guard FileStat.exists(folder) else { return false }
+        // Inside a protected container even `lstat` is refused, so "can't look" counts as denied,
+        // not as missing.
+        var info = stat()
+        if lstat(folder.path, &info) != 0 { return errno == EPERM || errno == EACCES }
         let dir = opendir(folder.path)
         if let dir { closedir(dir); return false }
         return errno == EPERM || errno == EACCES

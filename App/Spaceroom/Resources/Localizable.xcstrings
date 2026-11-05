@@ -1319,6 +1319,16 @@
         }
       }
     },
+    "Broken preferences": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferensi rusak"
+          }
+        }
+      }
+    },
     "Broken signature": {
       "localizations": {
         "id": {
@@ -3615,6 +3625,16 @@
         }
       }
     },
+    "Mail attachments": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lampiran Mail"
+          }
+        }
+      }
+    },
     "Maintenance is up to date": {
       "localizations": {
         "id": {
@@ -4642,6 +4662,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Foto"
+          }
+        }
+      }
+    },
+    "Photos caches": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache Foto"
           }
         }
       }

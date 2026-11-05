@@ -57,6 +57,43 @@
       "paths": ["~/.Trash/*"],
       "default_selected": true,
       "smart_care": true
+    },
+    {
+      "id": "mail.downloads",
+      "module": "cleanup",
+      "group": "mail",
+      "title": "Mail attachment copies",
+      "why_safe": "Copies of attachments you opened or previewed in Mail. The originals stay in your mailboxes, and Mail makes a new copy the next time you open one.",
+      "paths": ["~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/*", "~/Library/Mail Downloads/*"],
+      "min_age_days": 7,
+      "skip_if_running": ["com.apple.mail"],
+      "default_selected": true
+    },
+    {
+      "id": "system.broken-preferences",
+      "module": "cleanup",
+      "group": "preferences",
+      "title": "Broken preference files",
+      "why_safe": "Settings files that are empty or damaged, so their app can't read them anyway. The app starts with default settings and saves a fresh file. Apple's own settings are never included.",
+      "rebuild_hint": "That app's settings go back to their defaults",
+      "paths": ["~/Library/Preferences/*.plist"],
+      "exclude": ["com.apple.*", ".GlobalPreferences*", "loginwindow*"],
+      "min_age_days": 1,
+      "skip_if_owner_running": true,
+      "default_selected": false,
+      "content_check": "broken_property_list"
+    },
+    {
+      "id": "photos.analysis-caches",
+      "module": "cleanup",
+      "group": "photos",
+      "title": "Photos analysis caches",
+      "why_safe": "Working files from the background analysis that recognises faces, scenes and text in your photos. They are rebuilt as needed. Your photos, albums and the analysis results in your library are not touched.",
+      "rebuild_hint": "Photos may re-analyse in the background for a while",
+      "paths": ["~/Library/Containers/com.apple.mediaanalysisd/Data/Library/Caches/com.apple.mediaanalysisd", "~/Library/Containers/com.apple.photoanalysisd/Data/Library/Caches/com.apple.photoanalysisd"],
+      "min_age_days": 7,
+      "skip_if_running": ["com.apple.Photos"],
+      "default_selected": true
     }
   ]
 }

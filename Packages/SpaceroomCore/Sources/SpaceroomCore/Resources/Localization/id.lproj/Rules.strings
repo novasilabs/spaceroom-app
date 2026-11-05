@@ -59,3 +59,13 @@
 "Python virtual environments" = "Virtual environment Python";
 "Virtual environments in Python projects you haven't changed for 30 days. Recreate one with python -m venv and reinstall the project's requirements." = "Virtual environment di proyek Python yang tidak Anda ubah selama 30 hari. Buat ulang dengan python -m venv, lalu pasang lagi kebutuhan proyeknya.";
 "You'll need to recreate the environment and reinstall packages" = "Anda perlu membuat ulang environment dan memasang paketnya lagi";
+
+/* Mail, preferences and Photos */
+"Mail attachment copies" = "Salinan lampiran Mail";
+"Copies of attachments you opened or previewed in Mail. The originals stay in your mailboxes, and Mail makes a new copy the next time you open one." = "Salinan lampiran yang pernah Anda buka atau pratinjau di Mail. Aslinya tetap ada di kotak surat, dan Mail membuat salinan baru saat Anda membukanya lagi.";
+"Broken preference files" = "File preferensi rusak";
+"Settings files that are empty or damaged, so their app can't read them anyway. The app starts with default settings and saves a fresh file. Apple's own settings are never included." = "File pengaturan yang kosong atau rusak, sehingga aplikasinya memang tidak bisa membacanya. Aplikasi akan mulai dengan pengaturan bawaan dan menyimpan file baru. Pengaturan milik Apple tidak pernah disertakan.";
+"That app's settings go back to their defaults" = "Pengaturan aplikasi itu kembali ke bawaan";
+"Photos analysis caches" = "Cache analisis Foto";
+"Working files from the background analysis that recognises faces, scenes and text in your photos. They are rebuilt as needed. Your photos, albums and the analysis results in your library are not touched." = "File kerja dari analisis latar belakang yang mengenali wajah, pemandangan, dan teks di foto Anda. File ini dibuat ulang saat diperlukan. Foto, album, dan hasil analisis di perpustakaan Anda tidak disentuh.";
+"Photos may re-analyse in the background for a while" = "Foto mungkin menganalisis ulang di latar belakang untuk sementara";

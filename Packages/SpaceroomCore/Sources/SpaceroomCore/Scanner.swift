@@ -199,13 +199,16 @@ public struct Scanner: Sendable {
                     claim.ruleID != rule.id && (claim.path == real || claim.path.hasPrefix(real + "/"))
                 }
                 if claimedElsewhere { continue }
+                if let check = rule.contentCheck, !check.fails(url) { continue }
 
                 guard let m = FileStat.measure(url, isCancelled: { Task.isCancelled }) else { continue }
 
                 var reason: SkipReason? = context.ignore.ignoresItem(at: url) ? .ignored : nil
                 if reason == nil { reason = guardrail.check(url, root: root) }
                 if reason == nil, let app = ruleInUse { reason = .inUse(bundleID: app) }
-                if reason == nil, rule.skipIfOwnerRunning, let owner = context.runningOwner(of: url.lastPathComponent) {
+                if reason == nil, rule.skipIfOwnerRunning,
+                   let owner = context.runningOwner(of: url.lastPathComponent)
+                       ?? context.runningOwner(of: url.deletingPathExtension().lastPathComponent) {
                     reason = .inUse(bundleID: owner)
                 }
                 if reason == nil, rule.minAgeDays > 0,

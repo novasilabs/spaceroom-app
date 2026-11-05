@@ -44,7 +44,7 @@
 
 - **Bersihkan**
   - **Smart Care:** sampah sistem, sampah developer, dan Tong Sampah dalam satu pemindaian, plus tile Perlindungan, Kecepatan, dan Aplikasi.
-  - **Pembersihan** dan **Pembersihan Dev:** cache, log, Xcode, simulator, cache package manager, dan folder build (`node_modules`, `target`, `.build`, `.venv`, …) di proyek yang tidak diubah selama 30 hari. Folder yang di-commit ke Git tidak pernah ditawarkan. Tool yang sedang berjalan dilewati. Kartu Docker terpisah mengosongkan build cache dan image tanpa tag lewat Docker sendiri, dengan peringatan bahwa ini tidak bisa diurungkan.
+  - **Pembersihan** dan **Pembersihan Dev:** cache, log, salinan lampiran Mail, cache analisis Foto, file preferensi rusak, Xcode, simulator, cache package manager, dan folder build (`node_modules`, `target`, `.build`, `.venv`, …) di proyek yang tidak diubah selama 30 hari. Folder yang di-commit ke Git tidak pernah ditawarkan. Tool yang sedang berjalan dilewati. Kartu Docker terpisah mengosongkan build cache dan image tanpa tag lewat Docker sendiri, dengan peringatan bahwa ini tidak bisa diurungkan.
   - **File Berantakan:** file besar dan lama, duplikat yang dipastikan dari isinya, dan installer yang sudah tidak diperlukan.
 - **Pahami**
   - **Space Lens:** peta sunburst interaktif dari folder atau disk mana pun. Centang item lalu pilih *Tinjau dan Hapus*, dan item akan masuk ke Pusat Pemulihan.
@@ -102,7 +102,6 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 - Helper dengan hak admin: cache dan log sistem, flush DNS, Spotlight
 - Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
 - CLI `spaceroom`
-- Bahasa aplikasi yang tidak dipakai dan lampiran Mail
 - Foto yang mirip, tampilan treemap di Space Lens, dan riwayat pertumbuhan storage
 - Pembaru aplikasi dan "slim apps"
 
