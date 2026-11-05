@@ -160,12 +160,20 @@ public struct DiskScanner: Sendable {
     }
 }
 
+/// A `getattrlistbulk` buffer that frees itself (a raw allocation in a struct would leak).
+final class ScanBuffer {
+    static let size = 256 * 1024
+    let pointer = UnsafeMutableRawPointer.allocate(byteCount: ScanBuffer.size, alignment: 16)
+    deinit { pointer.deallocate() }
+}
+
 /// Per-worker `getattrlistbulk` state: a reusable buffer, hard-link set and progress counters.
 struct BulkReader {
     struct Subfolder { let name: String; let path: String }
 
-    private static let bufferSize = 256 * 1024
-    private var buffer = UnsafeMutableRawPointer.allocate(byteCount: BulkReader.bufferSize, alignment: 16)
+    private let storage = ScanBuffer()
+    private var buffer: UnsafeMutableRawPointer { storage.pointer }
+    private static var bufferSize: Int { ScanBuffer.size }
     private var seenInodes: Set<UInt64> = []
     private(set) var pendingItems = 0
     private var pendingBytes: Int64 = 0

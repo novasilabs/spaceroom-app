@@ -35,6 +35,7 @@ final class AppModel {
     private(set) var flows: [FlowKind: ScanFlowModel] = [:]
     @ObservationIgnored private(set) lazy var spaceLens = SpaceLensModel(app: self)
     @ObservationIgnored private(set) lazy var applications = ApplicationsModel(app: self)
+    @ObservationIgnored private(set) lazy var clutter = ClutterModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 
@@ -147,6 +148,54 @@ final class AppModel {
     @discardableResult
     func purge(_ operationID: UUID) async -> Bool {
         await perform("Couldn't delete") { try await $0.purge(operationID) }
+    }
+
+    /// Permanently deletes several operations; one combined report instead of an alert each.
+    @discardableResult
+    func purge(_ operationIDs: [UUID]) async -> Bool {
+        guard let store else { return false }
+        var total = PurgeResult()
+        var failed = 0
+        for id in operationIDs {
+            do {
+                let result = try await store.purge(id)
+                total.freed += result.freed
+                total.movedToTrash += result.movedToTrash
+                total.movedToTrashSize += result.movedToTrashSize
+            } catch {
+                failed += 1
+            }
+        }
+        reportTrashFallback(total)
+        if failed > 0 {
+            alert = AlertMessage(title: String(localized: "Some items couldn't be deleted"),
+                                 message: String(localized: "\(failed) of \(operationIDs.count) operations still have items in the Restore Center."))
+        }
+        await refreshOperations()
+        return failed == 0
+    }
+
+    /// Restores several operations; one combined report for anything that couldn't come back.
+    @discardableResult
+    func restoreAll(_ operationIDs: [UUID]) async -> Bool {
+        guard let store else { return false }
+        var problems = 0
+        for id in operationIDs {
+            do {
+                let outcomes = try await store.restoreAll(in: id)
+                problems += outcomes.filter {
+                    if case .restored = $0 { false } else if case .restoredRenamed = $0 { false } else { true }
+                }.count
+            } catch {
+                problems += 1
+            }
+        }
+        if problems > 0 {
+            alert = AlertMessage(title: String(localized: "Some items couldn't be restored"),
+                                 message: String(localized: "\(problems) items are no longer in the Restore Center or couldn't be moved back."))
+        }
+        await refreshOperations()
+        return problems == 0
     }
 
     /// Runs a store action, reports failures (including per-item restore failures), refreshes.

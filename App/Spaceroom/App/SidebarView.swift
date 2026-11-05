@@ -105,13 +105,19 @@ private struct SidebarRow: View {
                     .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(module.isAvailable || isSelected ? .white : .textSecondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Spacer(minLength: 4)
+                // Badges keep their natural width; only the title shrinks or truncates.
                 if let badge {
                     Text(badge).font(.system(size: 10, weight: .semibold)).monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize()
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(Capsule().fill(.white.opacity(0.16)))
                 } else if !module.isAvailable {
                     Text("Soon").font(.system(size: 10, weight: .medium)).foregroundStyle(.textTertiary)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
             }
             .padding(.horizontal, 8)

@@ -56,6 +56,8 @@ struct RootView: View {
                 SpaceLensView(model: app.spaceLens)
             } else if module == .applications {
                 ApplicationsView(model: app.applications)
+            } else if module == .clutter {
+                ClutterView(model: app.clutter)
             } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {

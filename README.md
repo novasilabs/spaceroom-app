@@ -22,7 +22,9 @@
 | Smart Care: one scan across every module (safe, regenerable rules only), System Junk / Developer Junk / Trash tiles, disk-after-cleaning tile, single Undo; opens first and runs from the menu bar | ✅ (M1) |
 | Space Lens: map of the home folder, startup disk or external drives as an interactive sunburst (hover, click to drill in, breadcrumb, linked size list), grows live while scanning, shows "system & hidden" space the scan can't see | ✅ (M1) |
 | Applications: installed apps with size, source and last opened; uninstall with leftovers (caches, logs, settings, containers, launch agents — personal data unticked by default); leftovers of apps already removed; everything undoable via the Restore Center | ✅ (M1) |
-| Other modules (My Clutter, System Status…) | Placeholders for M1+ |
+| My Clutter: large & old files (size and age filters), duplicates confirmed by content with a protected "Keep" copy, installer downloads with their source; your own files only, never app data | ✅ (M1) |
+| Restore Center bulk actions: select, Restore All / Delete All | ✅ |
+| Other modules (System Status, Startup & Background…) | Placeholders for v0.5+ |
 
 ## Requirements
 

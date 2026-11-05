@@ -119,8 +119,8 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
     /// Milestone that delivers a module not built yet (PRD §11).
     var plannedMilestone: LocalizedStringResource? {
         switch self {
-        case .smartCare, .cleanup, .devCleanup, .spaceLens, .applications, .restoreCenter: nil
-        case .clutter: "Coming in M1"
+        case .smartCare, .cleanup, .devCleanup, .clutter, .spaceLens, .applications, .restoreCenter: nil
+
         case .status, .startup, .performance, .privacy: "Coming in v0.5"
         case .automations: "Coming in v1.0"
         }
@@ -143,6 +143,10 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
             [("sparkles", "System junk, developer junk and Trash in one scan"),
              ("hand.thumbsup", "Only safe, regenerable data — never documents or projects"),
              ("arrow.uturn.backward", "One Undo brings everything back")]
+        case .clutter:
+            [("doc.badge.clock", "Large files you haven't touched in months"),
+             ("doc.on.doc", "Duplicates confirmed by content, not just name"),
+             ("shippingbox", "Installer downloads you no longer need")]
         default:
             []
         }

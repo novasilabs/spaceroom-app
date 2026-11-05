@@ -103,6 +103,22 @@ enum DebugSnapshots {
 
         app.selection = .clutter
         await pause(1.0)
+        capture("17-clutter-intro", in: directory)
+        let clutter = app.clutter
+        clutter.start()
+        await waitUntil(timeout: 600) { clutter.phase == .results && !clutter.isFindingDuplicates }
+        await pause(1.0)
+        capture("18-clutter-large", in: directory)
+        clutter.tab = .duplicates
+        await pause(1.0)
+        capture("19-clutter-duplicates", in: directory)
+        clutter.tab = .installers
+        await pause(1.0)
+        capture("20-clutter-installers", in: directory)
+        clutter.tab = .large
+
+        app.selection = .status
+        await pause(1.0)
         capture("08-placeholder", in: directory)
 
         NSApp.terminate(nil)
