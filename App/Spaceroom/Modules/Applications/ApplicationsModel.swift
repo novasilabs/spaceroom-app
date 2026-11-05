@@ -9,7 +9,7 @@ import SwiftUI
 @MainActor
 @Observable
 final class ApplicationsModel {
-    enum Tab: Hashable { case installed, leftovers }
+    enum Tab: Hashable { case installed, leftovers, updates }
     enum Sort: String, CaseIterable, Identifiable {
         case size, name, lastUsed
         var id: String { rawValue }
@@ -56,6 +56,39 @@ final class ApplicationsModel {
     private(set) var isWorking = false
     /// Banner after an uninstall: message plus the operation to undo.
     private(set) var lastResult: (message: String, operationID: UUID?)?
+
+    /// Update check results. Only filled when the user asks; nothing is checked in the background.
+    private(set) var updateResult: UpdateCheckResult?
+    private(set) var isCheckingUpdates = false
+    private(set) var lastUpdateCheck: Date?
+    #if DEBUG
+    /// Snapshot tour: show sample updates without contacting anything.
+    func showUpdatesForSnapshot(_ result: UpdateCheckResult) {
+        updateResult = result
+        lastUpdateCheck = .now
+    }
+    #endif
+
+    func checkForUpdates() {
+        guard !isCheckingUpdates else { return }
+        isCheckingUpdates = true
+        let apps = rows.map(\.app)
+        Task {
+            let result = await AppUpdateChecker().check(apps)
+            updateResult = result
+            lastUpdateCheck = .now
+            isCheckingUpdates = false
+        }
+    }
+
+    func openForUpdate(_ update: AppUpdate) {
+        switch update.channel {
+        case .sparkle:
+            NSWorkspace.shared.openApplication(at: update.app.url, configuration: NSWorkspace.OpenConfiguration())
+        case .appStore(let page):
+            NSWorkspace.shared.open(page)
+        }
+    }
 
     private var loadTask: Task<Void, Never>?
     private var leftoverTask: Task<Void, Never>?

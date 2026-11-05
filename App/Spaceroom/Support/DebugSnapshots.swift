@@ -133,6 +133,15 @@ enum DebugSnapshots {
         apps.tab = .leftovers
         await pause(1.0)
         capture("16-applications-leftovers", in: directory)
+        // Sample updates for two listed apps; nothing is contacted.
+        let samples = apps.rows.prefix(2).map(\.app).enumerated().map { index, installed in
+            AppUpdate(app: installed, installedVersion: installed.version ?? "1.0", availableVersion: index == 0 ? "4.2" : "2.1.3",
+                      channel: index == 0 ? .sparkle(releaseNotes: URL(string: "https://example.com")) : .appStore(page: URL(string: "macappstore://apps.apple.com")!))
+        }
+        apps.showUpdatesForSnapshot(UpdateCheckResult(updates: samples, checked: 24, failed: 1))
+        apps.tab = .updates
+        await pause(1.0)
+        capture("16b-applications-updates", in: directory)
         apps.tab = .installed
 
         app.selection = .clutter

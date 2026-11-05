@@ -29,6 +29,7 @@ struct ApplicationsView: View {
                 switch model.tab {
                 case .installed: installed
                 case .leftovers: leftovers
+                case .updates: UpdatesPane(model: model)
                 }
             }
             .padding(.horizontal, 28)
@@ -55,10 +56,13 @@ struct ApplicationsView: View {
                 Text("Installed").tag(ApplicationsModel.Tab.installed)
                 Text(model.orphans.isEmpty ? "Leftovers" : "Leftovers · \(model.orphansSize.bytesText)")
                     .tag(ApplicationsModel.Tab.leftovers)
+                Text(model.updateResult.map { $0.updates.isEmpty ? String(localized: "Updates") : String(localized: "Updates · \($0.updates.count)") }
+                     ?? String(localized: "Updates"))
+                    .tag(ApplicationsModel.Tab.updates)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 280)
+            .frame(width: 400)
         }
     }
 

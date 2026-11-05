@@ -283,6 +283,16 @@
         }
       }
     },
+    "%@ → %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        }
+      }
+    },
     "%@, %@": {
       "localizations": {
         "en": {
@@ -393,6 +403,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld aplikasi"
+          }
+        }
+      }
+    },
+    "%lld apps checked": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld aplikasi diperiksa"
+          }
+        }
+      }
+    },
+    "%lld apps checked · %lld couldn't be reached": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld aplikasi diperiksa · %lld tidak bisa dihubungi"
           }
         }
       }
@@ -785,6 +815,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld image tanpa tag %@"
+          }
+        }
+      }
+    },
+    "%lld updates available": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld update tersedia"
           }
         }
       }
@@ -1259,6 +1299,16 @@
         }
       }
     },
+    "Apps that publish an update feed or come from the App Store can be checked. Others update themselves.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplikasi yang menerbitkan feed update atau berasal dari App Store bisa diperiksa. Aplikasi lain memperbarui dirinya sendiri."
+          }
+        }
+      }
+    },
     "Apps, startup items, malware, speed and privacy": {
       "localizations": {
         "id": {
@@ -1589,12 +1639,32 @@
         }
       }
     },
+    "Check for Updates": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periksa Update"
+          }
+        }
+      }
+    },
     "Check for junk and tell me": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
             "value": "Cari sampah dan beri tahu saya"
+          }
+        }
+      }
+    },
+    "Check your apps for updates": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periksa update aplikasi Anda"
           }
         }
       }
@@ -2993,6 +3063,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dari aplikasi yang Anda hapus · data pribadi disimpan"
+          }
+        }
+      }
+    },
+    "From the developer": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dari pengembang"
           }
         }
       }
@@ -4656,6 +4736,16 @@
         }
       }
     },
+    "Open App Store": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka App Store"
+          }
+        }
+      }
+    },
     "Open Login Items": {
       "localizations": {
         "id": {
@@ -4726,6 +4816,16 @@
         }
       }
     },
+    "Open to Update": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka untuk Update"
+          }
+        }
+      }
+    },
     "Opening it runs commands in Terminal. Fine if you meant to download it.": {
       "localizations": {
         "id": {
@@ -4742,6 +4842,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Membukanya agar bisa Anda sesuaikan sebelum disimpan"
+          }
+        }
+      }
+    },
+    "Opens the app; its own updater installs the update and checks the developer's signature": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membuka aplikasinya; pembaruannya sendiri memasang update dan memeriksa tanda tangan pengembang"
           }
         }
       }
@@ -5102,6 +5212,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ambil kembali gigabyte yang ditinggalkan tool developer Anda."
+          }
+        }
+      }
+    },
+    "Release Notes": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catatan Rilis"
           }
         }
       }
@@ -6298,6 +6418,16 @@
         }
       }
     },
+    "Spaceroom asks each app's own update server, and Apple for App Store apps. Only the request and the apps' bundle IDs are sent, and only when you click Check for Updates.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom bertanya ke server update milik setiap aplikasi, dan ke Apple untuk aplikasi App Store. Hanya permintaan itu dan bundle ID aplikasi yang dikirim, dan hanya saat Anda mengklik Periksa Update."
+          }
+        }
+      }
+    },
     "Spaceroom can now see every cleanable location.": {
       "localizations": {
         "id": {
@@ -7071,6 +7201,36 @@
         }
       }
     },
+    "Updates": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
+          }
+        }
+      }
+    },
+    "Updates install from the App Store": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update dipasang dari App Store"
+          }
+        }
+      }
+    },
+    "Updates · %lld": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update · %lld"
+          }
+        }
+      }
+    },
     "Use the list beside the chart to explore folders.": {
       "localizations": {
         "id": {
@@ -7401,6 +7561,16 @@
         }
       }
     },
+    "Your apps are up to date": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplikasi Anda sudah versi terbaru"
+          }
+        }
+      }
+    },
     "Your launch agents": {
       "localizations": {
         "id": {
@@ -7715,6 +7885,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~10 dtk"
+          }
+        }
+      }
+    },
+    "·": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
           }
         }
       }

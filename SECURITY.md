@@ -48,8 +48,15 @@ prefer otherwise.
 
 ## How Spaceroom limits its own reach
 
-- **No network.** Spaceroom makes no network requests. Notifications are local. Future
-  endpoints (an update feed) will be listed here before they ship.
+- **No network, except when you check for app updates.** Spaceroom makes no network requests
+  on its own. Notifications are local. The only exception is **Applications › Updates ›
+  Check for Updates**, and it runs only when you click it. It then contacts:
+  - each app's own Sparkle update feed (the `SUFeedURL` in that app's Info.plist, HTTPS only);
+  - `https://itunes.apple.com/lookup`, with the bundle IDs of your App Store apps.
+
+  Requests use an ephemeral session with no cookies or cache. Spaceroom never downloads or
+  installs updates itself: the app's own updater or the App Store does, and both verify the
+  developer's signature.
 - **No admin rights.** Nothing runs as root. Admin tasks stay locked until the privileged
   helper exists and has had its own security review.
 - **Read-only where possible.** Permission databases are opened read-only, Protection reads

@@ -38,7 +38,7 @@
 - **See everything.** Every item shows its size, its location and a plain-language reason why it's safe to remove.
 - **Undo anything.** Cleaned items go to the **Restore Center** and stay restorable for 7 days (1–30, your choice) before they're deleted.
 - **Honest numbers.** Only regenerable data counts as junk. Nothing inflated, no scare tactics.
-- **Nothing leaves your Mac.** No account, no telemetry, no network requests. All analysis happens on-device.
+- **Nothing leaves your Mac.** No account, no telemetry, and no network requests unless you click *Check for Updates* (then only the apps' own update feeds and Apple's App Store lookup). All analysis happens on-device.
 - **Free and open.** GPL-3.0-or-later. The cleaning rules are plain JSON anyone can read and review.
 
 ## Features
@@ -60,7 +60,7 @@
 ### Manage
 | | |
 |---|---|
-| **Applications** | Uninstall apps completely, leftovers included (personal data stays unticked), and find what removed apps left behind. |
+| **Applications** | Uninstall apps completely, leftovers included (personal data stays unticked), find what removed apps left behind, and check for updates when you ask. Updates install through the app's own updater or the App Store. |
 | **Startup & Background** | Launch agents, daemons and helpers with signature checks and audit findings, plus a security overview (SIP, Gatekeeper, FileVault, Firewall, XProtect). |
 | **Protection** | Finds files disguised to trick you: programs named like photos or documents, `invoice.pdf.app` and right-to-left tricks, code hidden after images, PDFs that run JavaScript, unsigned apps and downloaded scripts. It reads headers only and never runs anything. |
 | **Performance** | Maintenance tasks with "helps when" notes, last-run times and honest skip reasons. |
@@ -155,7 +155,6 @@ project.yml                    XcodeGen project definition
 - **Privileged helper:** system caches and logs, plus the admin maintenance tasks (DNS, Spotlight, memory purge)
 - **Signed and notarized releases** with Sparkle updates and a Homebrew cask
 - **`spaceroom` CLI** (`scan`, `clean`, `status`, `--json`, `--dry-run`) on the same engine
-- **Applications:** an app updater and "slim apps" (strip unused architectures)
 
 The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.
 

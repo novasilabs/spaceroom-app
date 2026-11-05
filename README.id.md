@@ -37,7 +37,7 @@
 - **Lihat semuanya.** Setiap item menunjukkan ukuran, lokasi, dan alasan yang jelas kenapa aman dihapus.
 - **Urungkan apa pun.** Item yang dibersihkan masuk ke **Pusat Pemulihan** dan bisa dipulihkan selama 7 hari (bisa diatur 1–30 hari) sebelum dihapus.
 - **Angka yang jujur.** Hanya data yang bisa dibuat ulang yang dihitung sebagai sampah. Tanpa angka dibesar-besarkan, tanpa menakut-nakuti.
-- **Tidak ada yang keluar dari Mac Anda.** Tanpa akun, tanpa pelacakan, tanpa koneksi jaringan. Semua analisis terjadi di perangkat.
+- **Tidak ada yang keluar dari Mac Anda.** Tanpa akun, tanpa pelacakan, dan tanpa koneksi jaringan kecuali saat Anda mengklik *Periksa Update* (hanya ke feed update milik aplikasi itu sendiri dan pencarian App Store milik Apple). Semua analisis terjadi di perangkat.
 - **Gratis dan terbuka.** GPL-3.0-or-later. Aturan pembersihan berupa JSON biasa yang bisa dibaca dan ditinjau siapa saja.
 
 ## Fitur
@@ -50,7 +50,7 @@
   - **Space Lens:** peta sunburst atau treemap interaktif dari folder atau disk mana pun, plus apa saja yang membesar sejak pemindaian sebelumnya. Centang item lalu pilih *Tinjau dan Hapus*, dan item akan masuk ke Pusat Pemulihan.
   - **Status Sistem:** skor kesehatan; CPU, memori, jaringan, disk, dan baterai secara langsung; dan proses tersibuk.
 - **Kelola**
-  - **Aplikasi:** hapus instalan sampai bersih, termasuk sisanya.
+  - **Aplikasi:** hapus instalan sampai bersih, termasuk sisanya, dan periksa update saat Anda minta.
   - **Startup & Latar Belakang:** audit launch agent dan ringkasan keamanan Mac.
   - **Perlindungan:** temukan file yang menyamar, seperti program berkedok foto atau dokumen, nama menyesatkan, kode tersembunyi di gambar, PDF yang menjalankan skrip, dan aplikasi tidak ditandatangani.
   - **Performa:** tugas perawatan.
@@ -102,7 +102,6 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 - Helper dengan hak admin: cache dan log sistem, flush DNS, Spotlight
 - Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
 - CLI `spaceroom`
-- Pembaru aplikasi dan "slim apps"
 
 Rencana lengkap ada di [docs/PRD.md](docs/PRD.md), dan riwayat rilis di [CHANGELOG.md](CHANGELOG.md).
 
