@@ -84,12 +84,39 @@ public struct RuleCatalog: Sendable {
             }
             if rule.paths.isEmpty { throw .emptyField(ruleID: rule.id, field: "paths") }
             if rule.minAgeDays < 0 { throw .invalidMinAge(ruleID: rule.id) }
+            if let spec = rule.projectArtifact {
+                try validateProjectRule(rule, spec)
+                continue
+            }
             for raw in rule.paths {
                 do {
                     _ = try PathPattern(raw)
                 } catch {
                     throw .invalidPattern(ruleID: rule.id, pattern: raw, reason: error.description)
                 }
+            }
+        }
+    }
+
+    /// Project rules search folders such as `~/Documents` (which may never be a cleaning root),
+    /// so their paths are checked separately: plain home folders, no wildcards, never Library.
+    static func validateProjectRule(_ rule: Rule, _ spec: ProjectArtifactSpec) throws(RuleCatalogError) {
+        if spec.folders.isEmpty { throw .emptyField(ruleID: rule.id, field: "project_artifact.folders") }
+        if spec.markers.isEmpty { throw .emptyField(ruleID: rule.id, field: "project_artifact.markers") }
+        for name in spec.folders + spec.markers where name.isEmpty || name.contains("/") || name == "." || name == ".." {
+            throw .invalidPattern(ruleID: rule.id, pattern: name, reason: "must be a plain name")
+        }
+        for name in spec.folders where name.contains("*") || name.contains("?") || name.contains("[") {
+            throw .invalidPattern(ruleID: rule.id, pattern: name, reason: "must not contain wildcards")
+        }
+        for raw in rule.paths {
+            let components = raw.hasPrefix("~/") ? raw.dropFirst(2).split(separator: "/", omittingEmptySubsequences: false) : []
+            let valid = !components.isEmpty && components.count <= 2
+                && components.allSatisfy { !$0.isEmpty && $0 != "." && $0 != ".." && !$0.contains("*") && !$0.contains("?") }
+                && components.first != "Library"
+            if !valid {
+                throw .invalidPattern(ruleID: rule.id, pattern: raw,
+                                      reason: "must be a folder in the home folder (not Library), without wildcards")
             }
         }
     }

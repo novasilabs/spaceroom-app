@@ -22,6 +22,9 @@ public enum SkipReason: Codable, Sendable, Hashable {
     case moveFailed(String)
     /// On the user's ignore list.
     case ignored
+    /// Part of a Git repository's tracked files (`verified`), or inside a repository when Git
+    /// isn't installed to check (`verified == false`). Committed folders are never offered.
+    case trackedByGit(verified: Bool)
 }
 
 /// Last line of defence before anything is moved. Pure path logic, no side effects.

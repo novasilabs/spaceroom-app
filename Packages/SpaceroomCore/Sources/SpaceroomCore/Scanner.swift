@@ -17,11 +17,14 @@ public struct ScanItem: Sendable, Identifiable, Hashable {
     public let identity: FileIdentity
     /// Non-nil when the item will not be cleaned (in use, too recent, protected…).
     public let skipReason: SkipReason?
+    /// What to call the item when its own name isn't enough, e.g. "my-app › node_modules".
+    public let label: String?
 
     public var isCleanable: Bool { skipReason == nil }
+    public var displayName: String { label ?? url.lastPathComponent }
 
     public init(url: URL, ruleID: String, root: URL, size: Int64, fileCount: Int, lastModified: Date,
-                isDirectory: Bool, identity: FileIdentity, skipReason: SkipReason?) {
+                isDirectory: Bool, identity: FileIdentity, skipReason: SkipReason?, label: String? = nil) {
         self.url = url
         self.ruleID = ruleID
         self.root = root
@@ -31,6 +34,7 @@ public struct ScanItem: Sendable, Identifiable, Hashable {
         self.isDirectory = isDirectory
         self.identity = identity
         self.skipReason = skipReason
+        self.label = label
     }
 }
 
@@ -161,7 +165,8 @@ public struct Scanner: Sendable {
 
     /// Claimed real paths per rule ID.
     static func claims(for rules: [Rule], home: URL) -> [(ruleID: String, path: String)] {
-        rules.flatMap { rule in
+        // Project rules' paths are places to search, not folders they own.
+        rules.filter { $0.projectArtifact == nil }.flatMap { rule in
             rule.paths.compactMap { raw -> (String, String)? in
                 guard let pattern = try? PathPattern(raw) else { return nil }
                 return (rule.id, SafetyGuard.realPath(pattern.claimURL(home: home)))
@@ -172,6 +177,7 @@ public struct Scanner: Sendable {
     static func scanRule(_ rule: Rule, claims: [(ruleID: String, path: String)], context: ScanContext) -> RuleScanResult {
         // An ignored category isn't scanned at all.
         if context.ignore.ignoresRule(rule.id) { return RuleScanResult(rule: rule, items: []) }
+        if let spec = rule.projectArtifact { return ProjectArtifactFinder.scan(rule, spec: spec, context: context) }
         let guardrail = SafetyGuard(home: context.home)
         let ruleInUse = rule.skipIfRunning.first { context.runningBundleIDs.contains($0) }
         var items: [ScanItem] = []

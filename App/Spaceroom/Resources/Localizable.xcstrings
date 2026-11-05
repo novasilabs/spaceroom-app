@@ -1861,6 +1861,16 @@
         }
       }
     },
+    "Committed to Git": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di-commit ke Git"
+          }
+        }
+      }
+    },
     "Comparing files by content…": {
       "localizations": {
         "id": {
@@ -2959,6 +2969,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diabaikan"
+          }
+        }
+      }
+    },
+    "In a Git repository (Git isn't installed to check)": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di dalam repositori Git (Git belum terpasang untuk memeriksanya)"
           }
         }
       }
@@ -4512,6 +4532,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Program yang menyamar sebagai file"
+          }
+        }
+      }
+    },
+    "Project build folders": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder build proyek"
           }
         }
       }

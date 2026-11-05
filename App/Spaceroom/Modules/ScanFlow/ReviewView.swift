@@ -156,7 +156,7 @@ private struct ItemRow: View {
             Image(systemName: item.isDirectory ? "folder.fill" : "doc.fill")
                 .foregroundStyle(.white.opacity(0.7))
             VStack(alignment: .leading, spacing: 1) {
-                Text(item.url.lastPathComponent).font(.system(size: 13)).lineLimit(1)
+                Text(item.displayName).font(.system(size: 13)).lineLimit(1)
                 Text(item.url.path.abbreviatingHome)
                     .font(.caption).foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1).truncationMode(.middle)

@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "dev.projects.node-modules",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "node_modules in inactive projects",
+      "why_safe": "Packages installed into a JavaScript project you haven't changed for 30 days. Your code isn't touched. Run npm install (or yarn, pnpm, bun) in the project to get them back.",
+      "rebuild_hint": "Next install in that project downloads the packages again",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": true,
+      "project_artifact": {
+        "folders": [
+          "node_modules"
+        ],
+        "markers": [
+          "package.json"
+        ]
+      }
+    },
+    {
+      "id": "dev.projects.web-caches",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "Web framework build caches",
+      "why_safe": "Build output and caches from Next.js, Nuxt, SvelteKit, Turborepo and Parcel in projects you haven't changed for 30 days. They're rebuilt on the next dev or build run.",
+      "rebuild_hint": "Next build of that project takes longer",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": true,
+      "project_artifact": {
+        "folders": [
+          ".next",
+          ".nuxt",
+          ".svelte-kit",
+          ".turbo",
+          ".parcel-cache"
+        ],
+        "markers": [
+          "package.json"
+        ]
+      }
+    },
+    {
+      "id": "dev.projects.rust-target",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "Rust and Maven target folders",
+      "why_safe": "Compiled output of Rust (Cargo) and Java (Maven) projects you haven't changed for 30 days. cargo build or mvn package recreates it.",
+      "rebuild_hint": "Next build compiles the project from scratch",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": true,
+      "project_artifact": {
+        "folders": [
+          "target"
+        ],
+        "markers": [
+          "Cargo.toml",
+          "pom.xml"
+        ]
+      }
+    },
+    {
+      "id": "dev.projects.swiftpm-build",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "Swift package .build folders",
+      "why_safe": "Build products and downloaded dependencies of Swift packages you haven't changed for 30 days. swift build recreates them.",
+      "rebuild_hint": "Next build resolves and compiles everything again",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": true,
+      "project_artifact": {
+        "folders": [
+          ".build"
+        ],
+        "markers": [
+          "Package.swift"
+        ]
+      },
+      "skip_if_running": [
+        "com.apple.dt.Xcode"
+      ]
+    },
+    {
+      "id": "dev.projects.gradle-build",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "Gradle build folders",
+      "why_safe": "Build output and Gradle's project cache in Android and Java projects you haven't changed for 30 days. The next Gradle build recreates them.",
+      "rebuild_hint": "Next build compiles the project from scratch",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": false,
+      "project_artifact": {
+        "folders": [
+          "build",
+          ".gradle"
+        ],
+        "markers": [
+          "build.gradle",
+          "build.gradle.kts",
+          "settings.gradle",
+          "settings.gradle.kts"
+        ]
+      },
+      "skip_if_running": [
+        "com.google.android.studio"
+      ]
+    },
+    {
+      "id": "dev.projects.cocoapods",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "CocoaPods Pods folders",
+      "why_safe": "Pods installed into iOS and macOS projects you haven't changed for 30 days. Run pod install in the project to get them back. Folders committed to Git are never offered.",
+      "rebuild_hint": "pod install downloads the pods again",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": false,
+      "project_artifact": {
+        "folders": [
+          "Pods"
+        ],
+        "markers": [
+          "Podfile"
+        ]
+      },
+      "skip_if_running": [
+        "com.apple.dt.Xcode"
+      ]
+    },
+    {
+      "id": "dev.projects.python-venv",
+      "module": "devCleanup",
+      "group": "projects",
+      "title": "Python virtual environments",
+      "why_safe": "Virtual environments in Python projects you haven't changed for 30 days. Recreate one with python -m venv and reinstall the project's requirements.",
+      "rebuild_hint": "You'll need to recreate the environment and reinstall packages",
+      "paths": [
+        "~/development",
+        "~/Developer",
+        "~/Projects",
+        "~/code",
+        "~/src",
+        "~/dev",
+        "~/work",
+        "~/repos",
+        "~/GitHub",
+        "~/git",
+        "~/Sites",
+        "~/workspace",
+        "~/Documents",
+        "~/Desktop"
+      ],
+      "min_age_days": 30,
+      "default_selected": false,
+      "project_artifact": {
+        "folders": [
+          ".venv",
+          "venv"
+        ],
+        "markers": [
+          "pyproject.toml",
+          "requirements.txt",
+          "setup.py",
+          "Pipfile",
+          "poetry.lock",
+          "uv.lock"
+        ]
+      }
+    }
+  ]
+}

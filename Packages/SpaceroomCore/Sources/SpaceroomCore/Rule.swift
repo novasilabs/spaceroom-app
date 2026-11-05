@@ -43,6 +43,10 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
     /// Eligible for one-click Smart Care (regenerable data only).
     public var smartCare: Bool
     public var action: CleanAction
+    /// Set for rules that find build folders inside projects (`node_modules` next to
+    /// `package.json`). `paths` are then the folders to search, not the folders to clean, and
+    /// `min_age_days` counts from the project's last change instead of the item's.
+    public var projectArtifact: ProjectArtifactSpec?
     /// "mole" when ported from Mole; `sourceRef` then holds the upstream commit.
     public var source: String?
     public var sourceRef: String?
@@ -63,6 +67,7 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         defaultSelected: Bool = true,
         smartCare: Bool = false,
         action: CleanAction = .quarantine,
+        projectArtifact: ProjectArtifactSpec? = nil,
         source: String? = nil,
         sourceRef: String? = nil
     ) {
@@ -81,6 +86,7 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         self.defaultSelected = defaultSelected
         self.smartCare = smartCare
         self.action = action
+        self.projectArtifact = projectArtifact
         self.source = source
         self.sourceRef = sourceRef
     }
@@ -102,8 +108,23 @@ public struct Rule: Codable, Sendable, Identifiable, Hashable {
         defaultSelected = try c.decodeIfPresent(Bool.self, forKey: .defaultSelected) ?? true
         smartCare = try c.decodeIfPresent(Bool.self, forKey: .smartCare) ?? false
         action = try c.decodeIfPresent(CleanAction.self, forKey: .action) ?? .quarantine
+        projectArtifact = try c.decodeIfPresent(ProjectArtifactSpec.self, forKey: .projectArtifact)
         source = try c.decodeIfPresent(String.self, forKey: .source)
         sourceRef = try c.decodeIfPresent(String.self, forKey: .sourceRef)
+    }
+}
+
+/// Which build folders a project rule collects, and how it recognises a project.
+public struct ProjectArtifactSpec: Codable, Sendable, Hashable {
+    /// Folder names to collect, e.g. `node_modules`. Plain names, never paths.
+    public var folders: [String]
+    /// `fnmatch` patterns for files that mark a project of this kind, e.g. `package.json`.
+    /// A folder qualifies only next to one of these.
+    public var markers: [String]
+
+    public init(folders: [String], markers: [String]) {
+        self.folders = folders
+        self.markers = markers
     }
 }
 

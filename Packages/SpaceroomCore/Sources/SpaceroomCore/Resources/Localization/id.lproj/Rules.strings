@@ -37,3 +37,25 @@
 "Gradle caches" = "Cache Gradle";
 "Downloaded dependencies and build caches. Gradle fetches them again, which can take a long time on big projects." = "Dependensi yang diunduh dan cache build. Gradle mengambilnya lagi, yang bisa lama di proyek besar.";
 "Next Gradle build downloads dependencies again" = "Build Gradle berikutnya mengunduh dependensi lagi";
+
+/* Project build folders */
+"node_modules in inactive projects" = "node_modules di proyek yang tidak aktif";
+"Packages installed into a JavaScript project you haven't changed for 30 days. Your code isn't touched. Run npm install (or yarn, pnpm, bun) in the project to get them back." = "Paket yang terpasang di proyek JavaScript yang tidak Anda ubah selama 30 hari. Kode Anda tidak disentuh. Jalankan npm install (atau yarn, pnpm, bun) di proyek itu untuk memasangnya lagi.";
+"Next install in that project downloads the packages again" = "Instalasi berikutnya di proyek itu mengunduh paketnya lagi";
+"Web framework build caches" = "Cache build framework web";
+"Build output and caches from Next.js, Nuxt, SvelteKit, Turborepo and Parcel in projects you haven't changed for 30 days. They're rebuilt on the next dev or build run." = "Hasil build dan cache dari Next.js, Nuxt, SvelteKit, Turborepo, dan Parcel di proyek yang tidak Anda ubah selama 30 hari. Semuanya dibuat ulang saat dev atau build berikutnya.";
+"Next build of that project takes longer" = "Build berikutnya untuk proyek itu lebih lama";
+"Rust and Maven target folders" = "Folder target Rust dan Maven";
+"Compiled output of Rust (Cargo) and Java (Maven) projects you haven't changed for 30 days. cargo build or mvn package recreates it." = "Hasil kompilasi proyek Rust (Cargo) dan Java (Maven) yang tidak Anda ubah selama 30 hari. cargo build atau mvn package membuatnya ulang.";
+"Next build compiles the project from scratch" = "Build berikutnya mengompilasi proyek dari awal";
+"Swift package .build folders" = "Folder .build paket Swift";
+"Build products and downloaded dependencies of Swift packages you haven't changed for 30 days. swift build recreates them." = "Hasil build dan dependensi yang diunduh untuk paket Swift yang tidak Anda ubah selama 30 hari. swift build membuatnya ulang.";
+"Next build resolves and compiles everything again" = "Build berikutnya mengunduh dan mengompilasi semuanya lagi";
+"Gradle build folders" = "Folder build Gradle";
+"Build output and Gradle's project cache in Android and Java projects you haven't changed for 30 days. The next Gradle build recreates them." = "Hasil build dan cache proyek Gradle di proyek Android dan Java yang tidak Anda ubah selama 30 hari. Build Gradle berikutnya membuatnya ulang.";
+"CocoaPods Pods folders" = "Folder Pods CocoaPods";
+"Pods installed into iOS and macOS projects you haven't changed for 30 days. Run pod install in the project to get them back. Folders committed to Git are never offered." = "Pod yang terpasang di proyek iOS dan macOS yang tidak Anda ubah selama 30 hari. Jalankan pod install di proyek itu untuk memasangnya lagi. Folder yang di-commit ke Git tidak pernah ditawarkan.";
+"pod install downloads the pods again" = "pod install mengunduh pod-nya lagi";
+"Python virtual environments" = "Virtual environment Python";
+"Virtual environments in Python projects you haven't changed for 30 days. Recreate one with python -m venv and reinstall the project's requirements." = "Virtual environment di proyek Python yang tidak Anda ubah selama 30 hari. Buat ulang dengan python -m venv, lalu pasang lagi kebutuhan proyeknya.";
+"You'll need to recreate the environment and reinstall packages" = "Anda perlu membuat ulang environment dan memasang paketnya lagi";

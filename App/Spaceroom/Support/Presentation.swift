@@ -24,6 +24,7 @@ struct GroupInfo {
         case "trash": GroupInfo(title: "Trash", symbol: "trash", tint: .hex(0x9A86E0))
         case "xcode": GroupInfo(title: "Xcode & Simulators", symbol: "hammer", tint: .hex(0x4F8CF0))
         case "packages": GroupInfo(title: "Package managers", symbol: "shippingbox.and.arrow.backward", tint: .hex(0xE6A246))
+        case "projects": GroupInfo(title: "Project build folders", symbol: "folder.badge.gearshape", tint: .hex(0x5CC6D6))
         case "smartCare.systemJunk": GroupInfo(title: "System Junk", symbol: "bubbles.and.sparkles", tint: .hex(0x3FC79A))
         case "smartCare.developerJunk": GroupInfo(title: "Developer Junk", symbol: "hammer", tint: .hex(0x4F8CF0))
         case "smartCare.trash": GroupInfo(title: "Trash", symbol: "trash", tint: .hex(0x9A86E0))
@@ -70,6 +71,8 @@ extension SkipReason {
         case .notPermitted: String(localized: "Needs Full Disk Access")
         case .moveFailed(let message): message
         case .ignored: String(localized: "Ignored")
+        case .trackedByGit(let verified):
+            verified ? String(localized: "Committed to Git") : String(localized: "In a Git repository (Git isn't installed to check)")
         }
     }
 
@@ -83,6 +86,7 @@ extension SkipReason {
         case .notPermitted: "lock"
         case .moveFailed: "exclamationmark.triangle"
         case .ignored: "eye.slash"
+        case .trackedByGit: "arrow.triangle.branch"
         }
     }
 }
