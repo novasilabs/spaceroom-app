@@ -102,6 +102,8 @@ public enum Volumes {
 /// Measures total CPU usage between two calls (like Activity Monitor's CPU graph).
 public struct CPUSampler: Sendable {
     private var previous: [CoreTicks]?
+    /// Separate state for `samplePerCore()` so both samplers can be used independently.
+    var previousCores: [CoreTicks]?
 
     struct CoreTicks: Sendable {
         var busy: UInt32

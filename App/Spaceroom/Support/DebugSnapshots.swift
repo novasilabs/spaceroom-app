@@ -118,6 +118,10 @@ enum DebugSnapshots {
         clutter.tab = .large
 
         app.selection = .status
+        await pause(8.0) // let gauges and process sampling fill in
+        capture("21-status", in: directory)
+
+        app.selection = .startup
         await pause(1.0)
         capture("08-placeholder", in: directory)
 

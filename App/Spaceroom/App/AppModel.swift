@@ -36,6 +36,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var spaceLens = SpaceLensModel(app: self)
     @ObservationIgnored private(set) lazy var applications = ApplicationsModel(app: self)
     @ObservationIgnored private(set) lazy var clutter = ClutterModel(app: self)
+    @ObservationIgnored private(set) lazy var status = StatusModel()
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 

@@ -24,7 +24,8 @@
 | Applications: installed apps with size, source and last opened; uninstall with leftovers (caches, logs, settings, containers, launch agents — personal data unticked by default); leftovers of apps already removed; everything undoable via the Restore Center | ✅ (M1) |
 | My Clutter: large & old files (size and age filters), duplicates confirmed by content with a protected "Keep" copy, installer downloads with their source; your own files only, never app data | ✅ (M1) |
 | Restore Center bulk actions: select, Restore All / Delete All | ✅ |
-| Other modules (System Status, Startup & Background…) | Placeholders for v0.5+ |
+| System Status: health score with what to fix, CPU (per core, load), memory and swap, network, disk, battery health and cycles, thermal state, busiest processes with Quit for apps; samples only while visible | ✅ (v0.5) |
+| Other modules (Startup & Background, Performance, Privacy…) | Placeholders for v0.5+ |
 
 ## Requirements
 
