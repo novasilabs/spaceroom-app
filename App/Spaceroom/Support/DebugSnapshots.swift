@@ -91,6 +91,20 @@ enum DebugSnapshots {
         }
         window.orderOut(nil)
 
+        // Design tuning panel.
+        let tuning = NSHostingView(rootView: DesignTuningPanel())
+        let tuningWindow = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 380, height: 900),
+                                    styleMask: [.titled], backing: .buffered, defer: false)
+        tuningWindow.contentView = tuning
+        tuningWindow.orderFrontRegardless()
+        await pause(0.8)
+        if let rep = tuning.bitmapImageRepForCachingDisplay(in: tuning.bounds) {
+            tuning.cacheDisplay(in: tuning.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?
+                .write(to: directory.appendingPathComponent("09-design-tuning.png"))
+        }
+        tuningWindow.orderOut(nil)
+
         var images: [NSImage] = MenuBarModel.StorageStyle.allCases.map {
             StatusItemImage.storage(menuBar.rootVolume, style: $0)
         }

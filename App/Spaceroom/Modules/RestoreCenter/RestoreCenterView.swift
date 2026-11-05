@@ -95,7 +95,7 @@ private struct OperationCard: View {
                     Button("Restore All") { run { await app.restoreAll(operation.id) } }
                         .buttonStyle(GhostButtonStyle())
                 }
-                Button { withAnimation(.snappy) { isExpanded.toggle() } } label: {
+                Button { withAnimation(Easing.out(0.2)) { isExpanded.toggle() } } label: {
                     Image(systemName: "chevron.down")
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                         .frame(width: 24, height: 24)
@@ -115,7 +115,7 @@ private struct OperationCard: View {
                 .padding(.vertical, 6)
             }
         }
-        .glassSurface(cornerRadius: 14, tint: operation.hasStoredItems ? 0.08 : 0.02)
+        .glassSurface(cornerRadius: 18, isHighlighted: operation.hasStoredItems)
         .opacity(isWorking ? 0.6 : 1)
         .disabled(isWorking)
         .confirmationDialog("Delete these items permanently?", isPresented: $isConfirmingDelete) {

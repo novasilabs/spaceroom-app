@@ -87,21 +87,22 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// Background gradient stops (top-leading → bottom-trailing).
-    var gradient: [Color] {
+    /// Analogous palette: light and cool at the top, dark and warm at the bottom (grainy-gradient skill).
+    var palette: ModulePalette {
         switch self {
-        case .smartCare: [.hex(0x6B2FA0), .hex(0x35168A), .hex(0x0E1D57)]
-        case .cleanup: [.hex(0x137A55), .hex(0x0C6772), .hex(0x07303F)]
-        case .devCleanup: [.hex(0x3A3FB0), .hex(0x1F5FA8), .hex(0x0A3346)]
-        case .clutter: [.hex(0xA0521A), .hex(0x7A2E2A), .hex(0x2E1220)]
-        case .spaceLens: [.hex(0xB0396A), .hex(0xC0582A), .hex(0x3B1530)]
-        case .status: [.hex(0x1556B8), .hex(0x123A80), .hex(0x0A1A3A)]
-        case .applications: [.hex(0x3D4FD0), .hex(0x2A2C8A), .hex(0x14143F)]
-        case .startup: [.hex(0x9A2650), .hex(0x5A1840), .hex(0x22091C)]
-        case .performance: [.hex(0xC0661A), .hex(0x8A3412), .hex(0x2E1208)]
-        case .privacy: [.hex(0x13819A), .hex(0x0E5470), .hex(0x07233A)]
-        case .restoreCenter: [.hex(0x4D5A75), .hex(0x2E3650), .hex(0x141826)]
-        case .automations: [.hex(0x6A4FA8), .hex(0x3E2D70), .hex(0x181230)]
+        //                    cool      top       middle    bottom    floor     accent
+        case .smartCare:     .hex(0x8A93EA, 0x6C5CC7, 0x4A2C9E, 0x2A145E, 0x120A2C, 0xB86AE6)
+        case .cleanup:       .hex(0x92BFCB, 0x4F9196, 0x22665F, 0x10403A, 0x061F1C, 0x4FCB98)
+        case .devCleanup:    .hex(0x93B6EA, 0x4C77C9, 0x24479A, 0x12265E, 0x08122E, 0x4FB2EE)
+        case .clutter:       .hex(0xAEB6C4, 0x9A7F78, 0x8A4A33, 0x5A2416, 0x2A0E08, 0xE8804E)
+        case .spaceLens:     .hex(0xCB90DB, 0xB5579E, 0x9A3A5C, 0x5E1F2A, 0x290C11, 0xF2A444)
+        case .status:        .hex(0x97ADCB, 0x5F7EB0, 0x33508A, 0x1A2A52, 0x0A1227, 0x5AAAF2)
+        case .applications:  .hex(0x9EABF2, 0x6070D8, 0x3A3FA8, 0x1E1D62, 0x0C0B2C, 0x7C8CFF)
+        case .startup:       .hex(0xC99FC2, 0xA85A88, 0x7E2E5E, 0x4A1636, 0x210818, 0xF06C9C)
+        case .performance:   .hex(0xDABC8E, 0xC98A4A, 0xA4512A, 0x5E2414, 0x290D06, 0xF68C3C)
+        case .privacy:       .hex(0x93CBD2, 0x4E9AAE, 0x23687E, 0x103C4C, 0x061C25, 0x4CD2DA)
+        case .restoreCenter: .hex(0xA7B2C4, 0x6E7A90, 0x4A4E5E, 0x2E2824, 0x14100D, 0x9CA8CA)
+        case .automations:   .hex(0xB6AAE8, 0x7F6CC4, 0x503E94, 0x2A1F58, 0x130D2B, 0xAA8EF2)
         }
     }
 
@@ -145,15 +146,5 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         default:
             []
         }
-    }
-}
-
-extension Color {
-    static func hex(_ value: UInt32, opacity: Double = 1) -> Color {
-        Color(.sRGB,
-              red: Double((value >> 16) & 0xFF) / 255,
-              green: Double((value >> 8) & 0xFF) / 255,
-              blue: Double(value & 0xFF) / 255,
-              opacity: opacity)
     }
 }

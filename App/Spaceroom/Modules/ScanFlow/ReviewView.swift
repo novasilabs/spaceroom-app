@@ -114,7 +114,7 @@ private struct ItemPane: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassSurface(cornerRadius: 12, tint: 0.06)
+            .glassSurface(cornerRadius: 14)
 
             ScrollView {
                 LazyVStack(spacing: 2) {

@@ -23,7 +23,7 @@ struct MenuBarPopover: View {
         .padding(12)
         .frame(width: 340)
         .foregroundStyle(.white)
-        .background(ModuleBackground(module: .smartCare))
+        .background(GrainyBackground(palette: SidebarModule.smartCare.palette))
         .environment(\.colorScheme, .dark)
         .onAppear {
             AppDelegate.openMainWindowAction = { openWindow(id: "main") }
@@ -105,21 +105,21 @@ private struct StorageCard: View {
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             if app.storedSize > 0 {
-                Label("Restore Center holds \(app.storedSize.bytesText) until items expire",
+                Label("Restore Center holds \(app.storedSize.bytesText) on this disk until items expire",
                       systemImage: "arrow.uturn.backward.circle")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(.textSecondary)
             }
         }
-        .padding(12)
-        .glassSurface(cornerRadius: 12)
+        .padding(14)
+        .glassSurface(cornerRadius: 18)
     }
 
     private var levelColor: Color {
         switch volume.level {
         case .ok: .white
         case .low: .orange
-        case .critical: .red
+        case .critical: .hex(0xFF7A7A)
         }
     }
 
@@ -157,7 +157,7 @@ private struct StorageBar: View {
         switch volume.level {
         case .ok: .white
         case .low: .orange
-        case .critical: .red
+        case .critical: .hex(0xFF7A7A)
         }
     }
 }
@@ -179,8 +179,8 @@ private struct ExternalVolumeRow: View {
                     .help("Eject \(volume.name)")
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 8)
-        .glassSurface(cornerRadius: 10)
+        .padding(.horizontal, 14).padding(.vertical, 9)
+        .glassSurface(cornerRadius: 16)
     }
 }
 
@@ -209,13 +209,16 @@ private struct QuickActionsCard: View {
                         Button("Undo") { menuBar.undoLastAction() }.buttonStyle(GhostButtonStyle())
                     }
                 }
+                .padding(.horizontal, 6)
             }
             Text("Everything goes to the Restore Center first.")
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.textTertiary)
+                .padding(.horizontal, 6)
         }
-        .padding(12)
-        .glassSurface(cornerRadius: 12)
+        // Concentric: 8 pt inset around 12 pt buttons → 20 pt outer radius.
+        .padding(8)
+        .glassSurface(cornerRadius: 20)
     }
 }
 
@@ -237,8 +240,9 @@ private struct QuickActionButton: View {
             }
             .padding(.horizontal, 10).padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 9).fill(.white.opacity(isEnabled ? 0.12 : 0.05)))
-            .contentShape(RoundedRectangle(cornerRadius: 9))
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.white.opacity(isEnabled ? 0.11 : 0.04)))
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(PressableStyle())
         .disabled(!isEnabled)
@@ -303,9 +307,9 @@ private struct HealthCard: View {
                 .minimumScaleFactor(0.8)
             Sparkline(values: history, color: color).frame(height: 22)
         }
-        .padding(10)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: 12)
+        .glassSurface(cornerRadius: 16)
     }
 }
 
@@ -354,8 +358,8 @@ private struct LastCleanupCard: View {
                 Spacer()
                 Button("Undo") { menuBar.undo(last.id) }.buttonStyle(GhostButtonStyle())
             }
-            .padding(.horizontal, 12).padding(.vertical, 9)
-            .glassSurface(cornerRadius: 12)
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .glassSurface(cornerRadius: 16)
         }
     }
 }

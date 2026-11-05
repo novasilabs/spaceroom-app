@@ -87,7 +87,7 @@ struct RestoreStoreTests {
         let op = try #require(try await store.quarantine([move(item)], module: "cleanup").record)
         let storedPath = try #require(op.items.first).storedPath
 
-        let freed = try await store.purge(op.id)
+        let freed = try await store.purge(op.id).freed
         #expect(freed == 4096)
         #expect(!FileManager.default.fileExists(atPath: storedPath))
         #expect(try await store.restoreAll(in: op.id).isEmpty)
@@ -139,5 +139,95 @@ struct RestoreDestinationTests {
         #expect(RestoreStore.freeDestination(for: folder, isDirectory: true).lastPathComponent == "com.example (restored)")
         try box.folder("Library/Caches/com.example (restored)")
         #expect(RestoreStore.freeDestination(for: folder, isDirectory: true).lastPathComponent == "com.example (restored 2)")
+    }
+}
+
+@Suite("Restore Center purge")
+struct RestorePurgeTests {
+    func move(_ url: URL) -> PlannedMove { PlannedMove(url: url, ruleID: "test.rule", size: 4096, isDirectory: true) }
+
+    @Test("Regression: read-only folders (dotslash, Go, Cargo caches) are really deleted")
+    func purgesReadOnlyFolders() async throws {
+        let box = try Sandbox()
+        let item = try box.folder("Library/Caches/dotslash")
+        try box.file("Library/Caches/dotslash/bd/App.app/Contents/MacOS/tool")
+        for sub in ["bd/App.app/Contents/MacOS", "bd/App.app/Contents", "bd/App.app", "bd"] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o555],
+                                                  ofItemAtPath: item.appendingPathComponent(sub).path)
+        }
+        let store = try box.store()
+        let op = try #require(try await store.quarantine([move(item)], module: "cleanup").record)
+        let stored = try #require(op.items.first).storedPath
+
+        try await store.purge(op.id)
+        #expect(!FileManager.default.fileExists(atPath: stored))
+        #expect(await store.operation(op.id)?.hasStoredItems == false)
+        #expect((try? FileManager.default.contentsOfDirectory(atPath: box.support.appendingPathComponent("Quarantine").path)) ?? [] == [])
+    }
+
+    @Test func undeletableItemsStayRestorable() async throws {
+        let box = try Sandbox()
+        let item = try box.file("Library/Caches/locked/file").deletingLastPathComponent()
+        let store = try box.store()
+        await store.setTrashHandler { _ in throw CocoaError(.fileWriteNoPermission) }
+        let op = try #require(try await store.quarantine([move(item)], module: "cleanup").record)
+        let stored = URL(fileURLWithPath: try #require(op.items.first).storedPath)
+        // Make the item undeletable: an immutable (uchg) folder can't be removed even by its owner.
+        try FileManager.default.setAttributes([.immutable: true], ofItemAtPath: stored.path)
+        defer { try? FileManager.default.setAttributes([.immutable: false], ofItemAtPath: stored.path) }
+
+        await #expect(throws: RestoreStoreError.self) { try await store.purge(op.id) }
+        #expect(await store.operation(op.id)?.hasStoredItems == true)
+        #expect(FileManager.default.fileExists(atPath: stored.path))
+    }
+
+    @Test func removesOrphanedFolders() async throws {
+        let box = try Sandbox()
+        let item = try box.file("Library/Caches/keep/file").deletingLastPathComponent()
+        let store = try box.store()
+        let kept = try #require(try await store.quarantine([move(item)], module: "cleanup").record)
+        let orphan = box.support.appendingPathComponent("Quarantine/\(UUID().uuidString)/0-left")
+        try FileManager.default.createDirectory(at: orphan, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: orphan.path)
+
+        #expect(await store.removeOrphanedFolders().freed >= 0)
+        #expect(!FileManager.default.fileExists(atPath: orphan.path))
+        #expect(FileManager.default.fileExists(atPath: try #require(kept.items.first).storedPath))
+    }
+}
+
+@Suite("Restore Center purge — protected items")
+struct RestoreProtectedPurgeTests {
+    @Test("Items macOS won't delete in place go to the Trash instead of leaking")
+    func fallsBackToTrash() async throws {
+        let box = try Sandbox()
+        let item = try box.folder("Library/Caches/dotslash")
+        // A child macOS refuses to delete (stands in for an App Management–protected bundle).
+        let locked = try box.folder("Library/Caches/dotslash/Tool.app")
+        try box.file("Library/Caches/dotslash/Tool.app/binary")
+        let fakeTrash = try box.folder("FakeTrash")
+        let store = try box.store()
+        await store.setTrashHandler { url in
+            try FileManager.default.moveItem(at: url, to: fakeTrash.appendingPathComponent(url.lastPathComponent))
+        }
+        let op = try #require(try await store.quarantine(
+            [PlannedMove(url: item, ruleID: "test.rule", size: 8192, isDirectory: true)], module: "cleanup").record)
+        let storedLocked = URL(fileURLWithPath: try #require(op.items.first).storedPath).appendingPathComponent("Tool.app")
+        try FileManager.default.setAttributes([.immutable: true], ofItemAtPath: storedLocked.path)
+        _ = locked
+
+        let result = try await store.purge(op.id)
+        #expect(result.movedToTrash.count == 1)
+        #expect(result.movedToTrashSize == 8192)
+        #expect(await store.operation(op.id)?.hasStoredItems == false)
+        let quarantine = box.support.appendingPathComponent("Quarantine")
+        #expect(((try? FileManager.default.contentsOfDirectory(atPath: quarantine.path)) ?? []).isEmpty)
+
+        // Clean up the immutable flag so the sandbox can be deleted.
+        let trashed = try FileManager.default.contentsOfDirectory(atPath: fakeTrash.path)
+        for name in trashed {
+            let tool = fakeTrash.appendingPathComponent(name).appendingPathComponent("Tool.app")
+            try? FileManager.default.setAttributes([.immutable: false], ofItemAtPath: tool.path)
+        }
     }
 }

@@ -3,29 +3,37 @@
 import SpaceroomCore
 import SwiftUI
 
-/// The CleanMyMac-style module page: one illustrated screen per phase, one big button.
+/// The module page: one illustrated screen per phase, one glowing primary button.
+///
+/// Motion follows the frequency rule: the intro (seen on every visit) appears without
+/// ceremony; results and done (infrequent, a success moment) enter in staged chunks;
+/// every phase leaves with a short 150 ms exit.
 struct ScanFlowView: View {
     let module: SidebarModule
     @Bindable var flow: ScanFlowModel
     @Environment(AppModel.self) private var app
 
+    private var accent: Color { module.palette.accent }
+
     var body: some View {
         ZStack {
             switch flow.phase {
-            case .intro: intro.transition(.phase)
-            case .scanning: scanning.transition(.phase)
+            case .intro: intro.transition(.phaseSwap)
+            case .scanning: scanning.transition(.phaseSwap)
             case .results:
                 if flow.isReviewing {
-                    ReviewView(module: module, flow: flow).transition(.move(edge: .trailing).combined(with: .opacity))
+                    ReviewView(module: module, flow: flow)
+                        .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
+                                                removal: .opacity))
                 } else {
-                    results.transition(.phase)
+                    results.transition(.phaseSwap)
                 }
-            case .cleaning: cleaning.transition(.phase)
-            case .done: done.transition(.phase)
+            case .cleaning: cleaning.transition(.phaseSwap)
+            case .done: done.transition(.phaseSwap)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.spring(duration: 0.45), value: flow.isReviewing)
+        .animation(Easing.out(0.25), value: flow.isReviewing)
     }
 
     // MARK: Intro
@@ -33,19 +41,21 @@ struct ScanFlowView: View {
     private var intro: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 20)
-            ModuleHero(module: module, size: 190)
+            ModuleHero(module: module, size: 150)
             Text(module.title)
                 .font(Typography.hero())
-                .padding(.top, 8)
+                .padding(.top, 6)
             Text(module.tagline)
                 .font(.title3)
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundStyle(.textSecondary)
                 .padding(.top, 6)
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(Array(module.highlights.enumerated()), id: \.offset) { _, item in
-                    Label { Text(item.text) } icon: { Image(systemName: item.symbol).frame(width: 20) }
-                        .font(.system(size: 14))
-                        .foregroundStyle(.white.opacity(0.85))
+                    Label { Text(item.text) } icon: {
+                        Image(systemName: item.symbol).foregroundStyle(.white).frame(width: 20)
+                    }
+                    .font(.system(size: 14))
+                    .foregroundStyle(.textSecondary)
                 }
             }
             .padding(.top, 22)
@@ -54,8 +64,9 @@ struct ScanFlowView: View {
                 Label(notice, systemImage: "checkmark.circle.fill")
                     .font(.callout.weight(.medium))
                     .padding(.horizontal, 14).padding(.vertical, 8)
-                    .glassSurface(cornerRadius: 10)
+                    .glassSurface(cornerRadius: 12)
                     .padding(.top, 18)
+                    .entrance(0)
             }
             if let blocked = app.cleaningBlockedReason {
                 Label(blocked, systemImage: "exclamationmark.octagon.fill")
@@ -66,8 +77,8 @@ struct ScanFlowView: View {
                 FullDiskAccessHint().padding(.top, 18)
             }
             Spacer(minLength: 20)
-            PrimaryCircleButton(title: "Scan", isEnabled: !flow.rules.isEmpty) { flow.startScan() }
-                .padding(.bottom, 40)
+            PrimaryCircleButton(title: "Scan", tint: accent, isEnabled: !flow.rules.isEmpty) { flow.startScan() }
+                .padding(.bottom, 36)
         }
         .padding(.horizontal, 40)
     }
@@ -77,44 +88,49 @@ struct ScanFlowView: View {
     private var scanning: some View {
         VStack(spacing: 0) {
             Spacer()
-            Text(flow.foundSize.bytesText)
-                .font(Typography.bigNumber())
-                .contentTransition(.numericText())
-                .monospacedDigit()
-            Text("found so far")
-                .font(.title3)
-                .foregroundStyle(.white.opacity(0.75))
-            Text("Checked \(flow.completedRules) of \(flow.totalRules) locations")
-                .font(.callout)
-                .foregroundStyle(.white.opacity(0.6))
-                .padding(.top, 10)
-                .monospacedDigit()
-            if flow.kind == .smartCare {
-                HStack(spacing: 14) {
-                    ForEach(flow.groupProgress, id: \.key) { group in
-                        TileProgress(info: group.info, done: group.done, total: group.total)
-                    }
-                }
-                .padding(.top, 26)
-            } else {
-            VStack(spacing: 8) {
-                ForEach(flow.results.suffix(4)) { result in
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                        Text(result.rule.title)
-                        Spacer()
-                        Text(result.cleanableSize.bytesText).monospacedDigit().foregroundStyle(.white.opacity(0.7))
-                    }
+            VStack(spacing: 4) {
+                Text(flow.foundSize.bytesText)
+                    .font(Typography.bigNumber())
+                    .contentTransition(.numericText())
+                Text("found so far")
+                    .font(.title3)
+                    .foregroundStyle(.textSecondary)
+                Text("Checked \(flow.completedRules) of \(flow.totalRules) locations")
                     .font(.callout)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .foregroundStyle(.textTertiary)
+                    .monospacedDigit()
+                    .padding(.top, 6)
+            }
+            .entrance(0)
+
+            Group {
+                if flow.kind == .smartCare {
+                    HStack(spacing: 12) {
+                        ForEach(flow.groupProgress, id: \.key) { group in
+                            TileProgress(info: group.info, done: group.done, total: group.total)
+                        }
+                    }
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(flow.results.suffix(4)) { result in
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                Text(result.rule.title)
+                                Spacer()
+                                Text(result.cleanableSize.bytesText).monospacedDigit().foregroundStyle(.textSecondary)
+                            }
+                            .font(.callout)
+                            .transition(.opacity)
+                        }
+                    }
+                    .frame(width: 360)
                 }
             }
-            .frame(width: 360)
-            .padding(.top, 26)
-            }
+            .padding(.top, 28)
+            .entrance(1)
             Spacer()
-            PrimaryCircleButton(title: "Stop", progress: flow.scanProgress) { flow.cancelScan() }
-                .padding(.bottom, 40)
+            PrimaryCircleButton(title: "Stop", tint: accent, progress: flow.scanProgress) { flow.cancelScan() }
+                .padding(.bottom, 36)
         }
     }
 
@@ -124,38 +140,43 @@ struct ScanFlowView: View {
         VStack(spacing: 0) {
             Spacer(minLength: 16)
             if flow.foundSize == 0 && !flow.groups.contains(where: \.needsAccess) {
-                ModuleHero(module: module, size: 150, symbolOverride: "checkmark.seal")
-                Text("Nothing to clean")
-                    .font(Typography.hero(30))
+                ModuleHero(module: module, size: 130, symbolOverride: "checkmark.seal").entrance(0)
+                Text("Nothing to clean").font(Typography.hero(30)).entrance(1)
                 Text("This part of your Mac is already tidy.")
-                    .font(.title3).foregroundStyle(.white.opacity(0.75)).padding(.top, 4)
+                    .font(.title3).foregroundStyle(.textSecondary).padding(.top, 4)
+                    .entrance(2)
             } else {
-                Text(flow.selectedSize.bytesText)
-                    .font(Typography.bigNumber(64))
-                    .contentTransition(.numericText())
-                    .monospacedDigit()
-                Text("can be cleaned safely")
-                    .font(.title3)
-                    .foregroundStyle(.white.opacity(0.8))
-                Text("Everything goes to the Restore Center and is kept for \(app.retentionDays) days.")
+                VStack(spacing: 4) {
+                    Text(flow.selectedSize.bytesText)
+                        .font(Typography.bigNumber(64))
+                        .contentTransition(.numericText())
+                    Text("can be cleaned safely")
+                        .font(.title3)
+                        .foregroundStyle(.textSecondary)
+                }
+                .entrance(0)
+                Text("Everything goes to the Restore Center for \(app.retentionDays) days. Disk space is freed when it leaves.")
                     .font(.callout)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.textTertiary)
                     .padding(.top, 6)
+                    .entrance(1)
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 170, maximum: 220), spacing: 14)], spacing: 14) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 12)], spacing: 12) {
                     ForEach(flow.groups) { group in
-                        GroupCard(group: group) {
+                        ResultTile(group: group) {
                             if group.needsAccess { app.isShowingOnboarding = true } else { flow.toggleGroup(group) }
                         }
                     }
                 }
-                .frame(maxWidth: 760)
-                .padding(.top, 28)
+                .frame(maxWidth: 800)
+                .padding(.top, 26)
+                .entrance(2)
 
                 if flow.kind == .smartCare, let volume = flow.volumeAtResults {
                     DiskTile(volume: volume, cleanSize: flow.selectedSize)
-                        .frame(maxWidth: 760)
-                        .padding(.top, 14)
+                        .frame(maxWidth: 800)
+                        .padding(.top, 12)
+                        .entrance(3)
                 }
 
                 HStack(spacing: 10) {
@@ -164,21 +185,22 @@ struct ScanFlowView: View {
                     if flow.skippedItemCount > 0 {
                         Text("\(flow.skippedItemCount) items skipped (in use or too recent)")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(.textTertiary)
                     }
                 }
-                .padding(.top, 22)
+                .padding(.top, 20)
+                .entrance(4)
             }
             Spacer(minLength: 16)
-            HStack(spacing: 28) {
+            HStack(spacing: 24) {
                 Button("Rescan") { flow.startScan() }.buttonStyle(GhostButtonStyle())
-                PrimaryCircleButton(title: "Clean",
+                PrimaryCircleButton(title: "Clean", tint: accent,
                                     isEnabled: flow.selectedSize > 0 && app.cleaningBlockedReason == nil) {
                     flow.clean()
                 }
                 Button("Cancel") { flow.finish() }.buttonStyle(GhostButtonStyle())
             }
-            .padding(.bottom, 40)
+            .padding(.bottom, 36)
         }
         .padding(.horizontal, 40)
     }
@@ -190,10 +212,12 @@ struct ScanFlowView: View {
             Spacer()
             Text("Moving \(flow.selectedSize.bytesText) to the Restore Center…")
                 .font(.title3)
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(.textSecondary)
+                .entrance(0)
             Spacer()
-            PrimaryCircleButton(title: "Cleaning", progress: 0.25, isIndeterminate: true, isEnabled: false) {}
-                .padding(.bottom, 40)
+            PrimaryCircleButton(title: "Cleaning", tint: accent, progress: 0.25, isIndeterminate: true,
+                                isEnabled: false) {}
+                .padding(.bottom, 36)
         }
     }
 
@@ -203,17 +227,29 @@ struct ScanFlowView: View {
         let outcome = flow.lastOutcome
         return VStack(spacing: 0) {
             Spacer(minLength: 16)
-            ModuleHero(module: module, size: 160, symbolOverride: "checkmark.seal.fill")
+            ModuleHero(module: module, size: 140, symbolOverride: "checkmark.seal.fill").entrance(0)
             Text("\((outcome?.freedSize ?? 0).bytesText) cleaned")
                 .font(Typography.bigNumber(48))
-            Text("Moved to the Restore Center. You can restore it for \(app.retentionDays) days.")
+                .entrance(1)
+            Text(flow.isReleased
+                 ? "Released. The space is free now."
+                 : "Moved to the Restore Center. You can restore it for \(app.retentionDays) days.")
                 .font(.title3)
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundStyle(.textSecondary)
                 .multilineTextAlignment(.center)
+                .contentTransition(.opacity)
                 .padding(.top, 6)
+                .entrance(2)
+
+            if let operation = outcome?.operation, !flow.isReleased {
+                ReleaseCard(size: operation.totalSize, retentionDays: app.retentionDays) { flow.freeUpNow() }
+                    .frame(maxWidth: 520)
+                    .padding(.top, 20)
+                    .entrance(3)
+            }
 
             HStack(spacing: 10) {
-                if outcome?.operation != nil {
+                if outcome?.operation != nil && !flow.isReleased {
                     Button { flow.undoLastClean() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
                         .buttonStyle(GhostButtonStyle())
                 }
@@ -222,60 +258,82 @@ struct ScanFlowView: View {
                 }
                 .buttonStyle(GhostButtonStyle())
             }
-            .padding(.top, 22)
+            .padding(.top, 18)
+            .entrance(4)
 
             if let skipped = outcome?.skipped, !skipped.isEmpty {
                 SkippedSummary(items: skipped)
                     .frame(maxWidth: 520)
-                    .padding(.top, 22)
+                    .padding(.top, 18)
+                    .entrance(5)
             }
             Spacer(minLength: 16)
-            PrimaryCircleButton(title: "Done") { flow.finish() }
-                .padding(.bottom, 40)
+            PrimaryCircleButton(title: "Done", tint: accent) { flow.finish() }
+                .padding(.bottom, 36)
         }
         .padding(.horizontal, 40)
     }
 }
 
-private struct GroupCard: View {
+/// CleanMyMac-style result tile: small label, big number, short subtitle, a glass object in the
+/// corner and a colour wash. Tapping toggles the whole category.
+private struct ResultTile: View {
     let group: ScanFlowModel.GroupSummary
     let toggle: () -> Void
+    @State private var isHovering = false
 
     var body: some View {
+        let radius = DesignTokens.shared.cardRadius
         Button(action: toggle) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: group.info.symbol)
-                        .font(.system(size: 20))
-                        .frame(width: 36, height: 36)
-                        .background(Circle().fill(.white.opacity(0.14)))
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top) {
+                    Text(group.info.title)
+                        .font(Typography.eyebrow)
+                        .foregroundStyle(.textSecondary)
+                        .lineLimit(1)
                     Spacer()
-                    Image(systemName: group.needsAccess ? "lock.fill"
-                          : group.isSelected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 18))
-                        .foregroundStyle(group.isSelected ? .white : .white.opacity(0.5))
+                    if group.needsAccess {
+                        Image(systemName: "lock.fill").foregroundStyle(.yellow.opacity(0.9))
+                    } else {
+                        IconSwap(isOn: group.isSelected, on: "checkmark.circle.fill", off: "circle")
+                            .font(.system(size: 17))
+                            .foregroundStyle(group.isSelected ? .white : .textTertiary)
+                    }
                 }
-                Text(group.info.title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .lineLimit(1)
-                if group.needsAccess {
-                    Text("Needs Full Disk Access")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.yellow.opacity(0.9))
-                } else {
-                    Text(group.isSelected ? group.selectedSize.bytesText : group.cleanableSize.bytesText)
-                        .font(.system(size: 13))
-                        .monospacedDigit()
-                        .foregroundStyle(.white.opacity(group.isSelected ? 0.85 : 0.5))
+                Spacer(minLength: 14)
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if group.needsAccess {
+                            Text("Locked").font(Typography.tileNumber).lineLimit(1)
+                            Text("Needs Full Disk Access").font(.caption).foregroundStyle(.yellow.opacity(0.9))
+                        } else {
+                            Text(group.isSelected ? group.selectedSize.bytesText : group.cleanableSize.bytesText)
+                                .font(Typography.tileNumber)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                                .contentTransition(.numericText())
+                            Text(group.isSelected ? "to clean" : "not selected")
+                                .font(.caption)
+                                .foregroundStyle(.textTertiary)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    GlassGlyph(symbol: group.info.symbol, tint: group.info.tint, size: 46)
+                        .opacity(group.isSelected || group.needsAccess ? 1 : 0.6)
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .glassSurface(cornerRadius: 16, tint: group.isSelected ? 0.12 : 0.03)
-            .opacity(group.isSelected ? 1 : 0.75)
-            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 138, alignment: .leading)
+            .glassSurface(cornerRadius: radius,
+                          wash: group.isSelected ? group.info.tint : nil,
+                          isHighlighted: isHovering)
+            .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         }
         .buttonStyle(PressableStyle())
+        .onHover { isHovering = $0 }
+        .animation(Motion.hover, value: isHovering)
+        .animation(Motion.hover, value: group.isSelected)
+        .accessibilityElement(children: .combine)
         .accessibilityAddTraits(group.isSelected ? .isSelected : [])
     }
 }
@@ -287,28 +345,29 @@ private struct TileProgress: View {
     let total: Int
 
     var body: some View {
+        let finished = total > 0 && done >= total
         VStack(spacing: 10) {
             ZStack {
-                Circle().stroke(.white.opacity(0.18), lineWidth: 4)
+                Circle().stroke(.white.opacity(0.16), lineWidth: 3)
                 Circle()
                     .trim(from: 0, to: total == 0 ? 1 : CGFloat(done) / CGFloat(total))
-                    .stroke(.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(.white, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeOut(duration: 0.3), value: done)
-                Image(systemName: done == total ? "checkmark" : info.symbol)
-                    .font(.system(size: 18, weight: .semibold))
-                    .contentTransition(.symbolEffect(.replace))
+                    .animation(Easing.out(0.3), value: done)
+                IconSwap(isOn: finished, on: "checkmark", off: info.symbol)
+                    .font(.system(size: 17, weight: .semibold))
             }
-            .frame(width: 56, height: 56)
+            .frame(width: 52, height: 52)
             Text(info.title).font(.system(size: 12, weight: .medium))
         }
-        .frame(width: 130)
-        .padding(.vertical, 14)
-        .glassSurface(cornerRadius: 14)
+        .frame(width: 136)
+        .padding(.vertical, 16)
+        .glassSurface(wash: finished ? info.tint : nil)
+        .animation(Motion.hover, value: finished)
     }
 }
 
-/// "Macintosh HD: 4.8 GB free → 9.7 GB after Smart Care".
+/// "Macintosh HD: 4.8 GB free → 9.7 GB after cleaning".
 private struct DiskTile: View {
     let volume: VolumeInfo
     let cleanSize: Int64
@@ -316,17 +375,14 @@ private struct DiskTile: View {
     var body: some View {
         let after = min(volume.totalBytes, volume.availableBytes + cleanSize)
         HStack(spacing: 14) {
-            Image(systemName: "internaldrive")
-                .font(.system(size: 20))
-                .frame(width: 36, height: 36)
-                .background(Circle().fill(.white.opacity(0.14)))
-            VStack(alignment: .leading, spacing: 6) {
+            GlassGlyph(symbol: "internaldrive", tint: .hex(0x8A9AB8), size: 40)
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Text(volume.name).font(.system(size: 14, weight: .semibold))
                     Spacer()
-                    Text(volume.availableBytes.bytesText).monospacedDigit().foregroundStyle(levelColor)
-                    Image(systemName: "arrow.right").font(.caption).foregroundStyle(.white.opacity(0.6))
-                    Text("\(after.bytesText) free after cleaning")
+                    Text("\(volume.availableBytes.bytesText) free").monospacedDigit().foregroundStyle(levelColor)
+                    Image(systemName: "arrow.right").font(.caption).foregroundStyle(.textTertiary)
+                    Text("\(after.bytesText) once released")
                         .monospacedDigit().fontWeight(.semibold)
                 }
                 .font(.system(size: 13))
@@ -335,19 +391,23 @@ private struct DiskTile: View {
                     let usedAfter = proxy.size.width * Double(volume.totalBytes - after) / total
                     let freed = proxy.size.width * Double(after - volume.availableBytes) / total
                     ZStack(alignment: .leading) {
-                        Capsule().fill(.white.opacity(0.15))
+                        Capsule().fill(.white.opacity(0.14))
                         HStack(spacing: 0) {
                             Rectangle().fill(.white.opacity(0.85)).frame(width: usedAfter)
-                            Rectangle().fill(.green.opacity(0.85)).frame(width: freed)
+                            Rectangle().fill(Color.hex(0x4FCB98)).frame(width: freed)
                         }
                         .clipShape(Capsule())
                     }
                 }
-                .frame(height: 7)
+                .frame(height: 6)
+                Text("Cleaned items wait in the Restore Center on this disk. Their space frees up when they expire, or right away with Free Up Now.")
+                    .font(.caption)
+                    .foregroundStyle(.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(14)
-        .glassSurface(cornerRadius: 16, tint: 0.06)
+        .padding(16)
+        .glassSurface()
         .accessibilityElement(children: .combine)
     }
 
@@ -355,7 +415,36 @@ private struct DiskTile: View {
         switch volume.level {
         case .ok: .white
         case .low: .orange
-        case .critical: .red
+        case .critical: .hex(0xFF6B6B)
+        }
+    }
+}
+
+/// Done-screen card: the cleaned items still occupy the disk until released.
+private struct ReleaseCard: View {
+    let size: Int64
+    let retentionDays: Int
+    let release: () -> Void
+    @State private var isConfirming = false
+
+    var body: some View {
+        HStack(spacing: 14) {
+            GlassGlyph(symbol: "externaldrive.badge.checkmark", tint: .hex(0x4FCB98), size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(size.bytesText) is still on your disk").font(.system(size: 13, weight: .semibold))
+                Text("It frees up in \(retentionDays) days, or now if you're sure.")
+                    .font(.caption).foregroundStyle(.textSecondary)
+            }
+            Spacer(minLength: 8)
+            Button("Free Up Now") { isConfirming = true }
+                .buttonStyle(GhostButtonStyle())
+        }
+        .padding(.leading, 14).padding(.trailing, 10).padding(.vertical, 12)
+        .glassSurface(cornerRadius: 22, wash: .hex(0x4FCB98))
+        .confirmationDialog("Delete \(size.bytesText) permanently?", isPresented: $isConfirming) {
+            Button("Delete Permanently", role: .destructive, action: release)
+        } message: {
+            Text("This frees the space now, but you won't be able to restore these items.")
         }
     }
 }
@@ -372,7 +461,7 @@ private struct SkippedSummary: View {
                         Image(systemName: item.reason.symbol).frame(width: 16)
                         Text(item.path.abbreviatingHome).lineLimit(1).truncationMode(.middle)
                         Spacer()
-                        Text(item.reason.text).foregroundStyle(.white.opacity(0.6))
+                        Text(item.reason.text).foregroundStyle(.textTertiary)
                     }
                     .font(.caption)
                 }
@@ -383,7 +472,7 @@ private struct SkippedSummary: View {
                 .font(.callout.weight(.medium))
         }
         .padding(12)
-        .glassSurface(cornerRadius: 12)
+        .glassSurface(cornerRadius: 14)
     }
 }
 
@@ -392,6 +481,7 @@ struct FullDiskAccessHint: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        // Concentric: 6 px inset around a capsule button → outer radius = 15 + 6.
         HStack(spacing: 10) {
             Image(systemName: "lock.shield")
             Text("Some locations need Full Disk Access.")
@@ -399,14 +489,7 @@ struct FullDiskAccessHint: View {
                 .buttonStyle(GhostButtonStyle())
         }
         .font(.callout)
-        .padding(.horizontal, 14).padding(.vertical, 8)
-        .glassSurface(cornerRadius: 12)
-    }
-}
-
-extension AnyTransition {
-    static var phase: AnyTransition {
-        .asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.97)),
-                    removal: .opacity.combined(with: .scale(scale: 1.02)))
+        .padding(.leading, 14).padding(.trailing, 6).padding(.vertical, 6)
+        .glassSurface(cornerRadius: 21)
     }
 }

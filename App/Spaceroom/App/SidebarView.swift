@@ -2,29 +2,33 @@
 
 import SwiftUI
 
+/// Translucent sidebar over the module gradient. Selection and hover respond instantly
+/// (list navigation is high-frequency: no scale, no slide, ≤ 120 ms background fades).
 struct SidebarView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Room for the window's traffic-light buttons (hidden title bar).
-            Color.clear.frame(height: 38)
+            Color.clear.frame(height: 36)
             wordmark
                 .padding(.horizontal, 18)
-                .padding(.bottom, 14)
+                .padding(.bottom, 10)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(SidebarModule.Section.allCases, id: \.self) { section in
                         if section == .footer {
-                            Divider().overlay(.white.opacity(0.15)).padding(.vertical, 10).padding(.horizontal, 8)
+                            Rectangle().fill(.white.opacity(0.08)).frame(height: 1)
+                                .padding(.vertical, 8).padding(.horizontal, 10)
                         } else if let title = section.title {
                             Text(title)
                                 .font(.system(size: 11, weight: .semibold))
+                                .tracking(0.4)
                                 .textCase(.uppercase)
-                                .foregroundStyle(.white.opacity(0.5))
-                                .padding(.horizontal, 10)
-                                .padding(.top, 14)
+                                .foregroundStyle(.textTertiary)
+                                .padding(.horizontal, 12)
+                                .padding(.top, 12)
                                 .padding(.bottom, 4)
                         }
                         ForEach(SidebarModule.allCases.filter { $0.section == section }) { module in
@@ -41,32 +45,38 @@ struct SidebarView: View {
 
             if app.fullDiskAccess == .denied {
                 Button { app.isShowingOnboarding = true } label: {
-                    Label("Full Disk Access needed", systemImage: "lock.shield")
-                        .font(.system(size: 12, weight: .medium))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(.yellow.opacity(0.18)))
-                        .foregroundStyle(.yellow)
+                    HStack(spacing: 9) {
+                        GlassGlyph(symbol: "lock.shield", tint: .hex(0xE0A93A), size: 22, isCompact: true)
+                        Text("Allow Full Disk Access").font(.system(size: 12, weight: .semibold))
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.textTertiary)
+                    }
+                    // Concentric with the 22 pt glyph (radius ≈ 7) inset by 8 → 15.
+                    .padding(8)
+                    .glassSurface(cornerRadius: 15, wash: .hex(0xE0A93A))
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
-                .padding(12)
+                .buttonStyle(PressableStyle())
+                .padding(.horizontal, 10).padding(.vertical, 10)
             }
         }
         .background {
+            // Dark tint, not an opaque material: the module gradient and grain show through.
             Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay(Color.black.opacity(0.22))
+                .fill(Color.black.opacity(0.26))
+                .overlay(alignment: .trailing) {
+                    Rectangle().fill(.white.opacity(0.06)).frame(width: 1)
+                }
                 .ignoresSafeArea()
         }
     }
 
     private var wordmark: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "circle.hexagongrid.fill")
-                .font(.system(size: 20))
-                .symbolRenderingMode(.hierarchical)
+        HStack(spacing: 9) {
+            GlassGlyph(symbol: "circle.hexagongrid.fill", tint: .hex(0x8B6BE8), size: 26, isCompact: true)
             Text("Spaceroom")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 17, weight: .bold))
         }
     }
 
@@ -89,27 +99,30 @@ private struct SidebarRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                ModuleIcon(module: module)
+                ModuleIcon(module: module, size: 24)
+                    .opacity(module.isAvailable || isSelected ? 1 : 0.55)
                 Text(module.title)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(module.isAvailable || isSelected ? .white : .textSecondary)
                     .lineLimit(1)
                 Spacer(minLength: 4)
                 if let badge {
                     Text(badge).font(.system(size: 10, weight: .semibold)).monospacedDigit()
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Capsule().fill(.white.opacity(0.18)))
+                        .background(Capsule().fill(.white.opacity(0.16)))
                 } else if !module.isAvailable {
-                    Text("Soon").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.45))
+                    Text("Soon").font(.system(size: 10, weight: .medium)).foregroundStyle(.textTertiary)
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.vertical, 5)
             .background {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.white.opacity(isSelected ? 0.18 : (isHovering ? 0.08 : 0)))
+                // Concentric with the 24 pt icon: 8 (icon radius ≈ 7) + 5 inset ≈ 12.
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.white.opacity(isSelected ? 0.15 : (isHovering ? 0.07 : 0)))
             }
             .contentShape(Rectangle())
-            .opacity(module.isAvailable || isSelected ? 1 : 0.72)
+            .animation(Motion.hover, value: isHovering)
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }

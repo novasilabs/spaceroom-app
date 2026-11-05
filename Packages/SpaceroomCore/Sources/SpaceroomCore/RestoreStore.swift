@@ -68,6 +68,18 @@ public struct MoveFailure: Sendable, Hashable {
     public let reason: SkipReason
 }
 
+/// What "Delete now" or expiry actually did.
+public struct PurgeResult: Sendable, Hashable {
+    /// Bytes really deleted.
+    public var freed: Int64 = 0
+    /// Items macOS wouldn't let us delete in place (for example app bundles protected by
+    /// App Management). They were moved to the Trash; emptying it frees the space.
+    public var movedToTrash: [String] = []
+    public var movedToTrashSize: Int64 = 0
+
+    public init() {}
+}
+
 public enum RestoreOutcome: Sendable, Hashable {
     case restored(itemID: UUID, path: String)
     /// Restored next to the original because something new now exists at the original path.
@@ -79,13 +91,20 @@ public enum RestoreOutcome: Sendable, Hashable {
 public enum RestoreStoreError: Error, CustomStringConvertible {
     case unreadableIndex(URL, underlying: String)
     case operationNotFound(UUID)
+    /// Some items could not be deleted; they stay in the Restore Center.
+    case purgeIncomplete([String])
 
     public var description: String {
         switch self {
         case .unreadableIndex(let url, let underlying): "Restore Center index at \(url.path) is unreadable: \(underlying)"
         case .operationNotFound(let id): "Operation \(id) not found"
+        case .purgeIncomplete(let paths): "\(paths.count) item(s) could not be deleted and are still in the Restore Center"
         }
     }
+}
+
+extension RestoreStoreError: LocalizedError {
+    public var errorDescription: String? { description }
 }
 
 /// Owns the quarantine folder and its index. All cleaning goes through here so everything is undoable.
@@ -95,6 +114,12 @@ public actor RestoreStore {
     public let directory: URL
     private var records: [OperationRecord]
     private let fileManager = FileManager.default
+    /// Moves an item to the user's Trash. Replaceable in tests so they never touch the real Trash.
+    var trashHandler: @Sendable (URL) throws -> Void = { url in
+        try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+    }
+
+    func setTrashHandler(_ handler: @escaping @Sendable (URL) throws -> Void) { trashHandler = handler }
 
     var indexURL: URL { directory.appendingPathComponent("operations.json") }
     var quarantineRoot: URL { directory.appendingPathComponent("Quarantine", isDirectory: true) }
@@ -216,34 +241,120 @@ public actor RestoreStore {
 
     // MARK: Purge
 
-    /// Permanently deletes an operation's quarantined items ("Delete now"). Returns bytes freed.
+    /// Permanently deletes an operation's quarantined items ("Delete now").
+    ///
+    /// An item is only marked deleted once it is really gone, or — when macOS refuses to delete
+    /// it in place — once it is in the Trash. Items that can be neither stay stored (visible and
+    /// restorable) and the call throws `purgeIncomplete` after doing the rest.
     @discardableResult
-    public func purge(_ operationID: UUID, now: Date = .now) throws -> Int64 {
+    public func purge(_ operationID: UUID, now: Date = .now) throws -> PurgeResult {
         guard let opIndex = records.firstIndex(where: { $0.id == operationID }) else {
             throw RestoreStoreError.operationNotFound(operationID)
         }
-        var freed: Int64 = 0
+        var result = PurgeResult()
+        var failed: [String] = []
         for itemIndex in records[opIndex].items.indices where records[opIndex].items[itemIndex].isStored {
             let item = records[opIndex].items[itemIndex]
             if item.storage == .quarantine {
                 let url = URL(fileURLWithPath: item.storedPath)
-                if FileStat.exists(url) { try? fileManager.removeItem(at: url) }
-                freed += item.size
+                switch removeOrTrash(url) {
+                case .deleted: result.freed += item.size
+                case .trashed:
+                    result.movedToTrash.append(item.originalPath)
+                    result.movedToTrashSize += item.size
+                case .failed:
+                    failed.append(item.originalPath)
+                    continue
+                }
             }
+            // Trash-stored items stay in that volume's Trash, which the user manages in Finder.
             records[opIndex].items[itemIndex].state = .purged(at: now)
         }
         try save()
-        removeEmptyOperationFolder(operationID, force: true)
-        return freed
+        if failed.isEmpty { removeOperationFolder(operationID) }
+        if !failed.isEmpty { throw RestoreStoreError.purgeIncomplete(failed) }
+        return result
     }
 
-    /// Purges operations older than the retention period. Returns bytes freed.
+    /// Purges operations older than the retention period.
+    /// Keeps going past an operation that can't be fully purged, then reports the first failure.
     @discardableResult
-    public func purgeExpired(retentionDays: Int, now: Date = .now) throws -> Int64 {
+    public func purgeExpired(retentionDays: Int, now: Date = .now) throws -> PurgeResult {
         let expired = records.filter { $0.hasStoredItems && $0.expiryDate(retentionDays: retentionDays) <= now }
-        var freed: Int64 = 0
-        for record in expired { freed += try purge(record.id, now: now) }
-        return freed
+        var total = PurgeResult()
+        var firstError: (any Error)?
+        for record in expired {
+            do {
+                let result = try purge(record.id, now: now)
+                total.freed += result.freed
+                total.movedToTrash += result.movedToTrash
+                total.movedToTrashSize += result.movedToTrashSize
+            } catch {
+                firstError = firstError ?? error
+            }
+        }
+        if let firstError { throw firstError }
+        return total
+    }
+
+    enum RemovalOutcome { case deleted, trashed, failed }
+
+    /// Deletes in place (fixing read-only folders), else falls back to the Trash.
+    func removeOrTrash(_ url: URL) -> RemovalOutcome {
+        if (try? Self.forceRemove(url, fileManager: fileManager)) != nil { return .deleted }
+        // App Management protects app bundles signed by other developers: they can't be
+        // changed or deleted in place, but the folder containing them can still be moved.
+        if (try? trashHandler(url)) != nil { return .trashed }
+        return .failed
+    }
+
+    /// Deletes quarantine folders that no longer hold anything restorable: folders of unknown
+    /// operations, and leftovers of operations whose items are all restored or deleted.
+    /// Returns the number of folders removed.
+    @discardableResult
+    public func removeOrphanedFolders() -> PurgeResult {
+        let folders = (try? fileManager.contentsOfDirectory(atPath: quarantineRoot.path)) ?? []
+        var result = PurgeResult()
+        for name in folders {
+            let folder = quarantineRoot.appendingPathComponent(name, isDirectory: true)
+            if let id = UUID(uuidString: name), let record = operation(id), record.hasStoredItems { continue }
+            let size = FileStat.measure(folder)?.allocatedSize ?? 0
+            switch removeOrTrash(folder) {
+            case .deleted: result.freed += size
+            case .trashed:
+                result.movedToTrash.append(folder.path)
+                result.movedToTrashSize += size
+            case .failed: break
+            }
+        }
+        return result
+    }
+
+    /// Removes a file or folder tree, first making read-only folders writable.
+    /// Package caches (dotslash, Go modules, Cargo) commonly ship read-only directories, which
+    /// plain `removeItem` cannot empty.
+    static func forceRemove(_ url: URL, fileManager: FileManager) throws {
+        guard FileStat.exists(url) else { return }
+        do {
+            try fileManager.removeItem(at: url)
+        } catch {
+            makeTreeWritable(url)
+            try fileManager.removeItem(at: url)
+        }
+    }
+
+    /// Adds owner write permission to every folder in a tree (without following symlinks).
+    static func makeTreeWritable(_ url: URL) {
+        func addWrite(_ path: String) {
+            var info = stat()
+            guard lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR else { return }
+            chmod(path, info.st_mode | S_IRWXU)
+        }
+        addWrite(url.path)
+        guard let enumerator = FileManager.default.enumerator(atPath: url.path) else { return }
+        while let relative = enumerator.nextObject() as? String {
+            addWrite(url.appendingPathComponent(relative).path)
+        }
     }
 
     // MARK: Private
@@ -253,10 +364,14 @@ public actor RestoreStore {
         try Self.encoder.encode(records).write(to: indexURL, options: .atomic)
     }
 
-    private func removeEmptyOperationFolder(_ id: UUID, force: Bool = false) {
+    private func removeEmptyOperationFolder(_ id: UUID) {
         let folder = quarantineRoot.appendingPathComponent(id.uuidString, isDirectory: true)
         let contents = (try? fileManager.contentsOfDirectory(atPath: folder.path)) ?? []
-        if force || contents.isEmpty { try? fileManager.removeItem(at: folder) }
+        if contents.isEmpty { try? fileManager.removeItem(at: folder) }
+    }
+
+    private func removeOperationFolder(_ id: UUID) {
+        _ = removeOrTrash(quarantineRoot.appendingPathComponent(id.uuidString, isDirectory: true))
     }
 
     /// `name`, `name (restored)`, `name (restored 2)`… — first path that doesn't exist.

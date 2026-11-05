@@ -15,15 +15,15 @@ struct OnboardingView: View {
             ModuleBackground(module: .smartCare)
             Group {
                 switch step {
-                case .welcome: welcome.transition(.phase)
-                case .fullDiskAccess: fullDiskAccess.transition(.phase)
+                case .welcome: welcome.transition(.phaseSwap)
+                case .fullDiskAccess: fullDiskAccess.transition(.phaseSwap)
                 }
             }
             .padding(40)
         }
         .frame(width: 620, height: 560)
         .preferredColorScheme(.dark)
-        .animation(.spring(duration: 0.45), value: step)
+        .animation(Motion.phaseChange, value: step)
         .onAppear {
             // Reopened from the "Grant Access" hint: go straight to the permission step.
             if app.hasCompletedOnboarding { step = .fullDiskAccess }

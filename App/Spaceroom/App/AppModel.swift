@@ -110,6 +110,7 @@ final class AppModel {
             } catch {
                 show("Couldn't clear expired items", error)
             }
+            reportTrashFallback(await store.removeOrphanedFolders())
         }
         await refreshOperations()
     }
@@ -141,7 +142,8 @@ final class AppModel {
         await perform("Couldn't restore") { try await $0.restore([itemID], in: operationID) }
     }
 
-    func purge(_ operationID: UUID) async {
+    @discardableResult
+    func purge(_ operationID: UUID) async -> Bool {
         await perform("Couldn't delete") { try await $0.purge(operationID) }
     }
 
@@ -152,6 +154,7 @@ final class AppModel {
         var succeeded = true
         do {
             let result = try await action(store)
+            if let purge = result as? PurgeResult { reportTrashFallback(purge) }
             if let outcomes = result as? [RestoreOutcome] {
                 let problems = outcomes.compactMap { outcome -> String? in
                     switch outcome {
@@ -171,6 +174,15 @@ final class AppModel {
         }
         await refreshOperations()
         return succeeded
+    }
+
+    /// macOS protects some items (app bundles from other developers) from being deleted in place;
+    /// those went to the Trash instead. Say so, because the space only frees when the Trash is emptied.
+    private func reportTrashFallback(_ result: PurgeResult) {
+        guard !result.movedToTrash.isEmpty else { return }
+        alert = AlertMessage(
+            title: String(localized: "Moved \(result.movedToTrashSize.bytesText) to the Trash"),
+            message: String(localized: "macOS doesn't let apps delete some protected items in place, such as apps inside caches. Spaceroom moved them to the Trash instead. Empty the Trash in Finder to free the space."))
     }
 
     func show(_ title: String, _ error: any Error) {

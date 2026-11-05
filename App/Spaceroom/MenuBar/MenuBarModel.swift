@@ -233,7 +233,7 @@ final class MenuBarModel {
                 let outcome = try await CleanupEngine(store: store)
                     .clean(items, rules: catalog.rules, module: rule.module, context: context)
                 if outcome.freedSize > 0 {
-                    lastAction = (String(localized: "Freed \(outcome.freedSize.bytesText)"), outcome.operation?.id)
+                    lastAction = (String(localized: "Moved \(outcome.freedSize.bytesText) to the Restore Center"), outcome.operation?.id)
                 } else {
                     lastAction = (String(localized: "Nothing to clean right now"), nil)
                 }

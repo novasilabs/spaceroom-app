@@ -25,6 +25,9 @@ struct SpaceroomApp: App {
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(replacing: .newItem) {}
+            #if DEBUG
+            CommandGroup(after: .windowArrangement) { DesignTuningCommand() }
+            #endif
             CommandMenu("Modules") {
                 ForEach(Array(SidebarModule.allCases.enumerated()), id: \.element) { index, module in
                     if index < 9 {
@@ -64,6 +67,14 @@ struct SpaceroomApp: App {
                 .environment(app)
                 .environment(menuBar)
         }
+
+        #if DEBUG
+        Window("Design Tuning", id: "design-tuning") {
+            DesignTuningPanel()
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.topTrailing)
+        #endif
     }
 
     private var popover: some View {

@@ -23,7 +23,7 @@ struct RootView: View {
                     .id(app.selection)
                     .transition(.opacity)
             }
-            .animation(.easeInOut(duration: 0.55), value: app.selection)
+            .animation(Motion.moduleSwitch, value: app.selection)
         }
         .frame(minWidth: 1000, minHeight: 680)
         .preferredColorScheme(.dark)
@@ -60,6 +60,6 @@ struct RootView: View {
         }
         .id(module)
         .transition(.opacity)
-        .animation(.easeInOut(duration: 0.3), value: module)
+        .animation(Motion.moduleSwitch, value: module)
     }
 }

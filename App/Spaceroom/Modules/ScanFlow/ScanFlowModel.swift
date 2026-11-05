@@ -51,6 +51,8 @@ final class ScanFlowModel {
     private(set) var completedRules = 0
     private(set) var totalRules = 0
     private(set) var lastOutcome: CleanOutcome?
+    /// The last clean was released from the Restore Center ("Free Up Now"), so its space is free.
+    private(set) var isReleased = false
     /// Short confirmation shown on the intro screen ("Restored 8.4 GB").
     private(set) var notice: String?
     /// The startup disk when results arrived (Smart Care's disk tile).
@@ -156,6 +158,7 @@ final class ScanFlowModel {
     func startScan() {
         guard phase != .scanning else { return }
         notice = nil
+        isReleased = false
         results = []
         completedRules = 0
         let rules = rules
@@ -163,7 +166,7 @@ final class ScanFlowModel {
         deselectedItemIDs = []
         selectedRuleIDs = Set(rules.filter(\.defaultSelected).map(\.id))
         isReviewing = false
-        withAnimation(.spring(duration: 0.5)) { phase = .scanning }
+        withAnimation(Motion.phaseChange) { phase = .scanning }
 
         let context = app.scanContext()
         let claimRules = app.catalog?.rules ?? rules
@@ -174,7 +177,7 @@ final class ScanFlowModel {
                 case .started:
                     break
                 case .ruleFinished(let result, let completed, _):
-                    withAnimation(.easeOut(duration: 0.3)) {
+                    withAnimation(Easing.out(0.2)) {
                         self.results.append(result)
                         self.completedRules = completed
                     }
@@ -183,7 +186,7 @@ final class ScanFlowModel {
                     // Keep catalog order (results streamed in completion order).
                     self.results = report.results
                     self.volumeAtResults = Volumes.root()
-                    withAnimation(.spring(duration: 0.5)) { self.phase = .results }
+                    withAnimation(Motion.phaseChange) { self.phase = .results }
                 }
             }
         }
@@ -192,7 +195,7 @@ final class ScanFlowModel {
     func cancelScan() {
         scanTask?.cancel()
         scanTask = nil
-        withAnimation(.spring(duration: 0.4)) { phase = .intro }
+        withAnimation(Motion.phaseChange) { phase = .intro }
     }
 
     func toggleGroup(_ group: GroupSummary) {
@@ -219,7 +222,7 @@ final class ScanFlowModel {
         let context = app.scanContext()
         let operationName = kind.operationName
         isReviewing = false
-        withAnimation(.spring(duration: 0.5)) { phase = .cleaning }
+        withAnimation(Motion.phaseChange) { phase = .cleaning }
 
         Task {
             // Keep the cleaning state on screen briefly so the transition reads as an action.
@@ -230,11 +233,11 @@ final class ScanFlowModel {
                 try? await Task.sleep(until: minimumDisplay)
                 lastOutcome = outcome
                 await app.refreshOperations()
-                withAnimation(.spring(duration: 0.5)) { phase = .done }
+                withAnimation(Motion.phaseChange) { phase = .done }
             } catch {
                 try? await Task.sleep(until: minimumDisplay)
                 app.show(String(localized: "Cleaning failed"), error)
-                withAnimation(.spring(duration: 0.5)) { phase = .results }
+                withAnimation(Motion.phaseChange) { phase = .results }
             }
         }
     }
@@ -247,13 +250,24 @@ final class ScanFlowModel {
                 notice = String(localized: "Restored \(operation.totalSize.bytesText). Everything is back where it was.")
             }
             lastOutcome = nil
-            withAnimation(.spring(duration: 0.5)) { phase = .intro }
+            withAnimation(Motion.phaseChange) { phase = .intro }
+        }
+    }
+
+    /// Permanently deletes what the last clean moved, so the disk space is free right away.
+    func freeUpNow() {
+        guard let operation = lastOutcome?.operation else { return }
+        Task {
+            if await app.purge(operation.id) {
+                withAnimation(Motion.hover) { isReleased = true }
+            }
         }
     }
 
     func finish() {
+        isReleased = false
         lastOutcome = nil
         results = []
-        withAnimation(.spring(duration: 0.5)) { phase = .intro }
+        withAnimation(Motion.phaseChange) { phase = .intro }
     }
 }
