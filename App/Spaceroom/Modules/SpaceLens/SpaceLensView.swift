@@ -338,7 +338,7 @@ private struct FolderList: View {
         case .allowed: return .unchecked
         case .notAnItem: return .hidden
         case .outsideHome:
-            return .blocked(String(localized: "Space Lens removes items inside your home folder only. To remove an app, use Applications."))
+            return .blocked(String(localized: "Space Lens removes items in your home folder and on external drives. To remove an app, use Applications."))
         case .protectedFolder:
             return .blocked(String(localized: "macOS and your apps rely on this folder, so Space Lens won't remove it. You can remove items inside it."))
         case .spaceroomData:

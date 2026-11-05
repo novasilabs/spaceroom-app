@@ -54,7 +54,7 @@
 ### Understand
 | | |
 |---|---|
-| **Space Lens** | An interactive sunburst or treemap of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. Tick items and choose *Review and Remove*. They go to the Restore Center. |
+| **Space Lens** | An interactive sunburst or treemap of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. Tick items (in your home folder or on an external drive) and choose *Review and Remove*. They go to the Restore Center. |
 | **System Status** | A health score with what to fix; live CPU (per core), memory and swap, network, disk, battery health and thermal state; and the busiest processes. |
 
 ### Manage

@@ -6078,12 +6078,12 @@
         }
       }
     },
-    "Space Lens removes items inside your home folder only. To remove an app, use Applications.": {
+    "Space Lens removes items in your home folder and on external drives. To remove an app, use Applications.": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Space Lens hanya menghapus item di dalam folder Home Anda. Untuk menghapus aplikasi, gunakan Aplikasi."
+            "value": "Space Lens hanya menghapus item di folder Home dan di drive eksternal. Untuk menghapus aplikasi, gunakan Aplikasi."
           }
         }
       }

@@ -53,6 +53,8 @@ final class SpaceLensModel {
     private(set) var lastResult: (message: String, operationID: UUID?)?
     /// The map before the last removal, so Undo can put it back without a rescan.
     @ObservationIgnored private var rootBeforeRemoval: DiskNode?
+    /// External drives items may be removed from, refreshed with the target list.
+    @ObservationIgnored private var removableVolumes: [URL] = []
 
     private var scanTask: Task<Void, Never>?
     private var scannedTarget: Target?
@@ -88,6 +90,7 @@ final class SpaceLensModel {
                                symbol: "externaldrive", url: volume.url, volume: volume))
         }
         targets = list
+        removableVolumes = LensRemovalPolicy.removableVolumes()
         if !targets.contains(where: { $0.id == selectedTargetID }) { selectedTargetID = "home" }
     }
 
@@ -249,7 +252,7 @@ final class SpaceLensModel {
     // MARK: Selection and removal
 
     private var policy: LensRemovalPolicy? {
-        app.store.map { LensRemovalPolicy(ownData: $0.directory) }
+        app.store.map { LensRemovalPolicy(ownData: $0.directory, volumes: removableVolumes) }
     }
 
     /// Whether `node` can be ticked. Only finished scans can remove anything.
@@ -288,7 +291,7 @@ final class SpaceLensModel {
         isRemoving = true
         Task {
             do {
-                let outcome = try await LensRemover(store: store).remove(nodes)
+                let outcome = try await LensRemover(store: store, volumes: removableVolumes).remove(nodes)
                 await app.refreshOperations()
                 if let operation = outcome.operation {
                     // The store records canonical paths; map them back to the paths on the map.

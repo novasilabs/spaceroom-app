@@ -114,3 +114,40 @@ struct LensRemovalTests {
         #expect(root.removing(paths: ["/elsewhere/x"]) == root)
     }
 }
+
+@Suite("Space Lens removal on external drives")
+struct LensExternalRemovalTests {
+    @Test("Items on an external drive are allowed, except its system and hidden folders")
+    func policy() throws {
+        let box = try Sandbox()
+        let drive = try box.folder("../Volumes/Backup Drive")
+        let policy = LensRemovalPolicy(home: box.home, ownData: box.support, volumes: [drive])
+        #expect(policy.verdict(for: drive.appendingPathComponent("Videos/2024")) == .allowed)
+        #expect(policy.verdict(for: drive.appendingPathComponent("old.dmg")) == .allowed)
+        #expect(policy.verdict(for: drive) == .outsideHome)
+        #expect(policy.verdict(for: drive.appendingPathComponent(".Spotlight-V100")) == .protectedFolder)
+        #expect(policy.verdict(for: drive.appendingPathComponent(".Trashes/501")) == .protectedFolder)
+        #expect(policy.verdict(for: drive.appendingPathComponent("System/Library")) == .protectedFolder)
+        #expect(policy.verdict(for: drive.appendingPathComponent("Users/someone/file")) == .protectedFolder)
+        #expect(policy.verdict(for: drive.appendingPathComponent("Backups.backupdb")) == .protectedFolder)
+        // A drive that isn't in the list stays off limits.
+        let other = LensRemovalPolicy(home: box.home, ownData: box.support)
+        #expect(other.verdict(for: drive.appendingPathComponent("Videos")) == .outsideHome)
+    }
+
+    @Test("Removing from an external drive checks containment against the drive and can be undone")
+    func remove() async throws {
+        let box = try Sandbox()
+        let drive = try box.folder("../Volumes/Drive")
+        let clip = drive.appendingPathComponent("Videos/clip.mov")
+        try FileManager.default.createDirectory(at: clip.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(repeating: 1, count: 5000).write(to: clip)
+        let remover = LensRemover(store: try box.store(), home: box.home, volumes: [drive])
+        let node = DiskNode(name: "clip.mov", path: clip.path, kind: .file, size: 5000, itemCount: 1)
+        let outcome = try await remover.remove([node])
+        let op = try #require(outcome.operation)
+        #expect(!FileManager.default.fileExists(atPath: clip.path))
+        _ = try await remover.store.restoreAll(in: op.id)
+        #expect(FileManager.default.fileExists(atPath: clip.path))
+    }
+}
