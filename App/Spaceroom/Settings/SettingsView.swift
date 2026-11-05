@@ -5,10 +5,29 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
+    @Environment(MenuBarModel.self) private var menuBar
 
     var body: some View {
         @Bindable var app = app
+        @Bindable var menuBar = menuBar
         Form {
+            Section("Menu Bar") {
+                Toggle("Show storage in the menu bar", isOn: $menuBar.isStorageItemShown)
+                Picker("Display", selection: $menuBar.storageStyle) {
+                    ForEach(MenuBarModel.StorageStyle.allCases) { Text($0.title).tag($0) }
+                }
+                .disabled(!menuBar.isStorageItemShown)
+                Toggle("Show CPU usage", isOn: $menuBar.isCPUItemShown)
+                Toggle("Show memory usage", isOn: $menuBar.isMemoryItemShown)
+                Toggle("Keep running in the menu bar when the window is closed", isOn: $menuBar.keepsRunningInMenuBar)
+                Toggle("Open at login", isOn: Binding(get: { menuBar.opensAtLogin },
+                                                       set: { menuBar.setOpensAtLogin($0) }))
+                if menuBar.loginItemNeedsApproval {
+                    Text("Approve Spaceroom in System Settings › General › Login Items.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            }
+
             Section("Restore Center") {
                 Picker("Keep cleaned items for", selection: $app.retentionDays) {
                     ForEach(AppModel.retentionChoices, id: \.self) { days in
@@ -51,7 +70,10 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 460)
-        .onAppear { app.refreshFullDiskAccess() }
+        .frame(width: 500, height: 640)
+        .onAppear {
+            app.refreshFullDiskAccess()
+            menuBar.refreshLoginItemStatus()
+        }
     }
 }

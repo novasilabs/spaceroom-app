@@ -203,7 +203,9 @@ Safety rules (from Mole, extended):
 - Exceptions (explicitly labelled in UI): cache categories marked "regenerable" may skip quarantine if the user enables "Delete caches immediately".
 
 ### 6.12 Menu bar app (status bar) — MVP
-A separate lightweight login-item agent (`MenuBarAgent`), usable even when the main window is closed. It is the place users look at every day, so it is a first-class product surface, not an add-on.
+A separate lightweight login-item agent (`MenuBarAgent`), usable even when the main window is closed.
+
+> **Implementation note (M1, 2026-11-05):** the first version runs in the main app process (`MenuBarExtra`) and keeps running in the menu bar, with no Dock icon, after the window closes. A separate agent process needs a cross-process design for the Restore Center index (file locking or XPC) so that quick actions and the main app never write it at the same time. Measured: 0 % CPU and about 28 MB idle. Not built yet from this section: disk forecast and "what grew" (need Space Lens snapshots), smart alerts, drag & drop, global hotkey, rotate mode, widgets, top processes. It is the place users look at every day, so it is a first-class product surface, not an add-on.
 
 #### 6.12.1 What shows in the menu bar itself
 The user picks one or more **status items**. Each metric can be its own item (iStat-style), or they can be combined into one compact item.

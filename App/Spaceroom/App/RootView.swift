@@ -5,6 +5,8 @@ import SwiftUI
 /// Main window: full-bleed module gradient, translucent sidebar, module content.
 struct RootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(MenuBarModel.self) private var menuBar
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         @Bindable var app = app
@@ -32,8 +34,12 @@ struct RootView: View {
         .task {
             await app.onLaunch()
             #if DEBUG
-            await DebugSnapshots.runIfRequested(app)
+            await DebugSnapshots.runIfRequested(app, menuBar: menuBar)
             #endif
+        }
+        .onAppear {
+            AppDelegate.openMainWindowAction = { openWindow(id: "main") }
+            NSApp.setActivationPolicy(.regular)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             app.refreshFullDiskAccess()

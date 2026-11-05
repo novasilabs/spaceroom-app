@@ -2,7 +2,7 @@
 
 **Give your Mac room again.** Spaceroom is a free, open-source, native SwiftUI app that cleans junk, removes apps completely, and shows what's happening on your Mac. Everything it removes can be undone.
 
-> Status: **M0 — Foundations** (pre-alpha). Not ready for daily use yet. See [docs/PRD.md](docs/PRD.md) for the full product plan.
+> Status: **M1 in progress** (pre-alpha). Not ready for daily use yet. See [docs/PRD.md](docs/PRD.md) for the full product plan.
 
 ## Promises
 
@@ -10,7 +10,7 @@
 - **Undo anything.** Cleaned items go to the Restore Center and are kept for 7 days by default, not deleted right away.
 - **Nothing leaves your Mac.** No account, no telemetry. All analysis happens on-device.
 
-## What works in M0
+## What works so far
 
 | Area | State |
 |---|---|
@@ -18,6 +18,7 @@
 | Cleanup and Dev Cleanup: scan → review → clean → undo | ✅ (starter rule set) |
 | Restore Center: timeline, restore item / operation, delete now, automatic expiry | ✅ |
 | Full Disk Access onboarding with live detection | ✅ |
+| Menu bar: storage ring with free space (turns amber/red when low), optional CPU and memory items, popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, last cleanup with Undo | ✅ (M1) |
 | Other modules (Smart Care, Space Lens, Applications…) | Placeholders for M1+ |
 
 ## Requirements

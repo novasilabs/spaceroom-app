@@ -123,7 +123,9 @@ struct ModuleHero: View {
         .frame(width: size * 1.2, height: size * 1.2)
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true)) { float = true }
+            // A few gentle floats on arrival, then rest: an endless animation keeps the window
+            // redrawing (~13 % CPU measured), which a menu bar utility can't afford while idle.
+            withAnimation(.easeInOut(duration: 2.6).repeatCount(3, autoreverses: true)) { float = true }
         }
         .accessibilityHidden(true)
     }

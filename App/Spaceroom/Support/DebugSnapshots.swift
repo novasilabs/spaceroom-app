@@ -12,9 +12,11 @@ enum DebugSnapshots {
         ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_DIR"].map { URL(fileURLWithPath: $0) }
     }
 
-    static func runIfRequested(_ app: AppModel) async {
+    static func runIfRequested(_ app: AppModel, menuBar: MenuBarModel) async {
         guard let directory else { return }
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        await captureMenuBar(app: app, menuBar: menuBar, in: directory)
 
         app.isShowingOnboarding = true
         await pause(1.2)
@@ -55,6 +57,61 @@ enum DebugSnapshots {
         capture("08-placeholder", in: directory)
 
         NSApp.terminate(nil)
+    }
+
+    /// Renders the popover in an off-screen window and the status item images in both appearances.
+    private static func captureMenuBar(app: AppModel, menuBar: MenuBarModel, in directory: URL) async {
+        let host = NSHostingView(rootView: MenuBarPopover().environment(app).environment(menuBar))
+        let window = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 340, height: 700),
+                              styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = host
+        window.orderFrontRegardless()
+        await waitUntil(timeout: 60) {
+            !menuBar.actionStates.isEmpty && !menuBar.actionStates.values.contains(.measuring)
+        }
+        await pause(2.5) // let CPU/memory sparklines collect a few samples
+        host.setFrameSize(host.fittingSize)
+        window.setContentSize(host.fittingSize)
+        if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+            host.cacheDisplay(in: host.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?
+                .write(to: directory.appendingPathComponent("00-menubar-popover.png"))
+        }
+        window.orderOut(nil)
+
+        var images: [NSImage] = MenuBarModel.StorageStyle.allCases.map {
+            StatusItemImage.storage(menuBar.rootVolume, style: $0)
+        }
+        images.append(StatusItemImage.cpu(menuBar.cpuUsage, history: menuBar.cpuHistory))
+        images.append(StatusItemImage.memory(menuBar.memory))
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            writeStrip(images, appearance: NSAppearance(named: appearance)!,
+                       to: directory.appendingPathComponent("00-menubar-items-\(name).png"))
+        }
+    }
+
+    private static func writeStrip(_ images: [NSImage], appearance: NSAppearance, to url: URL) {
+        let scale: CGFloat = 3
+        let width = images.reduce(CGFloat(16)) { $0 + $1.size.width + 16 }
+        let size = NSSize(width: width, height: 26)
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale),
+                                         pixelsHigh: Int(size.height * scale), bitsPerSample: 8, samplesPerPixel: 4,
+                                         hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                         bytesPerRow: 0, bitsPerPixel: 0) else { return }
+        rep.size = size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        appearance.performAsCurrentDrawingAppearance {
+            (appearance.name == .darkAqua ? NSColor(white: 0.15, alpha: 1) : NSColor(white: 0.93, alpha: 1)).setFill()
+            NSRect(origin: .zero, size: size).fill()
+            var x: CGFloat = 16
+            for image in images {
+                image.draw(in: NSRect(x: x, y: 4, width: image.size.width, height: image.size.height))
+                x += image.size.width + 16
+            }
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        try? rep.representation(using: .png, properties: [:])?.write(to: url)
     }
 
     private static func pause(_ seconds: Double) async {
