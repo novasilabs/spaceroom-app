@@ -48,6 +48,7 @@ final class AppModel {
     @ObservationIgnored private(set) lazy var automations = AutomationsModel(app: self)
     @ObservationIgnored private(set) lazy var palette = CommandPaletteModel(app: self)
     @ObservationIgnored private(set) lazy var protection = ProtectionModel(app: self)
+    @ObservationIgnored private(set) lazy var smartCareExtras = SmartCareExtras(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 

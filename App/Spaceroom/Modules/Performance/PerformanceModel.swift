@@ -47,27 +47,40 @@ final class PerformanceModel {
         if selection.contains(task.id) { selection.remove(task.id) } else { selection.insert(task.id) }
     }
 
+    /// The quick suggested tasks that haven't run for a month (what Smart Care offers).
+    var dueTasks: [MaintenanceTask] {
+        let monthAgo = Date.now.addingTimeInterval(-30 * 86_400)
+        return userTasks.filter { Self.suggested.contains($0.id) && (lastRun[$0.id] ?? .distantPast) < monthAgo }
+    }
+
     /// Runs the selected tasks one after another, off the main thread.
     func runSelected() {
         let queue = selectedTasks
         guard !queue.isEmpty, !isRunning else { return }
+        Task { _ = await run(queue) }
+    }
+
+    /// Runs tasks in order and returns how many finished successfully.
+    func run(_ queue: [MaintenanceTask]) async -> Int {
+        guard !queue.isEmpty, !isRunning else { return 0 }
         isRunning = true
         for task in queue { states[task.id] = .waiting }
         let running = AppNames.runningBundleIDs()
-        Task {
-            for task in queue {
-                states[task.id] = .running
-                let outcome = await Task.detached(priority: .userInitiated) {
-                    MaintenanceRunner().run(task, runningBundleIDs: running)
-                }.value
-                states[task.id] = .finished(outcome)
-                if case .done = outcome {
-                    lastRun[task.id] = .now
-                    UserDefaults.standard.set(lastRun, forKey: Self.lastRunKey)
-                    selection.remove(task.id)
-                }
+        var done = 0
+        for task in queue {
+            states[task.id] = .running
+            let outcome = await Task.detached(priority: .userInitiated) {
+                MaintenanceRunner().run(task, runningBundleIDs: running)
+            }.value
+            states[task.id] = .finished(outcome)
+            if case .done = outcome {
+                done += 1
+                lastRun[task.id] = .now
+                UserDefaults.standard.set(lastRun, forKey: Self.lastRunKey)
+                selection.remove(task.id)
             }
-            isRunning = false
         }
+        isRunning = false
+        return done
     }
 }

@@ -117,6 +117,16 @@
         }
       }
     },
+    "%@ of app leftovers": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sisa aplikasi"
+          }
+        }
+      }
+    },
     "%@ once released": {
       "localizations": {
         "id": {
@@ -429,6 +439,16 @@
         }
       }
     },
+    "%lld files to look at": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld file perlu dicek"
+          }
+        }
+      }
+    },
     "%lld files · %@": {
       "localizations": {
         "en": {
@@ -595,6 +615,16 @@
         }
       }
     },
+    "%lld likely harmful files": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld file berbahaya"
+          }
+        }
+      }
+    },
     "%lld of %lld operations still have items in the Restore Center.": {
       "localizations": {
         "en": {
@@ -675,6 +705,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld sumber · %@ jejak"
+          }
+        }
+      }
+    },
+    "%lld startup items need a look": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld item startup perlu dilihat"
+          }
+        }
+      }
+    },
+    "%lld tasks due": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tugas tertunda"
           }
         }
       }
@@ -1461,6 +1511,16 @@
         }
       }
     },
+    "Checking…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memeriksa…"
+          }
+        }
+      }
+    },
     "Checks every minute": {
       "localizations": {
         "id": {
@@ -1477,6 +1537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bersihkan"
+          }
+        }
+      }
+    },
+    "Clean moves them to the Restore Center": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipindah ke Pusat Pemulihan saat Bersihkan"
           }
         }
       }
@@ -2181,6 +2251,26 @@
         }
       }
     },
+    "Downloads, Desktop and Applications": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unduhan, Desktop, dan Aplikasi"
+          }
+        }
+      }
+    },
+    "Downloads, Desktop and Applications checked": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unduhan, Desktop, dan Aplikasi diperiksa"
+          }
+        }
+      }
+    },
     "Duplicates confirmed by content, not just name": {
       "localizations": {
         "id": {
@@ -2573,6 +2663,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dari %lld folder"
+          }
+        }
+      }
+    },
+    "From apps you removed · personal data kept": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dari aplikasi yang Anda hapus · data pribadi disimpan"
           }
         }
       }
@@ -3245,6 +3345,16 @@
         }
       }
     },
+    "Maintenance is up to date": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perawatan sudah terkini"
+          }
+        }
+      }
+    },
     "Manage": {
       "extractionState": "manual",
       "localizations": {
@@ -3376,6 +3486,16 @@
         }
       }
     },
+    "Moved %@ of app leftovers to the Restore Center": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sisa aplikasi dipindah ke Pusat Pemulihan"
+          }
+        }
+      }
+    },
     "Moved %@ to the Restore Center": {
       "localizations": {
         "id": {
@@ -3402,6 +3522,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld item dipindah ke Pusat Pemulihan."
+          }
+        }
+      }
+    },
+    "Moved %lld likely harmful files to the Restore Center": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld file kemungkinan berbahaya dipindah ke Pusat Pemulihan"
           }
         }
       }
@@ -3586,6 +3716,16 @@
         }
       }
     },
+    "No app leftovers": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak ada sisa"
+          }
+        }
+      }
+    },
     "No apps": {
       "localizations": {
         "id": {
@@ -3676,6 +3816,16 @@
         }
       }
     },
+    "No threats found": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak ada ancaman"
+          }
+        }
+      }
+    },
     "Nobody vouches for who made this app. Keep it only if you know where it came from.": {
       "localizations": {
         "id": {
@@ -3732,6 +3882,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Belum ada yang diabaikan. Klik kanan item di mana saja di Spaceroom lalu pilih Selalu Abaikan, atau tambahkan folder di sini."
+          }
+        }
+      }
+    },
+    "Nothing is moved without your review": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak ada yang dipindah tanpa Anda tinjau"
           }
         }
       }
@@ -4256,6 +4416,16 @@
         }
       }
     },
+    "Quick tasks that keep macOS snappy": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas singkat agar macOS tetap gesit"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "id": {
@@ -4302,6 +4472,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dijalankan %@"
+          }
+        }
+      }
+    },
+    "Ran %lld maintenance tasks": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tugas perawatan dijalankan"
+          }
+        }
+      }
+    },
+    "Ran in the last 30 days": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dijalankan dalam 30 hari terakhir"
           }
         }
       }
@@ -4502,6 +4692,16 @@
         }
       }
     },
+    "Removed apps left nothing behind": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplikasi yang dihapus tidak meninggalkan sisa"
+          }
+        }
+      }
+    },
     "Rescan": {
       "localizations": {
         "id": {
@@ -4628,6 +4828,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tinjau setiap item sebelum dihapus"
+          }
+        }
+      }
+    },
+    "Review in %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinjau di %@"
           }
         }
       }

@@ -21,6 +21,11 @@ public struct CleanOutcome: Sendable {
     public let operation: OperationRecord?
     public let skipped: [SkippedItem]
     public var freedSize: Int64 { operation?.totalSize ?? 0 }
+
+    public init(operation: OperationRecord?, skipped: [SkippedItem]) {
+        self.operation = operation
+        self.skipped = skipped
+    }
 }
 
 /// Turns reviewed scan items into a Restore Center operation.

@@ -139,7 +139,7 @@ struct ScanFlowView: View {
     private var results: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 16)
-            if flow.foundSize == 0 && !flow.groups.contains(where: \.needsAccess) {
+            if flow.foundSize == 0 && !flow.groups.contains(where: \.needsAccess) && !extrasHaveNews {
                 ModuleHero(module: module, size: 130, symbolOverride: "checkmark.seal").entrance(0)
                 Text("Nothing to clean").font(Typography.hero(30)).entrance(1)
                 Text("This part of your Mac is already tidy.")
@@ -148,7 +148,7 @@ struct ScanFlowView: View {
             } else {
                 VStack(spacing: 4) {
                     Text(flow.selectedSize.bytesText)
-                        .font(Typography.bigNumber(64))
+                        .font(Typography.bigNumber(flow.kind == .smartCare ? 56 : 64))
                         .contentTransition(.numericText())
                     Text("can be cleaned safely")
                         .font(.title3)
@@ -169,13 +169,24 @@ struct ScanFlowView: View {
                     }
                 }
                 .frame(maxWidth: 800)
-                .padding(.top, 26)
+                .padding(.top, flow.kind == .smartCare ? 16 : 26)
                 .entrance(2)
+
+                if flow.kind == .smartCare {
+                    HStack(spacing: 12) {
+                        ForEach(SmartCareExtras.Area.allCases) { area in
+                            ExtraTile(extras: app.smartCareExtras, area: area) { app.selection = area.module }
+                        }
+                    }
+                    .frame(maxWidth: 800)
+                    .padding(.top, 10)
+                    .entrance(3)
+                }
 
                 if flow.kind == .smartCare, let volume = flow.volumeAtResults {
                     DiskTile(volume: volume, cleanSize: flow.selectedSize)
                         .frame(maxWidth: 800)
-                        .padding(.top, 12)
+                        .padding(.top, 10)
                         .entrance(3)
                 }
 
@@ -188,14 +199,15 @@ struct ScanFlowView: View {
                             .foregroundStyle(.textTertiary)
                     }
                 }
-                .padding(.top, 20)
+                .padding(.top, flow.kind == .smartCare ? 12 : 20)
                 .entrance(4)
             }
             Spacer(minLength: 16)
             HStack(spacing: 24) {
                 Button("Rescan") { flow.startScan() }.buttonStyle(GhostButtonStyle())
                 PrimaryCircleButton(title: "Clean", tint: accent,
-                                    isEnabled: flow.selectedSize > 0 && app.cleaningBlockedReason == nil) {
+                                    isEnabled: (flow.selectedSize > 0 || (flow.kind == .smartCare && app.smartCareExtras.hasSelectedAction))
+                                        && app.cleaningBlockedReason == nil) {
                     flow.clean()
                 }
                 Button("Cancel") { flow.finish() }.buttonStyle(GhostButtonStyle())
@@ -203,6 +215,11 @@ struct ScanFlowView: View {
             .padding(.bottom, 36)
         }
         .padding(.horizontal, 40)
+    }
+
+    /// Smart Care shows results (not "Nothing to clean") while its other tiles have something to say.
+    private var extrasHaveNews: Bool {
+        flow.kind == .smartCare && (app.smartCareExtras.hasAnyFinding || app.smartCareExtras.isCheckingProtection)
     }
 
     // MARK: Cleaning
@@ -240,6 +257,13 @@ struct ScanFlowView: View {
                 .contentTransition(.opacity)
                 .padding(.top, 6)
                 .entrance(2)
+
+            if flow.kind == .smartCare, let extras = app.smartCareExtras.lastOutcome, !extras.isEmpty {
+                ExtrasSummary(outcome: extras)
+                    .frame(maxWidth: 520)
+                    .padding(.top, 14)
+                    .entrance(3)
+            }
 
             if let operation = outcome?.operation, !flow.isReleased {
                 ReleaseCard(size: operation.totalSize, retentionDays: app.retentionDays) { flow.freeUpNow() }
@@ -502,5 +526,122 @@ struct FullDiskAccessHint: View {
         .font(.callout)
         .padding(.leading, 14).padding(.trailing, 6).padding(.vertical, 6)
         .glassSurface(cornerRadius: 21)
+    }
+}
+
+/// A compact Smart Care tile for Protection, Speed or Applications: what was found, whether Clean
+/// will act on it (tick), and a way to review it in its module.
+private struct ExtraTile: View {
+    let extras: SmartCareExtras
+    let area: SmartCareExtras.Area
+    let review: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        let module = area.module
+        let hasAction = extras.hasAction(area)
+        let isSelected = extras.isSelected(area)
+        Button { if hasAction { extras.toggle(area) } } label: {
+            HStack(alignment: .top, spacing: 10) {
+                GlassGlyph(symbol: module.symbol, tint: module.palette.accent, size: 30, isCompact: true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(module.title).font(Typography.eyebrow).foregroundStyle(.textSecondary).lineLimit(1)
+                    if extras.isReady(area) {
+                        Text(headline).font(.system(size: 14, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                    } else {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.mini)
+                            Text("Checking…").font(.system(size: 14, weight: .semibold))
+                        }
+                    }
+                    Text(detail).font(.caption).foregroundStyle(.textTertiary).lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 4)
+                VStack(alignment: .trailing, spacing: 8) {
+                    if hasAction {
+                        IconSwap(isOn: isSelected, on: "checkmark.circle.fill", off: "circle")
+                            .font(.system(size: 16))
+                            .foregroundStyle(isSelected ? .white : .textTertiary)
+                    }
+                    Button(action: review) { Image(systemName: "arrow.up.right") }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.textTertiary)
+                        .opacity(isHovering ? 1 : 0.7)
+                        .help(Text("Review in \(String(localized: module.title))"))
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 86, alignment: .topLeading)
+            .glassSurface(cornerRadius: 18, wash: isSelected ? module.palette.accent : nil)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .onHover { isHovering = $0 }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var headline: String {
+        switch area {
+        case .protection:
+            let harmful = extras.harmfulThreats.count, all = extras.visibleThreats.count
+            if harmful > 0 { return String(localized: "\(harmful) likely harmful files") }
+            if all > 0 { return String(localized: "\(all) files to look at") }
+            return String(localized: "No threats found")
+        case .speed:
+            let due = extras.dueTasks.count
+            return due > 0 ? String(localized: "\(due) tasks due") : String(localized: "Maintenance is up to date")
+        case .applications:
+            return extras.leftovers.isEmpty ? String(localized: "No app leftovers")
+                : String(localized: "\(extras.leftoversSize.bytesText) of app leftovers")
+        }
+    }
+
+    private var detail: String {
+        switch area {
+        case .protection:
+            if !extras.isReady(area) { return String(localized: "Downloads, Desktop and Applications") }
+            if !extras.harmfulThreats.isEmpty { return String(localized: "Clean moves them to the Restore Center") }
+            if !extras.visibleThreats.isEmpty { return String(localized: "Nothing is moved without your review") }
+            return String(localized: "Downloads, Desktop and Applications checked")
+        case .speed:
+            let startup = extras.startupAttention
+            if startup > 0 { return String(localized: "\(startup) startup items need a look") }
+            return extras.dueTasks.isEmpty ? String(localized: "Ran in the last 30 days")
+                : String(localized: "Quick tasks that keep macOS snappy")
+        case .applications:
+            return extras.leftovers.isEmpty ? String(localized: "Removed apps left nothing behind")
+                : String(localized: "From apps you removed · personal data kept")
+        }
+    }
+}
+
+/// What Smart Care's other tiles did, under the "cleaned" headline.
+private struct ExtrasSummary: View {
+    let outcome: SmartCareExtras.Outcome
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if outcome.movedThreats > 0 {
+                line(SidebarModule.protection, String(localized: "Moved \(outcome.movedThreats) likely harmful files to the Restore Center"))
+            }
+            if outcome.ranTasks > 0 {
+                line(SidebarModule.performance, String(localized: "Ran \(outcome.ranTasks) maintenance tasks"))
+            }
+            if outcome.removedLeftovers > 0 {
+                line(SidebarModule.applications, String(localized: "Moved \(outcome.removedLeftovers.bytesText) of app leftovers to the Restore Center"))
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(cornerRadius: 18)
+    }
+
+    private func line(_ module: SidebarModule, _ text: String) -> some View {
+        HStack(spacing: 8) {
+            GlassGlyph(symbol: module.symbol, tint: module.palette.accent, size: 20, isCompact: true)
+            Text(text).font(.callout)
+        }
     }
 }

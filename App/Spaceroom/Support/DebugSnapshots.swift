@@ -32,6 +32,8 @@ enum DebugSnapshots {
         app.selection = .smartCare
         await pause(1.2)
         capture("02a-smartcare-intro", in: directory)
+        // Smart Care's Protection tile checks fake files, never the real Desktop.
+        app.smartCareExtras.debugRoots = makeProtectionFixture(in: directory).map { [$0] }
         if let flow = app.flow(for: .smartCare) {
             flow.startScan()
             await pause(0.5)

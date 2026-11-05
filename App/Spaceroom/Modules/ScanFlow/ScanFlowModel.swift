@@ -167,6 +167,7 @@ final class ScanFlowModel {
         selectedRuleIDs = Set(rules.filter(\.defaultSelected).map(\.id))
         isReviewing = false
         withAnimation(Motion.phaseChange) { phase = .scanning }
+        if kind == .smartCare { app.smartCareExtras.check() }
 
         let context = app.scanContext()
         let claimRules = app.catalog?.rules ?? rules
@@ -193,6 +194,7 @@ final class ScanFlowModel {
     }
 
     func cancelScan() {
+        if kind == .smartCare { app.smartCareExtras.cancel() }
         scanTask?.cancel()
         scanTask = nil
         withAnimation(Motion.phaseChange) { phase = .intro }
@@ -236,7 +238,8 @@ final class ScanFlowModel {
     }
 
     func clean() {
-        guard let store = app.store, let catalog = app.catalog, !selectedItems.isEmpty else { return }
+        let runsExtras = kind == .smartCare && app.smartCareExtras.hasSelectedAction
+        guard let store = app.store, let catalog = app.catalog, !selectedItems.isEmpty || runsExtras else { return }
         let items = selectedItems
         let context = app.scanContext()
         let operationName = kind.operationName
@@ -247,8 +250,9 @@ final class ScanFlowModel {
             // Keep the cleaning state on screen briefly so the transition reads as an action.
             let minimumDisplay = ContinuousClock.now + .milliseconds(700)
             do {
-                let outcome = try await CleanupEngine(store: store)
-                    .clean(items, rules: catalog.rules, operationName: operationName, context: context)
+                let outcome = items.isEmpty ? CleanOutcome(operation: nil, skipped: [])
+                    : try await CleanupEngine(store: store).clean(items, rules: catalog.rules, operationName: operationName, context: context)
+                if runsExtras { _ = await app.smartCareExtras.run() }
                 try? await Task.sleep(until: minimumDisplay)
                 lastOutcome = outcome
                 await app.refreshOperations()
