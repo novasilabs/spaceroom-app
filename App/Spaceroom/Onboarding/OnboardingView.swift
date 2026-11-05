@@ -44,8 +44,7 @@ struct OnboardingView: View {
             .padding(.top, 26)
             Spacer()
             Button("Continue") { step = .fullDiskAccess }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(FilledButtonStyle(tint: SidebarModule.smartCare.palette.accent))
                 .keyboardShortcut(.defaultAction)
         }
     }
@@ -53,7 +52,7 @@ struct OnboardingView: View {
     private var fullDiskAccess: some View {
         let granted = app.fullDiskAccess == .granted
         return VStack(spacing: 0) {
-            ModuleHero(module: .privacy, size: 120, symbolOverride: granted ? "checkmark.shield.fill" : "lock.shield")
+            ModuleHero(module: .smartCare, size: 120, symbolOverride: granted ? "checkmark.shield.fill" : "lock.shield")
             Text(granted ? "Full Disk Access is on" : "Allow Full Disk Access")
                 .font(Typography.hero(28))
             Text(granted
@@ -86,13 +85,11 @@ struct OnboardingView: View {
                     Button("Not Now") { finish() }.buttonStyle(GhostButtonStyle())
                     Spacer()
                     Button("Open System Settings") { app.openFullDiskAccessSettings() }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(FilledButtonStyle(tint: SidebarModule.smartCare.palette.accent))
                 } else {
                     Spacer()
                     Button("Start Using Spaceroom") { finish() }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(FilledButtonStyle(tint: SidebarModule.smartCare.palette.accent))
                         .keyboardShortcut(.defaultAction)
                     Spacer()
                 }

@@ -34,6 +34,7 @@ final class AppModel {
 
     private(set) var flows: [FlowKind: ScanFlowModel] = [:]
     @ObservationIgnored private(set) lazy var spaceLens = SpaceLensModel(app: self)
+    @ObservationIgnored private(set) lazy var applications = ApplicationsModel(app: self)
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 

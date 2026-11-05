@@ -91,6 +91,17 @@ enum DebugSnapshots {
         }
 
         app.selection = .applications
+        let apps = app.applications
+        apps.loadIfNeeded()
+        await waitUntil(timeout: 180) { apps.hasLoaded && !apps.rows.contains { $0.size == nil } }
+        await pause(1.5)
+        capture("15-applications", in: directory)
+        apps.tab = .leftovers
+        await pause(1.0)
+        capture("16-applications-leftovers", in: directory)
+        apps.tab = .installed
+
+        app.selection = .clutter
         await pause(1.0)
         capture("08-placeholder", in: directory)
 

@@ -82,8 +82,7 @@ struct ReviewView: View {
                 .font(.headline).monospacedDigit()
             Spacer()
             Button("Clean") { flow.clean() }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(FilledButtonStyle(tint: module.palette.accent))
                 .disabled(flow.selectedSize == 0 || app.cleaningBlockedReason != nil)
                 .keyboardShortcut(.defaultAction)
         }

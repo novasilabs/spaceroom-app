@@ -21,7 +21,8 @@
 | Menu bar: storage ring with free space (turns amber/red when low), optional CPU and memory items, popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, last cleanup with Undo | ✅ (M1) |
 | Smart Care: one scan across every module (safe, regenerable rules only), System Junk / Developer Junk / Trash tiles, disk-after-cleaning tile, single Undo; opens first and runs from the menu bar | ✅ (M1) |
 | Space Lens: map of the home folder, startup disk or external drives as an interactive sunburst (hover, click to drill in, breadcrumb, linked size list), grows live while scanning, shows "system & hidden" space the scan can't see | ✅ (M1) |
-| Other modules (Applications, My Clutter…) | Placeholders for M1+ |
+| Applications: installed apps with size, source and last opened; uninstall with leftovers (caches, logs, settings, containers, launch agents — personal data unticked by default); leftovers of apps already removed; everything undoable via the Restore Center | ✅ (M1) |
+| Other modules (My Clutter, System Status…) | Placeholders for M1+ |
 
 ## Requirements
 
