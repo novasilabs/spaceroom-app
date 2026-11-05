@@ -77,6 +77,15 @@ final class SpaceLensModel {
 
     var selectedTarget: Target? { targets.first { $0.id == selectedTargetID } }
 
+    #if DEBUG
+    /// Snapshot tour: scan a small folder instead of the whole home folder.
+    func useDebugTarget(_ url: URL) {
+        targets.append(Target(id: "debug", name: url.lastPathComponent, detail: url.path, symbol: "folder",
+                              url: url, volume: nil))
+        selectedTargetID = "debug"
+    }
+    #endif
+
     // MARK: Scan
 
     func start() {

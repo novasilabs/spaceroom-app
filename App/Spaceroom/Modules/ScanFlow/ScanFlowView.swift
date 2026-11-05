@@ -441,10 +441,21 @@ private struct ReleaseCard: View {
         }
         .padding(.leading, 14).padding(.trailing, 10).padding(.vertical, 12)
         .glassSurface(cornerRadius: 22, wash: .hex(0x4FCB98))
-        .confirmationDialog("Delete \(size.bytesText) permanently?", isPresented: $isConfirming) {
-            Button("Delete Permanently", role: .destructive, action: release)
-        } message: {
-            Text("This frees the space now, but you won't be able to restore these items.")
+        .sheet(isPresented: $isConfirming) {
+            ConfirmSheet(
+                symbol: "externaldrive.badge.minus",
+                title: String(localized: "Free up \(size.bytesText) now?"),
+                message: String(localized: "This deletes the cleaned items permanently so their space is free right away."),
+                details: [
+                    .init(symbol: "clock", text: String(localized: "Otherwise they free up by themselves in \(retentionDays) days")),
+                    .init(symbol: "exclamationmark.triangle", text: String(localized: "You won't be able to restore them")),
+                ],
+                confirmTitle: String(localized: "Delete Permanently"),
+                onConfirm: {
+                    isConfirming = false
+                    release()
+                },
+                onCancel: { isConfirming = false })
         }
     }
 }

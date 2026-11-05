@@ -60,6 +60,7 @@ struct SpaceLensView: View {
 
     private var explorer: some View {
         VStack(spacing: 0) {
+            keyboardShortcuts
             header
                 .padding(.horizontal, 28)
                 .padding(.top, 40)
@@ -90,11 +91,24 @@ struct SpaceLensView: View {
 
     private var header: some View {
         HStack(alignment: .center, spacing: 16) {
+            if !model.path.isEmpty {
+                // Mouse: a short spatial transition. Keyboard (⌘↑ / ⌘[): instant, like Finder.
+                Button { withAnimation(Easing.out(0.22)) { model.goUp() } } label: {
+                    Label("Back", systemImage: "chevron.left")
+                }
+                .buttonStyle(GhostButtonStyle())
+                .help("Back to \(model.breadcrumb.dropLast().last.map { SpaceLensFormat.name(of: $0) } ?? model.displayName) (⌘↑)")
+                .transition(.opacity)
+            }
             VStack(alignment: .leading, spacing: 3) {
-                Text(model.displayName).font(.system(size: 22, weight: .bold))
+                Text(model.path.last.map { SpaceLensFormat.name(of: $0) } ?? model.displayName)
+                    .font(.system(size: 22, weight: .bold))
+                    .lineLimit(1)
                 Group {
                     if model.phase == .scanning {
                         ScanProgressLabel(model: model)
+                    } else if let folder = model.path.last, let root = model.breadcrumb.first {
+                        Text("\(folder.size.bytesText) · \(Int((Double(folder.size) / Double(max(root.size, 1)) * 100).rounded()))% of \(model.displayName)")
                     } else if let root = model.breadcrumb.first {
                         Text(summary(root))
                     }
@@ -120,6 +134,18 @@ struct SpaceLensView: View {
                     .buttonStyle(GhostButtonStyle())
             }
         }
+    }
+
+    /// Keyboard navigation without animation (keyboard actions repeat; they must feel instant).
+    private var keyboardShortcuts: some View {
+        Group {
+            Button("Back") { model.goUp() }.keyboardShortcut(.upArrow, modifiers: .command)
+            Button("Back") { model.goUp() }.keyboardShortcut("[", modifiers: .command)
+        }
+        .disabled(model.path.isEmpty)
+        .opacity(0)
+        .frame(width: 0, height: 0)
+        .accessibilityHidden(true)
     }
 
     private func summary(_ root: DiskNode) -> String {

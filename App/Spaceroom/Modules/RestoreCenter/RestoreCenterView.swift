@@ -118,12 +118,22 @@ private struct OperationCard: View {
         .glassSurface(cornerRadius: 18, isHighlighted: operation.hasStoredItems)
         .opacity(isWorking ? 0.6 : 1)
         .disabled(isWorking)
-        .confirmationDialog("Delete these items permanently?", isPresented: $isConfirmingDelete) {
-            Button("Delete \(operation.storedSize.bytesText) Permanently", role: .destructive) {
-                run { await app.purge(operation.id) }
-            }
-        } message: {
-            Text("This can't be undone.")
+        .sheet(isPresented: $isConfirmingDelete) {
+            ConfirmSheet(
+                symbol: "trash",
+                title: String(localized: "Delete \(operation.storedSize.bytesText) permanently?"),
+                message: String(localized: "These items leave the Restore Center for good and their space is freed right away."),
+                details: [
+                    .init(symbol: "doc.on.doc", text: String(localized: "\(operation.storedItems.count) items from \(String(localized: module.title))")),
+                    .init(symbol: "calendar", text: String(localized: "Cleaned \(operation.date.formatted(date: .abbreviated, time: .shortened))")),
+                    .init(symbol: "exclamationmark.triangle", text: String(localized: "This can't be undone")),
+                ],
+                confirmTitle: String(localized: "Delete Permanently"),
+                onConfirm: {
+                    isConfirmingDelete = false
+                    run { await app.purge(operation.id) }
+                },
+                onCancel: { isConfirmingDelete = false })
         }
     }
 

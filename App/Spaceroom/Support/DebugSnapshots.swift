@@ -74,6 +74,9 @@ enum DebugSnapshots {
         capture("10-spacelens-intro", in: directory)
         let lens = app.spaceLens
         lens.selectedTargetID = "home"
+        if let path = ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_LENS_PATH"] {
+            lens.useDebugTarget(URL(fileURLWithPath: path))
+        }
         lens.start()
         await waitUntil(timeout: 60) { lens.liveChildren.count >= 3 }
         await pause(1.0)
@@ -113,6 +116,26 @@ enum DebugSnapshots {
                 .write(to: directory.appendingPathComponent("00-menubar-popover.png"))
         }
         window.orderOut(nil)
+
+        // Confirmation sheet.
+        let confirm = NSHostingView(rootView: ConfirmSheet(
+            symbol: "trash", title: "Delete 676,9 MB permanently?",
+            message: "These items leave the Restore Center for good and their space is freed right away.",
+            details: [.init(symbol: "doc.on.doc", text: "48 items from Smart Care"),
+                      .init(symbol: "calendar", text: "Cleaned 5 Nov 2026 at 12.04"),
+                      .init(symbol: "exclamationmark.triangle", text: "This can't be undone")],
+            confirmTitle: "Delete Permanently", onConfirm: {}, onCancel: {}))
+        let confirmWindow = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 480, height: 520),
+                                     styleMask: [.borderless], backing: .buffered, defer: false)
+        confirmWindow.contentView = confirm
+        confirmWindow.orderFrontRegardless()
+        await pause(1.0)
+        if let rep = confirm.bitmapImageRepForCachingDisplay(in: confirm.bounds) {
+            confirm.cacheDisplay(in: confirm.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?
+                .write(to: directory.appendingPathComponent("14-confirm-sheet.png"))
+        }
+        confirmWindow.orderOut(nil)
 
         // Design tuning panel.
         let tuning = NSHostingView(rootView: DesignTuningPanel())
