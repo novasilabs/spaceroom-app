@@ -81,6 +81,8 @@ struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13, weight: .semibold))
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
             .background(Capsule().fill(.white.opacity(configuration.isPressed ? 0.24 : 0.14)))

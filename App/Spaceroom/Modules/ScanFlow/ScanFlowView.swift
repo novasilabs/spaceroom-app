@@ -89,6 +89,14 @@ struct ScanFlowView: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .padding(.top, 10)
                 .monospacedDigit()
+            if flow.kind == .smartCare {
+                HStack(spacing: 14) {
+                    ForEach(flow.groupProgress, id: \.key) { group in
+                        TileProgress(info: group.info, done: group.done, total: group.total)
+                    }
+                }
+                .padding(.top, 26)
+            } else {
             VStack(spacing: 8) {
                 ForEach(flow.results.suffix(4)) { result in
                     HStack {
@@ -103,6 +111,7 @@ struct ScanFlowView: View {
             }
             .frame(width: 360)
             .padding(.top, 26)
+            }
             Spacer()
             PrimaryCircleButton(title: "Stop", progress: flow.scanProgress) { flow.cancelScan() }
                 .padding(.bottom, 40)
@@ -142,6 +151,12 @@ struct ScanFlowView: View {
                 }
                 .frame(maxWidth: 760)
                 .padding(.top, 28)
+
+                if flow.kind == .smartCare, let volume = flow.volumeAtResults {
+                    DiskTile(volume: volume, cleanSize: flow.selectedSize)
+                        .frame(maxWidth: 760)
+                        .padding(.top, 14)
+                }
 
                 HStack(spacing: 10) {
                     Button("Review Details") { flow.isReviewing = true }
@@ -262,6 +277,86 @@ private struct GroupCard: View {
         }
         .buttonStyle(PressableStyle())
         .accessibilityAddTraits(group.isSelected ? .isSelected : [])
+    }
+}
+
+/// Smart Care scan progress for one tile.
+private struct TileProgress: View {
+    let info: GroupInfo
+    let done: Int
+    let total: Int
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle().stroke(.white.opacity(0.18), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: total == 0 ? 1 : CGFloat(done) / CGFloat(total))
+                    .stroke(.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.easeOut(duration: 0.3), value: done)
+                Image(systemName: done == total ? "checkmark" : info.symbol)
+                    .font(.system(size: 18, weight: .semibold))
+                    .contentTransition(.symbolEffect(.replace))
+            }
+            .frame(width: 56, height: 56)
+            Text(info.title).font(.system(size: 12, weight: .medium))
+        }
+        .frame(width: 130)
+        .padding(.vertical, 14)
+        .glassSurface(cornerRadius: 14)
+    }
+}
+
+/// "Macintosh HD: 4.8 GB free → 9.7 GB after Smart Care".
+private struct DiskTile: View {
+    let volume: VolumeInfo
+    let cleanSize: Int64
+
+    var body: some View {
+        let after = min(volume.totalBytes, volume.availableBytes + cleanSize)
+        HStack(spacing: 14) {
+            Image(systemName: "internaldrive")
+                .font(.system(size: 20))
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(.white.opacity(0.14)))
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Text(volume.name).font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                    Text(volume.availableBytes.bytesText).monospacedDigit().foregroundStyle(levelColor)
+                    Image(systemName: "arrow.right").font(.caption).foregroundStyle(.white.opacity(0.6))
+                    Text("\(after.bytesText) free after cleaning")
+                        .monospacedDigit().fontWeight(.semibold)
+                }
+                .font(.system(size: 13))
+                GeometryReader { proxy in
+                    let total = max(Double(volume.totalBytes), 1)
+                    let usedAfter = proxy.size.width * Double(volume.totalBytes - after) / total
+                    let freed = proxy.size.width * Double(after - volume.availableBytes) / total
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.15))
+                        HStack(spacing: 0) {
+                            Rectangle().fill(.white.opacity(0.85)).frame(width: usedAfter)
+                            Rectangle().fill(.green.opacity(0.85)).frame(width: freed)
+                        }
+                        .clipShape(Capsule())
+                    }
+                }
+                .frame(height: 7)
+            }
+        }
+        .padding(14)
+        .glassSurface(cornerRadius: 16, tint: 0.06)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var levelColor: Color {
+        switch volume.level {
+        case .ok: .white
+        case .low: .orange
+        case .critical: .red
+        }
     }
 }
 

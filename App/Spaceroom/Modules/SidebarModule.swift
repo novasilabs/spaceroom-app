@@ -105,11 +105,12 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// The cleaning module behind this entry, if it is a working scan flow in this build.
-    var cleanModule: CleanModule? {
+    /// The scan flow behind this entry, if it is a working scan flow in this build.
+    var flowKind: FlowKind? {
         switch self {
-        case .cleanup: .cleanup
-        case .devCleanup: .devCleanup
+        case .smartCare: .smartCare
+        case .cleanup: .module(.cleanup)
+        case .devCleanup: .module(.devCleanup)
         default: nil
         }
     }
@@ -117,8 +118,8 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
     /// Milestone that delivers a module not built yet (PRD §11).
     var plannedMilestone: LocalizedStringResource? {
         switch self {
-        case .cleanup, .devCleanup, .restoreCenter: nil
-        case .smartCare, .clutter, .spaceLens, .applications: "Coming in M1"
+        case .smartCare, .cleanup, .devCleanup, .restoreCenter: nil
+        case .clutter, .spaceLens, .applications: "Coming in M1"
         case .status, .startup, .performance, .privacy: "Coming in v0.5"
         case .automations: "Coming in v1.0"
         }
@@ -138,9 +139,9 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
              ("shippingbox", "Homebrew, npm, Yarn, pip, Cargo, Go, Gradle caches"),
              ("pause.circle", "Skips tools that are running right now")]
         case .smartCare:
-            [("sparkles", "Cleanup, protection and speed in one scan"),
-             ("hand.thumbsup", "Only safe, regenerable items"),
-             ("arrow.uturn.backward", "Fully undoable")]
+            [("sparkles", "System junk, developer junk and Trash in one scan"),
+             ("hand.thumbsup", "Only safe, regenerable data — never documents or projects"),
+             ("arrow.uturn.backward", "One Undo brings everything back")]
         default:
             []
         }

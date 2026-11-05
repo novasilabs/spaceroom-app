@@ -4,6 +4,21 @@ import Observation
 import SpaceroomCore
 import SwiftUI
 
+/// Which rules a scan flow runs.
+enum FlowKind: Hashable {
+    /// One click across every module: only `smart_care` rules.
+    case smartCare
+    case module(CleanModule)
+
+    /// Name recorded on Restore Center operations (matches `SidebarModule.rawValue`).
+    var operationName: String {
+        switch self {
+        case .smartCare: "smartCare"
+        case .module(let module): module.rawValue
+        }
+    }
+}
+
 /// State machine behind every scan-based module: Intro → Scanning → Results → Cleaning → Done.
 @MainActor
 @Observable
@@ -28,7 +43,7 @@ final class ScanFlowModel {
         let needsAccess: Bool
     }
 
-    let module: CleanModule
+    let kind: FlowKind
     private unowned let app: AppModel
 
     private(set) var phase: Phase = .intro
@@ -38,6 +53,8 @@ final class ScanFlowModel {
     private(set) var lastOutcome: CleanOutcome?
     /// Short confirmation shown on the intro screen ("Restored 8.4 GB").
     private(set) var notice: String?
+    /// The startup disk when results arrived (Smart Care's disk tile).
+    private(set) var volumeAtResults: VolumeInfo?
 
     var selectedRuleIDs: Set<String> = []
     /// Individual items the user unticked in Review Details.
@@ -47,12 +64,40 @@ final class ScanFlowModel {
 
     private var scanTask: Task<Void, Never>?
 
-    init(module: CleanModule, app: AppModel) {
-        self.module = module
+    init(kind: FlowKind, app: AppModel) {
+        self.kind = kind
         self.app = app
     }
 
-    var rules: [Rule] { app.catalog?.rules(for: module) ?? [] }
+    var rules: [Rule] {
+        guard let catalog = app.catalog else { return [] }
+        switch kind {
+        case .smartCare: return catalog.smartCareRules
+        case .module(let module): return catalog.rules(for: module)
+        }
+    }
+
+    /// Card a rule belongs to: Smart Care groups by area, modules by rule group.
+    func groupKey(for rule: Rule) -> String {
+        switch kind {
+        case .smartCare: "smartCare." + SmartCareArea(rule: rule).rawValue
+        case .module: rule.group
+        }
+    }
+
+    /// Scan progress per card, for Smart Care's tile rings.
+    var groupProgress: [(key: String, info: GroupInfo, done: Int, total: Int)] {
+        var order: [String] = []
+        var totals: [String: Int] = [:]
+        for rule in rules {
+            let key = groupKey(for: rule)
+            if totals[key] == nil { order.append(key) }
+            totals[key, default: 0] += 1
+        }
+        var done: [String: Int] = [:]
+        for result in results { done[groupKey(for: result.rule), default: 0] += 1 }
+        return sortedKeys(order).map { ($0, GroupInfo.forGroup($0), done[$0] ?? 0, totals[$0] ?? 0) }
+    }
 
     // MARK: Derived
 
@@ -75,10 +120,11 @@ final class ScanFlowModel {
         var order: [String] = []
         var byGroup: [String: [RuleScanResult]] = [:]
         for result in results where !result.items.isEmpty || result.accessDenied {
-            if byGroup[result.rule.group] == nil { order.append(result.rule.group) }
-            byGroup[result.rule.group, default: []].append(result)
+            let key = groupKey(for: result.rule)
+            if byGroup[key] == nil { order.append(key) }
+            byGroup[key, default: []].append(result)
         }
-        return order.map { group in
+        return sortedKeys(order).map { group in
             let members = byGroup[group] ?? []
             let selected = members.filter { selectedRuleIDs.contains($0.rule.id) }
             return GroupSummary(
@@ -91,6 +137,13 @@ final class ScanFlowModel {
                 needsAccess: members.allSatisfy { $0.items.isEmpty && $0.accessDenied }
             )
         }
+    }
+
+    /// Smart Care tiles always read System Junk → Developer Junk → Trash; modules keep rule order.
+    private func sortedKeys(_ keys: [String]) -> [String] {
+        guard kind == .smartCare else { return keys }
+        let rank = Dictionary(uniqueKeysWithValues: SmartCareArea.allCases.enumerated().map { ("smartCare." + $1.rawValue, $0) })
+        return keys.sorted { (rank[$0] ?? .max) < (rank[$1] ?? .max) }
     }
 
     func selectedSize(of result: RuleScanResult) -> Int64 {
@@ -129,6 +182,7 @@ final class ScanFlowModel {
                     guard !report.wasCancelled else { return }
                     // Keep catalog order (results streamed in completion order).
                     self.results = report.results
+                    self.volumeAtResults = Volumes.root()
                     withAnimation(.spring(duration: 0.5)) { self.phase = .results }
                 }
             }
@@ -163,7 +217,7 @@ final class ScanFlowModel {
         guard let store = app.store, let catalog = app.catalog, !selectedItems.isEmpty else { return }
         let items = selectedItems
         let context = app.scanContext()
-        let module = module
+        let operationName = kind.operationName
         isReviewing = false
         withAnimation(.spring(duration: 0.5)) { phase = .cleaning }
 
@@ -172,7 +226,7 @@ final class ScanFlowModel {
             let minimumDisplay = ContinuousClock.now + .milliseconds(700)
             do {
                 let outcome = try await CleanupEngine(store: store)
-                    .clean(items, rules: catalog.rules, module: module, context: context)
+                    .clean(items, rules: catalog.rules, operationName: operationName, context: context)
                 try? await Task.sleep(until: minimumDisplay)
                 lastOutcome = outcome
                 await app.refreshOperations()

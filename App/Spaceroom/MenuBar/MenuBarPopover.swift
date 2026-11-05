@@ -51,8 +51,16 @@ struct MenuBarPopover: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button { menuBar.openMainWindow() } label: { Label("Open Spaceroom", systemImage: "macwindow") }
+            Button {
+                app.runSmartCare()
+                menuBar.openMainWindow()
+            } label: { Label("Smart Care", systemImage: "sparkles") }
                 .buttonStyle(GhostButtonStyle())
+                .help("Open Spaceroom and run Smart Care")
+            Button { menuBar.openMainWindow() } label: { Image(systemName: "macwindow") }
+                .buttonStyle(GhostButtonStyle())
+                .help("Open Spaceroom")
+                .accessibilityLabel(Text("Open Spaceroom"))
             Spacer()
             Button {
                 NSApp.activate(ignoringOtherApps: true)

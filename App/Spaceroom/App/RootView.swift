@@ -52,7 +52,7 @@ struct RootView: View {
         Group {
             if module == .restoreCenter {
                 RestoreCenterView()
-            } else if let clean = module.cleanModule, let flow = app.flow(for: clean) {
+            } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {
                 PlaceholderModuleView(module: module)

@@ -22,6 +22,9 @@ struct GroupInfo {
         case "trash": GroupInfo(title: "Trash", symbol: "trash")
         case "xcode": GroupInfo(title: "Xcode & Simulators", symbol: "hammer")
         case "packages": GroupInfo(title: "Package managers", symbol: "shippingbox.and.arrow.backward")
+        case "smartCare.systemJunk": GroupInfo(title: "System Junk", symbol: "bubbles.and.sparkles")
+        case "smartCare.developerJunk": GroupInfo(title: "Developer Junk", symbol: "hammer")
+        case "smartCare.trash": GroupInfo(title: "Trash", symbol: "trash")
         default: GroupInfo(title: LocalizedStringResource(stringLiteral: id.capitalized), symbol: "folder")
         }
     }

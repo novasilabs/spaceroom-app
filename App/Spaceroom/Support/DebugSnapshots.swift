@@ -23,11 +23,23 @@ enum DebugSnapshots {
         capture("01-onboarding", in: directory, sheet: true)
 
         app.isShowingOnboarding = false
+        app.selection = .smartCare
+        await pause(1.2)
+        capture("02a-smartcare-intro", in: directory)
+        if let flow = app.flow(for: .smartCare) {
+            flow.startScan()
+            await pause(0.5)
+            capture("02b-smartcare-scanning", in: directory)
+            await waitUntil { flow.phase == .results }
+            await pause(1.0)
+            capture("02c-smartcare-results", in: directory)
+        }
+
         app.selection = .cleanup
         await pause(1.2)
         capture("02-cleanup-intro", in: directory)
 
-        if let flow = app.flow(for: .cleanup) {
+        if let flow = app.flow(for: .module(.cleanup)) {
             flow.startScan()
             await pause(0.4)
             capture("03-cleanup-scanning", in: directory)
@@ -41,7 +53,7 @@ enum DebugSnapshots {
         }
 
         app.selection = .devCleanup
-        if let flow = app.flow(for: .devCleanup) {
+        if let flow = app.flow(for: .module(.devCleanup)) {
             flow.startScan()
             await waitUntil { flow.phase == .results }
             await pause(1.0)

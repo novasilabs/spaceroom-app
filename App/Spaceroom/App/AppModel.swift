@@ -9,7 +9,7 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppModel {
-    var selection: SidebarModule = .cleanup
+    var selection: SidebarModule = .smartCare
     var isShowingOnboarding = false
     var alert: AlertMessage?
 
@@ -32,7 +32,7 @@ final class AppModel {
         didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: Keys.onboarding) }
     }
 
-    private(set) var flows: [CleanModule: ScanFlowModel] = [:]
+    private(set) var flows: [FlowKind: ScanFlowModel] = [:]
 
     static let retentionChoices = [1, 3, 7, 14, 30]
 
@@ -68,8 +68,9 @@ final class AppModel {
             storeError = String(describing: error)
         }
 
+        flows[.smartCare] = ScanFlowModel(kind: .smartCare, app: self)
         for module in CleanModule.allCases {
-            flows[module] = ScanFlowModel(module: module, app: self)
+            flows[.module(module)] = ScanFlowModel(kind: .module(module), app: self)
         }
         refreshFullDiskAccess()
         isShowingOnboarding = !hasCompletedOnboarding
@@ -82,7 +83,16 @@ final class AppModel {
         return nil
     }
 
-    func flow(for module: CleanModule) -> ScanFlowModel? { flows[module] }
+    func flow(for kind: FlowKind) -> ScanFlowModel? { flows[kind] }
+
+    /// Shows Smart Care and starts a scan unless one is already under way or showing results.
+    func runSmartCare() {
+        selection = .smartCare
+        if let flow = flows[.smartCare], flow.phase == .intro || flow.phase == .done {
+            if flow.phase == .done { flow.finish() }
+            flow.startScan()
+        }
+    }
 
     func scanContext() -> ScanContext {
         ScanContext(home: FileManager.default.homeDirectoryForCurrentUser,

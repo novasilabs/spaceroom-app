@@ -53,10 +53,12 @@ public struct CleanupEngine: Sendable {
     }
 
     /// Verifies and moves items into the Restore Center.
-    public func clean(_ items: [ScanItem], rules: [Rule], module: CleanModule, context: ScanContext) async throws -> CleanOutcome {
+    ///
+    /// - Parameter operationName: what the Restore Center shows as the source, e.g. "cleanup" or "smartCare".
+    public func clean(_ items: [ScanItem], rules: [Rule], operationName: String, context: ScanContext) async throws -> CleanOutcome {
         let plan = plan(items, rules: rules, context: context)
         guard !plan.moves.isEmpty else { return CleanOutcome(operation: nil, skipped: plan.skipped) }
-        let (record, failures) = try await store.quarantine(plan.moves, module: module.rawValue, now: context.now)
+        let (record, failures) = try await store.quarantine(plan.moves, module: operationName, now: context.now)
         let sizes = Dictionary(plan.moves.map { ($0.url.path, $0.size) }, uniquingKeysWith: { a, _ in a })
         let failed = failures.map { SkippedItem(path: $0.path, size: sizes[$0.path] ?? 0, reason: $0.reason) }
         return CleanOutcome(operation: record, skipped: plan.skipped + failed)
