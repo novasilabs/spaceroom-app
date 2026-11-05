@@ -1,0 +1,40 @@
+Spaceroom — free, open-source Mac cleaner (GPL-3.0-or-later)
+
+INSTALL
+1. Drag Spaceroom into the Applications folder.
+2. Open it from Applications.
+
+FIRST OPEN
+This build is not notarized by Apple yet, so macOS stops the first launch.
+- Click Done (or Cancel) in the warning.
+- Open System Settings › Privacy & Security, scroll down and click
+  "Open Anyway" next to Spaceroom, then confirm.
+- On macOS 14 you can also right-click Spaceroom in Applications and choose Open.
+You only need to do this once.
+
+AFTER OPENING
+The welcome tour asks for Full Disk Access. It lets Spaceroom measure and clean
+protected places such as the Trash and Safari data. It never reads your documents.
+Everything Spaceroom cleans goes to its Restore Center first, so you can undo it.
+
+-----------------------------------------------------------------------------
+
+Spaceroom — pembersih Mac gratis dan open source (GPL-3.0-or-later)
+
+PASANG
+1. Seret Spaceroom ke folder Aplikasi.
+2. Buka dari folder Aplikasi.
+
+PEMBUKAAN PERTAMA
+Build ini belum dinotarisasi Apple, jadi macOS menahan pembukaan pertama.
+- Klik Selesai (atau Batal) pada peringatan.
+- Buka Pengaturan Sistem › Privasi & Keamanan, gulir ke bawah, lalu klik
+  "Tetap Buka" di samping Spaceroom dan konfirmasi.
+- Di macOS 14 Anda juga bisa klik kanan Spaceroom di Aplikasi lalu pilih Buka.
+Cukup dilakukan sekali.
+
+SETELAH DIBUKA
+Tur selamat datang akan meminta Akses Disk Penuh. Ini agar Spaceroom bisa mengukur
+dan membersihkan tempat yang dilindungi seperti Tong Sampah dan data Safari.
+Spaceroom tidak pernah membaca dokumen Anda. Semua yang dibersihkan masuk ke
+Pusat Pemulihan dulu, jadi bisa dikembalikan.
