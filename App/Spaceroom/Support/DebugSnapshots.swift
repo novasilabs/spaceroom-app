@@ -71,6 +71,24 @@ enum DebugSnapshots {
 
         app.selection = .spaceLens
         await pause(1.0)
+        capture("10-spacelens-intro", in: directory)
+        let lens = app.spaceLens
+        lens.selectedTargetID = "home"
+        lens.start()
+        await waitUntil(timeout: 60) { lens.liveChildren.count >= 3 }
+        await pause(1.0)
+        capture("11-spacelens-scanning", in: directory)
+        await waitUntil(timeout: 900) { lens.phase == .results }
+        await pause(1.0)
+        capture("12-spacelens-results", in: directory)
+        if let biggest = lens.current?.children.first(where: { $0.kind == .folder && !$0.children.isEmpty }) {
+            lens.drill(into: biggest)
+            await pause(1.0)
+            capture("13-spacelens-drilled", in: directory)
+        }
+
+        app.selection = .applications
+        await pause(1.0)
         capture("08-placeholder", in: directory)
 
         NSApp.terminate(nil)

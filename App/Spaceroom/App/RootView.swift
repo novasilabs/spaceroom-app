@@ -52,6 +52,8 @@ struct RootView: View {
         Group {
             if module == .restoreCenter {
                 RestoreCenterView()
+            } else if module == .spaceLens {
+                SpaceLensView(model: app.spaceLens)
             } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {

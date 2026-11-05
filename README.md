@@ -20,7 +20,8 @@
 | Full Disk Access onboarding with live detection | ✅ |
 | Menu bar: storage ring with free space (turns amber/red when low), optional CPU and memory items, popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, last cleanup with Undo | ✅ (M1) |
 | Smart Care: one scan across every module (safe, regenerable rules only), System Junk / Developer Junk / Trash tiles, disk-after-cleaning tile, single Undo; opens first and runs from the menu bar | ✅ (M1) |
-| Other modules (Space Lens, Applications, My Clutter…) | Placeholders for M1+ |
+| Space Lens: map of the home folder, startup disk or external drives as an interactive sunburst (hover, click to drill in, breadcrumb, linked size list), grows live while scanning, shows "system & hidden" space the scan can't see | ✅ (M1) |
+| Other modules (Applications, My Clutter…) | Placeholders for M1+ |
 
 ## Requirements
 
