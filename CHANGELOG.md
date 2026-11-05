@@ -6,6 +6,8 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-06
+
 ### Added
 - **`spaceroom` command-line tool:** `scan`, `clean` (`--dry-run`, `--yes`), `status`, `history` and `restore <id>`, with `--json` output. It uses the same rules, safety checks, ignore list and Restore Center as the app. `clean` takes the categories ticked by default, asks before moving anything, and refuses to run while the app is open. Build it with `make cli` or install it with `make install-cli`. Releases attach a universal tarball.
 - **Applications › Updates:** checks for newer versions, but only when you click *Check for Updates*. It reads Sparkle feeds over HTTPS, using each app's own `SUFeedURL`, and asks Apple's App Store lookup about App Store apps. Beta channels and releases for newer macOS are skipped. *Open to Update* lets the app's own updater install, and *Open App Store* goes to the store page. Spaceroom never downloads or installs anything itself. "Slim apps" (stripping architectures) is deliberately not offered: it breaks code signatures.
@@ -17,6 +19,9 @@ All notable changes to Spaceroom are documented here. The format follows
 - **Dev Cleanup › Docker:** a card that shows Docker's build cache and untagged ("dangling") images, then lets Docker remove them (`docker builder prune`, `docker image prune`, never `-a`). It works with Docker Desktop, OrbStack, Colima and Rancher Desktop. This is the one clean that can't go to the Restore Center, so it has its own button and says so first. Containers, volumes and tagged images are never touched, and Spaceroom never starts Docker.
 - **Dev Cleanup › Project build folders:** `node_modules`, web framework caches (`.next`, `.nuxt`, `.svelte-kit`, `.turbo`, `.parcel-cache`), Rust and Maven `target`, SwiftPM `.build`, Gradle `build`, CocoaPods `Pods` and Python virtual environments. Only projects with no changes for 30 days qualify, counting your own files and Git's index but not the build folders. Anything Git tracks is never offered. Searches `~/development`, `~/Developer`, `~/Projects`, `~/code`, `~/Documents` and similar folders. Never cleaned unattended.
 - **Space Lens:** tick files and folders in the list and choose *Review and Remove*. They go to the Restore Center like every other clean, and Undo puts the map back. Only items in your home folder can be removed. Its top-level folders, the folders directly inside `~/Library`, Keychains and Spaceroom's own data stay locked, with the reason shown.
+
+### Changed
+- **New bundle identifier:** `com.novasilabs.spaceroom` (was `io.github.spaceroom-app.spaceroom`). Your settings carry over on first launch, and the Restore Center and ignore list stay where they are. macOS ties permissions to the identifier, so after updating you need to grant **Full Disk Access** again, and allow notifications again if you use Automations.
 
 ### Fixed
 - Command-line tools (Git, Docker) write their output to a temporary file instead of a pipe, so a tool started at the same moment elsewhere can't hold the pipe open and stall the scan.
@@ -61,5 +66,6 @@ first-launch steps).
 - **Bahasa Indonesia** translation.
 - Release packaging (`scripts/make-dmg.sh`): a universal app in a designed disk image.
 
-[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/novasilabs/spaceroom-app/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/novasilabs/spaceroom-app/releases/tag/v0.9.0

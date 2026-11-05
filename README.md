@@ -31,7 +31,7 @@
   <img src="docs/images/smart-care.jpg" alt="Smart Care results: system junk, developer junk, Trash, Protection, Speed and Applications tiles" width="900">
 </p>
 
-> **Status: 0.9 beta.** Every module works and is covered by tests, but builds are not notarized yet and admin-only tasks wait for the privileged helper. See the [roadmap](#roadmap).
+> **Status: 0.10 beta.** Every module works and is covered by tests, but builds are not notarized yet and admin-only tasks wait for the privileged helper. See the [roadmap](#roadmap).
 
 ## Why Spaceroom
 

@@ -69,5 +69,5 @@ prefer otherwise.
 Every release ships a `.sha256` next to the `.dmg`:
 
 ```bash
-shasum -a 256 -c Spaceroom-0.9.0.dmg.sha256
+shasum -a 256 -c Spaceroom-0.10.0.dmg.sha256
 ```

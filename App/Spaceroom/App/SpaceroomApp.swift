@@ -15,7 +15,7 @@ struct SpaceroomApp: App {
         _menuBar = State(initialValue: MenuBarModel(app: app))
     }
 
-    /// Builds before 0.9.0 used the bundle ID `io.github.spaceroom-app.spaceroom`. Carry their
+    /// Builds up to 0.9.0 used the bundle ID `io.github.spaceroom-app.spaceroom`. Carry their
     /// settings over once so testers don't lose them. Keys already set are left alone.
     private static func migrateLegacyDefaults() {
         guard ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_DIR"] == nil else { return }

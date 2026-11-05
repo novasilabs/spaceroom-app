@@ -30,7 +30,7 @@
   <img src="docs/images/smart-care.jpg" alt="Hasil Smart Care" width="900">
 </p>
 
-> **Status: 0.9 beta.** Semua modul berfungsi dan teruji, tetapi build belum dinotarisasi Apple, dan tugas yang butuh hak admin masih menunggu helper. Lihat [rencana](#rencana).
+> **Status: 0.10 beta.** Semua modul berfungsi dan teruji, tetapi build belum dinotarisasi Apple, dan tugas yang butuh hak admin masih menunggu helper. Lihat [rencana](#rencana).
 
 ## Kenapa Spaceroom
 
