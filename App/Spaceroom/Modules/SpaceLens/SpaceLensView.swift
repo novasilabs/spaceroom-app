@@ -71,12 +71,23 @@ struct SpaceLensView: View {
             }
             if let current = model.current {
                 HStack(alignment: .top, spacing: 20) {
-                    SunburstChart(node: current, title: model.path.isEmpty ? model.displayName : nil,
-                                  canGoUp: !model.path.isEmpty,
-                                  hoveredID: $model.hoveredID,
-                                  onDrill: { node in withAnimation(Easing.out(0.22)) { model.drill(into: node) } },
-                                  onUp: { withAnimation(Easing.out(0.22)) { model.goUp() } })
-                        .frame(minWidth: 340, maxWidth: 520, maxHeight: 520)
+                    Group {
+                        switch model.chartStyle {
+                        case .sunburst:
+                            SunburstChart(node: current, title: model.path.isEmpty ? model.displayName : nil,
+                                          canGoUp: !model.path.isEmpty,
+                                          selectedPaths: Set(model.selection.keys),
+                                          hoveredID: $model.hoveredID,
+                                          onDrill: { node in withAnimation(Easing.out(0.22)) { model.drill(into: node) } },
+                                          onUp: { withAnimation(Easing.out(0.22)) { model.goUp() } })
+                                .frame(minWidth: 340, maxWidth: 520, maxHeight: 520)
+                        case .treemap:
+                            TreemapChart(node: current, selectedPaths: Set(model.selection.keys),
+                                         hoveredID: $model.hoveredID,
+                                         onDrill: { node in withAnimation(Easing.out(0.22)) { model.drill(into: node) } })
+                                .frame(minWidth: 340, maxWidth: 620, maxHeight: 560)
+                        }
+                    }
                     FolderList(model: model, folder: current)
                         .frame(minWidth: 320, maxWidth: 420)
                 }
@@ -191,6 +202,14 @@ struct SpaceLensView: View {
                     .glassSurface(cornerRadius: 14)
                     .help("Used space the scan can't see: macOS system files, local snapshots, other users and protected folders.")
             }
+            Picker("Chart", selection: $model.chartStyle) {
+                Image(systemName: "chart.pie").help("Sunburst").tag(SpaceLensModel.ChartStyle.sunburst)
+                Image(systemName: "square.grid.3x3.square").help("Treemap").tag(SpaceLensModel.ChartStyle.treemap)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .accessibilityLabel(Text("Chart style"))
             if model.phase == .scanning {
                 ProgressView().controlSize(.small)
                 Button("Stop") { model.stop() }.buttonStyle(GhostButtonStyle())

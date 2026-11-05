@@ -111,7 +111,14 @@ enum DebugSnapshots {
         if !lens.selection.isEmpty {
             await pause(1.0)
             capture("13b-spacelens-selected", in: directory)
+            lens.chartStyle = .treemap
+            await pause(1.0)
+            capture("13c-spacelens-treemap-selected", in: directory)
             lens.clearSelection()
+            lens.goUp()
+            await pause(1.0)
+            capture("13d-spacelens-treemap", in: directory)
+            lens.chartStyle = .sunburst
         }
 
         app.selection = .applications

@@ -61,6 +61,7 @@ struct SunburstChart: View {
     /// Shown in the centre instead of the folder's own name (e.g. "Home Folder" at the root).
     var title: String?
     let canGoUp: Bool
+    var selectedPaths: Set<String> = []
     @Binding var hoveredID: String?
     let onDrill: (DiskNode) -> Void
     let onUp: () -> Void
@@ -87,6 +88,10 @@ struct SunburstChart: View {
                         let isHovered = segment.id == hoveredID
                         context.fill(path, with: .color(color(for: segment, hovered: isHovered, dim: dimOthers && !isHovered)))
                         context.stroke(path, with: .color(.black.opacity(0.28)), lineWidth: 1)
+                    }
+                    // Ticked items: outlined on top, so neighbours don't paint over the outline.
+                    for segment in segments where SpaceLensSelection.isMarked(segment.node, in: selectedPaths) {
+                        context.stroke(geometry.path(for: segment, center: center), with: .color(.white.opacity(0.95)), lineWidth: 2)
                     }
                 }
                 centerLabel(segments: segments)

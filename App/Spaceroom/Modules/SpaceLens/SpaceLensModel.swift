@@ -10,6 +10,15 @@ import SwiftUI
 @Observable
 final class SpaceLensModel {
     enum Phase: Equatable { case intro, scanning, results }
+    enum ChartStyle: String { case sunburst, treemap }
+
+    /// Remembered between launches (except during the snapshot tour, which never saves settings).
+    var chartStyle: ChartStyle = ChartStyle(rawValue: UserDefaults.standard.string(forKey: "spaceLensChart") ?? "") ?? .sunburst {
+        didSet {
+            guard ProcessInfo.processInfo.environment["SPACEROOM_SNAPSHOT_DIR"] == nil else { return }
+            UserDefaults.standard.set(chartStyle.rawValue, forKey: "spaceLensChart")
+        }
+    }
 
     struct Target: Identifiable, Hashable {
         let id: String

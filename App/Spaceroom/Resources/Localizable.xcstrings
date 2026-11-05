@@ -1499,6 +1499,26 @@
         }
       }
     },
+    "Chart": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grafik"
+          }
+        }
+      }
+    },
+    "Chart style": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gaya grafik"
+          }
+        }
+      }
+    },
     "Check Again": {
       "localizations": {
         "id": {
@@ -6224,6 +6244,16 @@
         }
       }
     },
+    "Sunburst": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunburst"
+          }
+        }
+      }
+    },
     "Suspicious": {
       "localizations": {
         "id": {
@@ -6590,6 +6620,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tong Sampah"
+          }
+        }
+      }
+    },
+    "Treemap": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treemap"
           }
         }
       }
