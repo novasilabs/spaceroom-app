@@ -44,9 +44,9 @@ final class DesignTokens {
     var surfaceTint: Double = 0.07
 
     // Background
-    var grainOpacity: Double = 0.40
-    var blobOpacity: Double = 0.90
-    var patternOpacity: Double = 0.22
+    var grainOpacity: Double = 0
+    var blobOpacity: Double = 1
+    var patternOpacity: Double = 0
 
     // Primary circle button
     var primarySize: Double = 92
@@ -76,7 +76,7 @@ final class DesignTokens {
         let enterDuration = 0.30, enterOffset = 12.0, enterBlur = 4.0, stagger = 0.10, exitDuration = 0.15
         let switchDuration = 0.15, hoverDuration = 0.12, iconSwapDuration = 0.30
         let cardRadius = 20.0, ringOpacity = 0.08, ringHoverOpacity = 0.13, surfaceTint = 0.07
-        let grainOpacity = 0.40, blobOpacity = 0.90, patternOpacity = 0.22
+        let grainOpacity = 0.0, blobOpacity = 1.0, patternOpacity = 0.0
         let primarySize = 92.0, primaryGlow = 0.55
     }
 

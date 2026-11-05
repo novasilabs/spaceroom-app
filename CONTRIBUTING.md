@@ -68,3 +68,14 @@ SPACEROOM_SNAPSHOT_DIR=/tmp/spaceroom-shots \
 ```
 
 The app opens each screen, scans Cleanup and Dev Cleanup (read-only, it never cleans), writes a PNG of each screen to the folder, then quits. Translucent materials render darker in these captures than on screen.
+
+## Regenerating the app icon (Debug builds)
+
+The icon is rendered from `AppIconArtwork` (the sidebar's glass glyph), so it always matches the in-app style:
+
+```bash
+SPACEROOM_EXPORT_ICON="$PWD/App/Spaceroom/Resources/Assets.xcassets/AppIcon.appiconset" \
+  build/DerivedData/Build/Products/Debug/Spaceroom.app/Contents/MacOS/Spaceroom
+```
+
+It writes every size listed in the icon set's `Contents.json`, then quits.

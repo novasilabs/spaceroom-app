@@ -53,7 +53,7 @@ struct GrainyBackground: View {
                 .opacity(tokens.blobOpacity)
 
                 // 3. Optional pattern: thin concentric contours, clear in the middle.
-                if showsPattern {
+                if showsPattern && tokens.patternOpacity > 0 {
                     ContourPattern()
                         .stroke(.white, lineWidth: 0.8)
                         .opacity(tokens.patternOpacity)
@@ -62,9 +62,12 @@ struct GrainyBackground: View {
                 }
 
                 // 4. Grain over everything; overlay makes it vanish in dark areas.
-                GrainLayer()
-                    .opacity(tokens.grainOpacity)
-                    .blendMode(.overlay)
+                // Skipped entirely at 0 so the blend layer costs nothing.
+                if tokens.grainOpacity > 0 {
+                    GrainLayer()
+                        .opacity(tokens.grainOpacity)
+                        .blendMode(.overlay)
+                }
             }
             .frame(width: size.width, height: size.height)
         }

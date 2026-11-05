@@ -13,6 +13,11 @@ enum DebugSnapshots {
     }
 
     static func runIfRequested(_ app: AppModel, menuBar: MenuBarModel) async {
+        if let iconSet = ProcessInfo.processInfo.environment["SPACEROOM_EXPORT_ICON"] {
+            exportAppIcon(to: URL(fileURLWithPath: iconSet))
+            NSApp.terminate(nil)
+            return
+        }
         guard let directory else { return }
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
@@ -138,6 +143,37 @@ enum DebugSnapshots {
         }
         NSGraphicsContext.restoreGraphicsState()
         try? rep.representation(using: .png, properties: [:])?.write(to: url)
+    }
+
+    /// Renders `AppIconArtwork` into every macOS icon size, overwriting the PNGs the
+    /// AppIcon.appiconset's Contents.json already lists.
+    private static func exportAppIcon(to iconSet: URL) {
+        for base in [16, 32, 128, 256, 512] {
+            for scale in [1, 2] {
+                let pixels = base * scale
+                let factor = CGFloat(pixels) / AppIconArtwork.canvas
+                let renderer = ImageRenderer(content: AppIconArtwork().environment(\.colorScheme, .dark))
+                renderer.scale = factor
+                renderer.isOpaque = false
+                guard let glyph = renderer.cgImage,
+                      let context = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8,
+                                              bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                else { continue }
+                let inset = (AppIconArtwork.canvas - AppIconArtwork.bodySize) / 2 * factor
+                let side = AppIconArtwork.bodySize * factor
+                // Small sizes get a tighter shadow so the edge stays crisp.
+                let blur = max(1, 24 * factor), drop = max(0.5, 10 * factor)
+                context.setShadow(offset: CGSize(width: 0, height: -drop), blur: blur,
+                                  color: CGColor(srgbRed: 0.08, green: 0.03, blue: 0.2, alpha: 0.45))
+                context.interpolationQuality = .high
+                context.draw(glyph, in: CGRect(x: inset, y: inset + drop * 0.5, width: side, height: side))
+                guard let output = context.makeImage() else { continue }
+                let name = "icon_\(base)x\(base)\(scale == 2 ? "@2x" : "").png"
+                try? NSBitmapImageRep(cgImage: output).representation(using: .png, properties: [:])?
+                    .write(to: iconSet.appendingPathComponent(name))
+            }
+        }
     }
 
     private static func pause(_ seconds: Double) async {
