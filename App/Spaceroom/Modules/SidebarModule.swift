@@ -119,9 +119,9 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
     /// Milestone that delivers a module not built yet (PRD §11).
     var plannedMilestone: LocalizedStringResource? {
         switch self {
-        case .smartCare, .cleanup, .devCleanup, .clutter, .spaceLens, .status, .applications, .startup, .restoreCenter: nil
+        case .smartCare, .cleanup, .devCleanup, .clutter, .spaceLens, .status, .applications, .startup, .performance, .restoreCenter: nil
 
-        case .performance, .privacy: "Coming in v0.5"
+        case .privacy: "Coming in v0.5"
         case .automations: "Coming in v1.0"
         }
     }

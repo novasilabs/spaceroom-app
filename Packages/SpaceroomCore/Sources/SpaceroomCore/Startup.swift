@@ -258,18 +258,7 @@ public struct SecurityPosture: Sendable, Hashable {
 
     /// Runs a read-only status tool with a short timeout.
     static func run(_ tool: String, _ arguments: [String]) -> String? {
-        guard FileManager.default.isExecutableFile(atPath: tool) else { return nil }
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: tool)
-        process.arguments = arguments
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        do { try process.run() } catch { return nil }
-        let deadline = Date.now.addingTimeInterval(3)
-        while process.isRunning, Date.now < deadline { usleep(20_000) }
-        if process.isRunning { process.terminate(); return nil }
-        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+        CommandRunner.system.run(Command(tool, arguments, timeout: 3)).flatMap { $0.timedOut ? nil : $0.output }
     }
 }
 

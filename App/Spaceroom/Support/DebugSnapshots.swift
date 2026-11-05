@@ -128,6 +128,10 @@ enum DebugSnapshots {
         capture("22-startup", in: directory)
 
         app.selection = .performance
+        await pause(1.2)
+        capture("23-performance", in: directory)
+
+        app.selection = .privacy
         await pause(1.0)
         capture("08-placeholder", in: directory)
 

@@ -62,6 +62,8 @@ struct RootView: View {
                 StatusView(model: app.status)
             } else if module == .startup {
                 StartupView(model: app.startup)
+            } else if module == .performance {
+                PerformanceView(model: app.performance)
             } else if let kind = module.flowKind, let flow = app.flow(for: kind) {
                 ScanFlowView(module: module, flow: flow)
             } else {
