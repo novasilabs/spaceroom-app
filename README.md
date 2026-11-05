@@ -1,89 +1,178 @@
-# Spaceroom
+<p align="center">
+  <img src="docs/images/icon.png" width="128" height="128" alt="Spaceroom icon">
+</p>
 
-**Give your Mac room again.** Spaceroom is a free, open-source, native SwiftUI app that cleans junk, removes apps completely, and shows what's happening on your Mac. Everything it removes can be undone.
+<h1 align="center">Spaceroom</h1>
 
-> Status: **M1 in progress** (pre-alpha). Not ready for daily use yet. See [docs/PRD.md](docs/PRD.md) for the full product plan.
+<p align="center">
+  <strong>Give your Mac room again.</strong><br>
+  A free, open-source Mac cleaner and system toolkit, built natively in SwiftUI.<br>
+  Everything it removes can be undone.
+</p>
 
-## Promises
+<p align="center">
+  <a href="https://github.com/novasilabs/spaceroom-app/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/novasilabs/spaceroom-app?include_prereleases&label=release"></a>
+  <a href="https://github.com/novasilabs/spaceroom-app/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/novasilabs/spaceroom-app/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
+  <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-black">
+  <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-orange">
+</p>
 
-- **See everything.** Every item comes with a size, a location and a plain-language "why is this safe?".
-- **Undo anything.** Cleaned items go to the Restore Center and are kept for 7 days by default, not deleted right away.
-- **Nothing leaves your Mac.** No account, no telemetry. All analysis happens on-device.
+<p align="center">
+  <a href="#download">Download</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#how-spaceroom-keeps-your-data-safe">Safety</a> ·
+  <a href="#build-from-source">Build</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a>
+</p>
 
-## What works so far
+<p align="center">
+  <img src="docs/images/smart-care.jpg" alt="Smart Care results: system junk, developer junk, Trash, Protection, Speed and Applications tiles" width="900">
+</p>
 
-| Area | State |
+> **Status: 0.9 beta.** Every module works and is covered by tests, but builds are not notarized yet and admin-only tasks wait for the privileged helper. See the [roadmap](#roadmap).
+
+## Why Spaceroom
+
+- **See everything.** Every item shows its size, its location and a plain-language reason why it's safe to remove.
+- **Undo anything.** Cleaned items go to the **Restore Center** and stay restorable for 7 days (1–30, your choice) before they're deleted.
+- **Honest numbers.** Only regenerable data counts as junk. Nothing inflated, no scare tactics.
+- **Nothing leaves your Mac.** No account, no telemetry, no network requests. All analysis happens on-device.
+- **Free and open.** GPL-3.0-or-later. The cleaning rules are plain JSON anyone can read and review.
+
+## Features
+
+### Clean
+| | |
 |---|---|
-| App shell: sidebar, per-module gradients, design system | ✅ |
-| Cleanup and Dev Cleanup: scan → review → clean → undo | ✅ (starter rule set) |
-| Restore Center: timeline, restore item / operation, delete now, automatic expiry | ✅ |
-| Full Disk Access onboarding with live detection | ✅ |
-| Menu bar: one Spaceroom item combining the readings you pick (storage ring with free space, CPU, memory; turns amber/red when low), one popover with storage, one-click undoable actions (Trash, App Caches, DerivedData, Simulators), CPU/memory graphs, battery, network speed, Protection status, last cleanup with Undo | ✅ (M1, v1.0) |
-| Smart Care: one scan across every module (safe, regenerable rules only), System Junk / Developer Junk / Trash tiles plus Protection (likely-harmful downloads), Speed (maintenance due, startup items to review) and Applications (leftovers of removed apps) tiles with their own toggles, disk-after-cleaning tile, single Undo; opens first and runs from the menu bar | ✅ (M1, v1.0) |
-| Space Lens: map of the home folder, startup disk or external drives as an interactive sunburst (hover, click to drill in, breadcrumb, linked size list), grows live while scanning, shows "system & hidden" space the scan can't see | ✅ (M1) |
-| Applications: installed apps with size, source and last opened; uninstall with leftovers (caches, logs, settings, containers, launch agents — personal data unticked by default); leftovers of apps already removed; everything undoable via the Restore Center | ✅ (M1) |
-| My Clutter: large & old files (size and age filters), duplicates confirmed by content with a protected "Keep" copy, installer downloads with their source; your own files only, never app data | ✅ (M1) |
-| Restore Center bulk actions: select, Restore All / Delete All | ✅ |
-| System Status: health score with what to fix, CPU (per core, load), memory and swap, network, disk, battery health and cycles, thermal state, busiest processes with Quit for apps; samples only while visible | ✅ (v0.5) |
-| Startup & Background: launch agents, daemons and in-app helpers with signature badges and audit findings (program missing, app removed, empty job, unsigned, unusual location); remove your own agents via the Restore Center; SIP / Gatekeeper / FileVault / Firewall / XProtect overview | ✅ (v0.5) |
-| Performance: maintenance tasks (Quick Look, “Open With” list, font caches, startup disk check) with when-it-helps notes, last run and live status; admin tasks (DNS, Spotlight, purge) shown but never run until the privileged helper exists | ✅ (v0.5) |
-| Privacy: clear browser history, cookies, form autofill and download history (Safari, Chrome, Dia, Arc, Edge, Brave, Vivaldi, Firefox) plus recent-items lists, undoable from the Restore Center; never touches saved passwords or bookmarks, refuses while the browser is open; read-only review of which apps hold camera, microphone, screen recording and other permissions | ✅ (v0.5) |
-| Protection: finds files disguised to trick you — programs named like photos or documents, misleading names (`invoice.pdf.app`, hidden right-to-left characters), code hidden after an image, PDFs that run JavaScript or launch programs, unsigned apps outside /Applications, downloaded scripts; reads headers only and never runs anything; findings move to the Restore Center; security strip (SIP, Gatekeeper, FileVault, Firewall, XProtect) | ✅ (v1.0) |
-| ⌘K command palette: jump to any module, run actions (Smart Care, scans, Empty Trash, DerivedData, malware scan), find apps to uninstall, run automations; anything that removes files measures first and asks | ✅ (v1.0) |
-| Ignore list: right-click anything (scan items, whole categories, clutter files, app leftovers, Space Lens folders, Protection findings) and choose Always Ignore, or add files and folders in Settings; a folder protects everything inside it and any folder containing it; enforced by every scan and by the Restore Center itself, and fail-closed (an unreadable list turns cleaning off) | ✅ (v1.0) |
-| Automations: "when → do" rules (daily or weekly schedule, low disk, at login, plugged in → check and notify, Smart Care clean, empty Trash, clear old Xcode builds); only Smart Care–safe rules run unattended, cleaning goes to the Restore Center unless you choose to free space right away; missed schedules catch up once after sleep; run history with Undo and notifications | ✅ (v1.0) |
+| **Smart Care** | One scan for system junk, developer junk and the Trash, plus Protection, Speed and Applications tiles, each with its own toggle. One Undo brings everything back. |
+| **Cleanup** | User caches, logs and crash reports, browser caches and the Trash, all reviewable item by item. |
+| **Dev Cleanup** | Xcode DerivedData, iOS DeviceSupport and simulator caches, and Homebrew, npm, Yarn, pip, CocoaPods, Go, Cargo and Gradle caches. Skips tools that are running. |
+| **My Clutter** | Large and old files, duplicates confirmed by content (one copy is always kept), and installer downloads with their source. |
+
+### Understand
+| | |
+|---|---|
+| **Space Lens** | An interactive sunburst map of any folder or disk that grows while it scans, with drill-in, a breadcrumb and a linked size list. |
+| **System Status** | A health score with what to fix; live CPU (per core), memory and swap, network, disk, battery health and thermal state; and the busiest processes. |
+
+### Manage
+| | |
+|---|---|
+| **Applications** | Uninstall apps completely, leftovers included (personal data stays unticked), and find what removed apps left behind. |
+| **Startup & Background** | Launch agents, daemons and helpers with signature checks and audit findings, plus a security overview (SIP, Gatekeeper, FileVault, Firewall, XProtect). |
+| **Protection** | Finds files disguised to trick you: programs named like photos or documents, `invoice.pdf.app` and right-to-left tricks, code hidden after images, PDFs that run JavaScript, unsigned apps and downloaded scripts. It reads headers only and never runs anything. |
+| **Performance** | Maintenance tasks with "helps when" notes, last-run times and honest skip reasons. |
+| **Privacy** | Clears browser history, cookies, autofill and download history for Safari, Chrome, Dia, Arc, Edge, Brave, Vivaldi and Firefox, and recent-items lists. Never touches passwords or bookmarks. Also reviews which apps hold camera, microphone and other permissions. |
+
+### Everywhere
+- **Restore Center:** a timeline of every clean, where you can restore one item, a whole operation or everything, or free the space now.
+- **Menu bar:** one item showing the readings you pick, and a popover with storage, quick cleans, CPU, memory, battery, network and Protection status.
+- **⌘K command palette:** jump to any screen, run any action or find an app. Anything that removes files measures first and asks.
+- **Automations:** "when → do" rules (schedule, low disk, at login, plugged in) that only run Smart Care–safe cleaning.
+- **Ignore list:** right-click anything and choose *Always Ignore*. Every scan and the Restore Center honour it.
+- **Languages:** English and Bahasa Indonesia.
+
+<table>
+  <tr>
+    <td><img src="docs/images/space-lens.jpg" alt="Space Lens sunburst"></td>
+    <td><img src="docs/images/system-status.jpg" alt="System Status"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/protection.jpg" alt="Protection"></td>
+    <td><img src="docs/images/privacy.jpg" alt="Privacy"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/automations.jpg" alt="Automations"></td>
+    <td><img src="docs/images/command-palette.jpg" alt="Command palette"></td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/images/menu-bar.jpg" alt="Menu bar popover" width="340"></p>
+
+## How Spaceroom keeps your data safe
+
+Spaceroom deletes files on people's computers, so safety comes before features:
+
+1. **Rules are data.** Every cleaning category is a JSON rule that states its paths, why it's safe and when to skip it. A rule that fails validation disables cleaning (fail-closed).
+2. **Guard rails on every item.** Items must stay inside their rule's root folder. Symlinks are never followed out, and protected folders (Documents, Desktop, Library itself, system folders) are refused.
+3. **Re-checked before moving.** Right before an item moves, Spaceroom checks that it's the same file it scanned (device and inode), that its app hasn't started, and that it isn't on your ignore list.
+4. **One door out.** Every module removes files through the Restore Center, which keeps them restorable and refuses anything on the ignore list. If the ignore list can't be read, nothing moves at all.
+5. **Nothing unattended that needs judgement.** Automations and Smart Care only use regenerable, Smart Care–eligible rules. Personal data, cookies and startup items are never ticked for you.
+6. **No admin, no surprises.** Tasks that need admin rights stay locked until the privileged helper exists. Nothing is run behind your back.
+
+Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md).
+
+## Download
+
+1. Get **Spaceroom-x.y.z.dmg** from [Releases](https://github.com/novasilabs/spaceroom-app/releases/latest).
+2. Open it and drag **Spaceroom** into **Applications**.
+3. **First launch:** beta builds aren't notarized yet, so macOS stops the first open. Go to **System Settings › Privacy & Security** and click **Open Anyway** next to Spaceroom. (On macOS 14 you can also right-click the app and choose **Open**.) You only need to do this once.
+4. The welcome tour asks for **Full Disk Access**, which lets Spaceroom measure protected places such as the Trash and Safari data. It works without it, and locked places are marked.
+
+Each release includes a `.sha256` file. Check your download with `shasum -a 256 Spaceroom-x.y.z.dmg`.
+
+**Uninstalling Spaceroom:** quit it, delete the app, then delete `~/Library/Application Support/Spaceroom` (this also permanently deletes anything still in the Restore Center).
 
 ## Requirements
 
-- macOS 14 Sonoma or later (Apple Silicon or Intel)
-- To build: Xcode 16+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
+- macOS 14 Sonoma or later, on Apple Silicon or Intel (universal build)
+- About 15 MB of disk space
 
-## Build & run
+## Build from source
 
-```bash
-xcodegen generate
-open Spaceroom.xcodeproj
-```
-
-Or from the command line:
+You need Xcode 16 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
-xcodegen generate && xcodebuild -project Spaceroom.xcodeproj -scheme Spaceroom -configuration Debug build
+git clone https://github.com/novasilabs/spaceroom-app.git
+cd spaceroom-app
+make bootstrap   # installs XcodeGen and generates Spaceroom.xcodeproj
+make run         # Debug build, then launch
+make test        # engine test suite (Swift Testing)
+make dmg         # Release build packaged as dist/Spaceroom-<version>.dmg
 ```
 
-Run the core engine tests:
-
-```bash
-swift test --package-path Packages/SpaceroomCore
-```
+`make help` lists every task. The `.xcodeproj` is generated from `project.yml` and isn't committed.
 
 ## Project layout
 
 ```
-App/Spaceroom/                 SwiftUI app (views, design system, app state)
-Packages/SpaceroomCore/        Engine: rules, scanner, safety guard, cleaner, Restore Center store
-  Sources/SpaceroomCore/Resources/Rules/   Cleaning rules (JSON) — the main place to contribute
-docs/PRD.md                    Product requirements
-project.yml                    XcodeGen project definition (the .xcodeproj is generated, not committed)
+App/Spaceroom/                 SwiftUI app: modules, design system, menu bar, command palette
+  Modules/<Module>/            One folder per sidebar module (model + view)
+  Resources/                   Assets and the String Catalog (English, Bahasa Indonesia)
+Packages/SpaceroomCore/        The engine, with no UI: rules, scanner, safety guard, Restore Center,
+                               ignore list, protection scanner, automations, system monitors
+  Sources/SpaceroomCore/Resources/Rules/   Cleaning rules (JSON), the easiest place to contribute
+  Tests/SpaceroomCoreTests/    The test suite (sandboxed fake home folders, never your real files)
+docs/                          PRD, architecture and screenshots
+scripts/make-dmg.sh            Release packaging
+project.yml                    XcodeGen project definition
 ```
 
-## How cleaning works
+## Roadmap
 
-1. **Rules** (JSON) declare what may be cleaned, why it's safe, and when to skip it (for example "skip while Xcode is running").
-2. The **scanner** expands each rule's paths, measures sizes, and marks items that are in use.
-3. The **safety guard** refuses anything outside the rule's root folder, anything reached through a symlink, protected system and user folders, and anything that was swapped after the scan (device and inode re-check).
-4. The **cleaner** moves the items into the **Restore Center**. That's an instant rename on the same disk; items on other disks go to that disk's Trash. Nothing is permanently deleted until the retention period ends or you choose **Delete now**.
+- **Privileged helper:** system caches and logs, plus the admin maintenance tasks (DNS, Spotlight, memory purge)
+- **Signed and notarized releases** with Sparkle updates and a Homebrew cask
+- **`spaceroom` CLI** (`scan`, `clean`, `status`, `--json`, `--dry-run`) on the same engine
+- **Cleanup:** unused app languages, broken preferences, Mail attachments, Photos caches
+- **Dev Cleanup:** per-project build folders (`node_modules`, `target`, …), git-aware, plus Docker
+- **My Clutter:** similar photos
+- **Space Lens:** delete from the map, a treemap view, storage-growth history
+- **Applications:** an app updater and "slim apps" (strip unused architectures)
 
-If the rule set fails to load or validate, cleaning is disabled. Scanning still works.
+The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). New cleaning rules are the most valuable contribution. Every rule needs a "why safe" text and a test.
+Contributions are welcome, and new cleaning rules and translations are the easiest place to start. Read [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Found a safety or security problem? Please report it privately, as described in [SECURITY.md](SECURITY.md).
 
-## Credits
+## Acknowledgements
 
-Spaceroom's feature set and several safety heuristics are inspired by [Mole](https://github.com/tw93/mole) by tw93 (GPL-3.0). Rules ported from Mole are marked with `"source": "mole"`. See [NOTICE](NOTICE).
+Spaceroom's cleaning categories and several safety heuristics are inspired by [Mole](https://github.com/tw93/mole) by tw93 (GPL-3.0). Rules ported from Mole are marked `"source": "mole"`. See [NOTICE](NOTICE).
 
 ## License
 
-[GPL-3.0-or-later](LICENSE). Spaceroom is not affiliated with Apple, MacPaw (CleanMyMac) or the Mole project. "Mac" is a trademark of Apple Inc.
+[GPL-3.0-or-later](LICENSE) © The Spaceroom contributors.
+
+Spaceroom is an independent project and is not affiliated with Apple Inc., MacPaw (CleanMyMac) or the Mole project. Mac and macOS are trademarks of Apple Inc.

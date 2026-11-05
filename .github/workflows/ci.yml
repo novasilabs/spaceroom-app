@@ -5,24 +5,44 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  core-tests:
+  engine-tests:
+    name: Engine tests
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Test SpaceroomCore
         run: swift test --package-path Packages/SpaceroomCore
 
-  app-build:
+  translations:
+    name: Translations complete
     runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-translations.py
+
+  app-build:
+    name: App build (${{ matrix.configuration }})
+    runs-on: macos-15
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project
         run: xcodegen generate
-      - name: Build app
+      - name: Build
         run: |
+          set -o pipefail
           xcodebuild -project Spaceroom.xcodeproj -scheme Spaceroom \
-            -configuration Debug -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO build
+            -configuration ${{ matrix.configuration }} -destination 'platform=macOS' \
+            -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build

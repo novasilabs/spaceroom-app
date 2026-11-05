@@ -4,18 +4,24 @@ Thanks for helping! Spaceroom deletes files on people's computers, so **safety r
 
 ## Ground rules
 
-- Be kind and constructive. We follow the spirit of the [Contributor Covenant](https://www.contributor-covenant.org/).
+- Be kind and constructive. See our [Code of Conduct](CODE_OF_CONDUCT.md).
 - By contributing you agree that your contribution is licensed under **GPL-3.0-or-later**.
 - Every Swift file starts with `// SPDX-License-Identifier: GPL-3.0-or-later`.
 
 ## Development setup
 
+Requirements: macOS 14+, Xcode 16+, Homebrew.
+
 ```bash
-brew install xcodegen
-xcodegen generate
-open Spaceroom.xcodeproj
-swift test --package-path Packages/SpaceroomCore
+make bootstrap   # brew install xcodegen, then generate Spaceroom.xcodeproj
+make open        # open in Xcode
+make test        # engine tests
+make run         # Debug build and launch
+make snapshots   # read-only UI tour → build/snapshots (English and Indonesian)
 ```
+
+`make help` lists everything. The `.xcodeproj` is generated from `project.yml`, so edit
+`project.yml`, not the project file. Architecture notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - Swift 6 language mode with strict concurrency checking.
 - Tests use **Swift Testing** (`@Test`, `#expect`).
@@ -54,9 +60,20 @@ PRs that touch `CleanupEngine`, `SafetyGuard`, `RestoreStore`, or rule files nee
 
 ## Pull requests
 
-- Keep PRs focused, with one feature or fix per PR.
-- Include screenshots for UI changes.
-- CI must be green: core tests and the app build.
+- Keep PRs focused, with one feature or fix per PR. Open an issue first for larger changes.
+- Write commit subjects in the imperative ("Add …", "Fix …"), under 72 characters.
+- Include screenshots for UI changes (`make snapshots`), in both languages if the text changed.
+- New behaviour comes with tests. Anything that removes files needs a test proving what it
+  *doesn't* touch.
+- Update `CHANGELOG.md` under **Unreleased**.
+- CI must be green: engine tests, the Debug app build and the Release build.
+
+### Safety checklist for code that removes files
+
+- [ ] Goes through `RestoreStore.quarantine` (never `FileManager.removeItem` on user data).
+- [ ] Re-checks each item right before moving it (it still exists, it's the same identity, it's inside its root).
+- [ ] Respects the ignore list, and is covered by a test with an ignored item.
+- [ ] Never acts on personal data, cookies or startup items unattended.
 
 ## Translations
 
@@ -74,6 +91,14 @@ Spaceroom ships in English and Bahasa Indonesia (`id`).
 - **Engine text** (maintenance tasks, health advice, Protection evidence, errors) uses `String(localized: "…", bundle: .module)` in SpaceroomCore; Indonesian goes in `Packages/SpaceroomCore/Sources/SpaceroomCore/Resources/Localization/id.lproj/Localizable.strings`.
 - **Cleaning rules** are data: their title, `why_safe` and `rebuild_hint` are translated in `…/id.lproj/Rules.strings`, keyed by the English text. A new rule needs its three lines there too.
 - Check a language without changing your Mac: append `-AppleLanguages '(id)' -AppleLocale id_ID` to the snapshot tour command below. Users pick the app's language in System Settings › General › Language & Region › Applications.
+
+## Building a release disk image
+
+```bash
+./scripts/make-dmg.sh
+```
+
+Builds a universal Release `Spaceroom.app`, checks its signature and writes `dist/Spaceroom-<version>.dmg`. The image has a designed window (background drawn by `scripts/dmg-background.swift`, with icon positions applied through Finder, so macOS asks once to let your terminal control Finder), an Applications shortcut, a bilingual *Read Me First* and a SHA-256 file. Pushing a `v*` tag runs the same script in the **Release** workflow and opens a draft GitHub release. Local builds are ad-hoc signed, so macOS asks people to confirm the first launch in System Settings › Privacy & Security. For a public release, pass a Developer ID (`SIGN_IDENTITY="Developer ID Application: …" ./scripts/make-dmg.sh`) and notarize the image with `xcrun notarytool submit … --wait` and `xcrun stapler staple`.
 
 ## UI snapshot tour (Debug builds)
 

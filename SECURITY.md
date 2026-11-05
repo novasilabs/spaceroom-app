@@ -1,26 +1,66 @@
 # Security Policy
 
-Spaceroom moves and deletes files and will later include a privileged helper, so we take security and data-safety bugs seriously.
+Spaceroom moves and deletes files on people's Macs, so we treat **data-safety bugs as
+security bugs**.
+
+## Supported versions
+
+| Version | Supported |
+|---|---|
+| 0.9.x (latest beta) | ✅ |
+| older | ❌ |
 
 ## Reporting a vulnerability
 
-Please **do not open a public issue**. Report privately via GitHub's **"Report a vulnerability"** button (Security → Advisories) on this repository.
+Please **do not open a public issue**. Report privately through
+[GitHub Security Advisories](https://github.com/novasilabs/spaceroom-app/security/advisories/new)
+("Report a vulnerability" on the Security tab).
 
 Please include:
-- the Spaceroom version and macOS version,
-- steps to reproduce,
-- the impact (for example "a crafted symlink lets a rule delete files outside its root").
+- the Spaceroom version (Settings › About) and macOS version,
+- steps to reproduce, ideally with a minimal folder layout,
+- the impact (for example "a crafted symlink lets a rule move files outside its root").
 
-We aim to acknowledge reports within 3 days and to ship a fix or mitigation within 30 days for high-severity issues.
+We aim to acknowledge reports within **3 days** and to ship a fix or mitigation within
+**30 days** for high-severity issues. We credit reporters in the release notes unless you
+prefer otherwise.
 
 ## In scope
 
-- Anything that lets Spaceroom remove, move, or expose data outside what the user reviewed and confirmed.
-- Escaping a rule's root folder (symlinks, `..`, race conditions between scan and clean).
-- Restore Center data loss (items not restorable before expiry).
-- The privileged helper (from v0.5): XPC authentication, command injection, privilege escalation.
-- Tampering with rule updates.
+- Anything that removes, moves or exposes data the user didn't review and confirm.
+- Escaping a rule's root folder (symlinks, `..`, races between scan and clean, identity
+  swaps).
+- Bypassing the ignore list, or the Restore Center's fail-closed behaviour.
+- Restore Center data loss (items that can't be restored before they expire).
+- Automations or Smart Care acting on data that isn't Smart Care–eligible.
+- Protection or Privacy reading more than they need to (for example file contents beyond
+  headers, or saved passwords).
+- The privileged helper, once it exists: XPC authentication, command injection, privilege
+  escalation.
+- Tampering with rules or release artifacts.
 
-## Network endpoints
+## Out of scope
 
-Spaceroom M0 makes **no network requests**. Future endpoints (Sparkle update feed, signed rule updates) will be listed here.
+- The Protection scan not detecting a given piece of malware. It's a heuristic scan for
+  common disguises, not an antivirus. Please open a regular issue with the sample's
+  characteristics, not the sample itself.
+- Gatekeeper warnings on beta builds (they aren't notarized yet).
+
+## How Spaceroom limits its own reach
+
+- **No network.** Spaceroom makes no network requests. Notifications are local. Future
+  endpoints (an update feed) will be listed here before they ship.
+- **No admin rights.** Nothing runs as root. Admin tasks stay locked until the privileged
+  helper exists and has had its own security review.
+- **Read-only where possible.** Permission databases are opened read-only, Protection reads
+  file headers and tails only, and nothing found is ever executed.
+- **One way out.** Every removal goes through the Restore Center, which enforces the ignore
+  list and refuses all moves if the list can't be read.
+
+## Verifying a download
+
+Every release ships a `.sha256` next to the `.dmg`:
+
+```bash
+shasum -a 256 -c Spaceroom-0.9.0.dmg.sha256
+```

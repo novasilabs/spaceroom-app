@@ -1,0 +1,30 @@
+name: New cleaning rule
+description: Propose a cache or junk location Spaceroom should clean.
+labels: [rule]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App or tool
+      placeholder: "pnpm"
+    validations:
+      required: true
+  - type: input
+    id: path
+    attributes:
+      label: Path(s)
+      placeholder: "~/Library/Caches/pnpm/*"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it safe to remove?
+      description: What is this data, and what happens after it's deleted (rebuilt, re-downloaded, …)? Links to official docs help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: skip
+    attributes:
+      label: When should it be skipped?
+      placeholder: "While pnpm is running; files changed in the last 7 days"

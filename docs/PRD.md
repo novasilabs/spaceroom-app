@@ -472,6 +472,6 @@ Resolved:
 - ~~Malware~~ → **v1 ships the persistence audit, security posture panel and a Protection scan for disguised files** (programs posing as images/documents, deceptive names, payloads appended to images, active PDFs, unsigned apps, downloaded scripts; header reads only, findings quarantined). It is heuristic, not an antivirus. Any future signature engine must be GPL-compatible (ClamAV signatures and/or YARA rules); evaluated post-v1.
 - ~~Localisation~~ → **English + Bahasa Indonesia at launch (v1.0)**. String Catalogs (`.xcstrings`) from M0 so no string is hard-coded; community translations via PRs afterwards.
 - ~~Quarantine retention~~ → **7 days default, configurable 0–30 days**; oldest items auto-purged first when free space is critically low, with a notification (§6.11).
-- ~~Repo home~~ → **new GitHub organisation** (proposed `spaceroom-app` — free on GitHub as of 2026-11-04; `spaceroom` is taken) so maintainers can be added later and the project is not tied to a personal account.
+- ~~Repo home~~ → **[novasilabs/spaceroom-app](https://github.com/novasilabs/spaceroom-app)** on GitHub, an organisation account so maintainers can be added and the project isn't tied to a personal account.
 
 All open questions are resolved. Next step: **M0 — Foundations** (§11).

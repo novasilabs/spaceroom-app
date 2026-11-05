@@ -1,0 +1,70 @@
+name: Bug report
+description: Something doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **If Spaceroom removed or moved something it shouldn't have, or you found a security problem, please report it privately instead:** Security › Report a vulnerability.
+  - type: input
+    id: version
+    attributes:
+      label: Spaceroom version
+      description: Settings › About
+      placeholder: "0.9.0"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac
+      placeholder: "macOS 14.6, MacBook Air M2"
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Where did it happen?
+      options:
+        - Smart Care
+        - Cleanup / Dev Cleanup
+        - My Clutter
+        - Space Lens
+        - System Status
+        - Applications
+        - Startup & Background
+        - Protection
+        - Performance
+        - Privacy
+        - Restore Center
+        - Automations
+        - Menu bar
+        - Command palette (⌘K)
+        - Onboarding / Settings
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs
+      description: Please blur personal file names.
+  - type: checkboxes
+    id: language
+    attributes:
+      label: Language
+      options:
+        - label: I was using Spaceroom in Bahasa Indonesia

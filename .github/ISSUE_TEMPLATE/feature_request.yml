@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an idea or improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: "When I … I want to … so that …"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Spaceroom to do?
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Could this remove or change data? How should it stay safe?
+      description: Spaceroom's rule is that everything can be reviewed first and undone afterwards.
