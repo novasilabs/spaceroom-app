@@ -209,7 +209,7 @@ private struct LaunchRow: View {
 }
 
 /// SIP, Gatekeeper, FileVault, Firewall and XProtect at a glance, with a way to fix what's off.
-private struct PostureStrip: View {
+struct PostureStrip: View {
     let posture: SecurityPosture?
     let open: (String) -> Void
 

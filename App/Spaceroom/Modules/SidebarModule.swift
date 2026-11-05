@@ -8,7 +8,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
     case smartCare
     case cleanup, devCleanup, clutter
     case spaceLens, status
-    case applications, startup, performance, privacy
+    case applications, startup, protection, performance, privacy
     case restoreCenter, automations
 
     var id: String { rawValue }
@@ -31,7 +31,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         case .smartCare: .top
         case .cleanup, .devCleanup, .clutter: .clean
         case .spaceLens, .status: .understand
-        case .applications, .startup, .performance, .privacy: .manage
+        case .applications, .startup, .protection, .performance, .privacy: .manage
         case .restoreCenter, .automations: .footer
         }
     }
@@ -46,6 +46,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         case .status: "System Status"
         case .applications: "Applications"
         case .startup: "Startup & Background"
+        case .protection: "Protection"
         case .performance: "Performance"
         case .privacy: "Privacy"
         case .restoreCenter: "Restore Center"
@@ -63,6 +64,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         case .status: "Live CPU, memory, disk, network and battery."
         case .applications: "Uninstall apps completely, leftovers included."
         case .startup: "See and control everything that runs in the background."
+        case .protection: "Find files disguised to trick you into running them."
         case .performance: "Run maintenance tasks that keep macOS snappy."
         case .privacy: "Clear browsing traces and review app permissions."
         case .restoreCenter: "Everything Spaceroom removed, ready to restore."
@@ -80,6 +82,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         case .status: "gauge.with.dots.needle.67percent"
         case .applications: "square.grid.2x2"
         case .startup: "power"
+        case .protection: "checkmark.shield"
         case .performance: "bolt"
         case .privacy: "hand.raised"
         case .restoreCenter: "arrow.uturn.backward.circle"
@@ -99,6 +102,7 @@ enum SidebarModule: String, CaseIterable, Identifiable, Hashable {
         case .status:        .hex(0x97ADCB, 0x5F7EB0, 0x33508A, 0x1A2A52, 0x0A1227, 0x5AAAF2)
         case .applications:  .hex(0x9EABF2, 0x6070D8, 0x3A3FA8, 0x1E1D62, 0x0C0B2C, 0x7C8CFF)
         case .startup:       .hex(0xC99FC2, 0xA85A88, 0x7E2E5E, 0x4A1636, 0x210818, 0xF06C9C)
+        case .protection:    .hex(0xA5C7A0, 0x5E9A5C, 0x2F6A3A, 0x173D20, 0x08190D, 0x6FD67A)
         case .performance:   .hex(0xDABC8E, 0xC98A4A, 0xA4512A, 0x5E2414, 0x290D06, 0xF68C3C)
         case .privacy:       .hex(0x93CBD2, 0x4E9AAE, 0x23687E, 0x103C4C, 0x061C25, 0x4CD2DA)
         case .restoreCenter: .hex(0xA7B2C4, 0x6E7A90, 0x4A4E5E, 0x2E2824, 0x14100D, 0x9CA8CA)
