@@ -17,7 +17,7 @@ jobs:
     name: Engine tests
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test SpaceroomCore
         run: swift test --package-path Packages/SpaceroomCore
 
@@ -25,7 +25,7 @@ jobs:
     name: Translations complete
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: python3 scripts/check-translations.py
 
   app-build:
@@ -35,7 +35,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project
