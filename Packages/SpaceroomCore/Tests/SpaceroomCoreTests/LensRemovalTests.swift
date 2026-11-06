@@ -162,7 +162,12 @@ struct RemovalSafetyTests {
         process.executableURL = url
         process.arguments = ["30"]
         try process.run()
-        Thread.sleep(forTimeInterval: 0.3)
+        // Wait until the process has actually started running this executable (under load,
+        // exec can take a while), so the tests check removal, not timing.
+        let deadline = Date.now.addingTimeInterval(5)
+        while RunningProcesses.current().program(inside: url) == nil, Date.now < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
+        }
         return process
     }
 
