@@ -46,7 +46,7 @@ public struct CLI: Sendable {
         case ok = 0, failure = 1, usage = 2, refused = 3
     }
 
-    public static let version = "0.10.0"
+    public static let version = "0.10.1"
 
     let env: Environment
 

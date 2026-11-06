@@ -6,6 +6,8 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-07
+
 ### Fixed
 - **Removed apps could still be opened.** macOS kept launching an app from the Restore Center (Spotlight, *Open With*, its links, `open -b`) for as long as it was kept. Apps are now stored under a name that isn't an app bundle, and they get their name back when restored. This also applies to apps removed by Protection, Space Lens and the Trash rule.
 - **Running programs were moved out from under themselves.** Protection and Space Lens now check every running process by path and skip anything running, with "Quit it first". Uninstalling also catches a running helper or second copy, not just the app's bundle ID.
@@ -78,6 +80,7 @@ first-launch steps).
 - **Bahasa Indonesia** translation.
 - Release packaging (`scripts/make-dmg.sh`): a universal app in a designed disk image.
 
-[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/novasilabs/spaceroom-app/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/novasilabs/spaceroom-app/releases/tag/v0.9.0
