@@ -62,7 +62,7 @@ struct DockerTests {
         #expect(result.reclaimed == 3_900_000_000)
         #expect(result.failures.isEmpty)
         let calls = try String(contentsOf: log, encoding: .utf8).split(separator: "\n")
-        #expect(calls == ["builder prune --force", "image prune --force"])
+        #expect(calls == ["builder prune --all --force", "image prune --force"])
 
         try Data().write(to: log)
         _ = docker.prune(buildCache: false, danglingImages: true)

@@ -6,6 +6,49 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-11-07
+
+### Fixed
+- **Restore Center**
+  - Cleaned files could be deleted for good if the index wasn't saved (full disk, crash, the CLI writing at the same time). Each clean now writes a journal before moving anything. Unknown folders are adopted from the journal, or go to the Trash if there's none; they're never deleted outright. The index is written under a lock and merged with what's on disk.
+  - An app restored under a new name kept working only as a folder; it's now `Foo (restored).app`.
+  - Expiry runs every hour, not only when the window opens. Choosing a shorter retention asks before deleting older items.
+  - *Delete Now* empties items kept in another drive's Trash too.
+  - Items that went missing stop counting as restorable.
+- **My Clutter**
+  - Duplicates could remove the last copy after the copy to keep was removed in another tab. The keeper is now picked again from what's left.
+  - Ticks are kept per tab, so Large & Old never shows the Installers and Duplicates pre-ticks.
+  - Only downloaded installers (Downloads, Desktop) are pre-ticked.
+  - A new scan cancels the old one, which could otherwise overwrite it.
+- **Applications**
+  - Uninstalling Chrome no longer takes Chrome Canary's data. The same goes for any installed app whose ID starts with the one being removed, and for launch agents.
+  - Leftovers of an app that's running now are skipped.
+  - Smart Care's Applications tile rescans each time instead of reusing a stale list.
+  - *Remove Data* refreshes the list.
+  - Uninstall waits for the leftover scan.
+  - The Leftovers tab shows when it's still looking.
+- **Space Lens**
+  - *Always Ignore* after a startup-disk scan really protects the item now: ignore paths are canonical.
+  - A removal that finishes after Undo or a new scan no longer overwrites the newer map.
+  - Hard-linked files count once across the whole scan.
+- **Smart Care:** Undo, *Free Up Now* and the headline cover the Protection and Applications tiles too.
+- **Review Details:** ticking one item of an unticked category ticks just that item.
+- **Running programs**
+  - Project build folders check for programs running from them, at scan and at clean time.
+  - The clean-time check for a running app matches the scan's (`com.foo.plist`).
+- **Startup:** a job is stopped only once its plist has actually moved.
+- **Protection**
+  - Code appended to a JPEG or PNG is found by walking the image's structure, so a large payload can't hide behind its own `FF D9`.
+  - Downloaded scripts are reported when they're hidden, and when they're bundles (`.workflow`, `.scptd`).
+  - Migrating the old ignore list no longer loses it when it can't be saved.
+- **Privacy:** Undo waits until the browser is closed.
+- **Docker:** the build cache is pruned with `--all`, matching the size shown, and image sizes are labelled "up to".
+- **Status:** rates and charts start fresh when you come back to the screen.
+- **Automations:** a run can't start twice.
+- **CLI:** `spaceroom restore` no longer counts failed items as restored, and `clean` checks again right before moving that the app isn't open.
+- **Other:** remaining English-only texts are translated.
+- **Disk image:** the build now waits for Finder to save the window background, retries, and fails instead of shipping a plain window. 0.10.1's image had lost its design this way.
+
 ## [0.10.1] - 2026-11-07
 
 ### Fixed
@@ -80,7 +123,8 @@ first-launch steps).
 - **Bahasa Indonesia** translation.
 - Release packaging (`scripts/make-dmg.sh`): a universal app in a designed disk image.
 
-[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/novasilabs/spaceroom-app/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/novasilabs/spaceroom-app/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/novasilabs/spaceroom-app/releases/tag/v0.9.0

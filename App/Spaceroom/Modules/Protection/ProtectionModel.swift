@@ -60,7 +60,10 @@ final class ProtectionModel {
         let defaults = UserDefaults.standard
         guard let paths = defaults.stringArray(forKey: Keys.ignored), !paths.isEmpty else { return }
         for path in paths { app.ignore(.path(URL(fileURLWithPath: path))) }
-        defaults.removeObject(forKey: Keys.ignored)
+        // Only forget the old list once every entry really is in the new one (it can't be saved
+        // while the ignore list is unreadable, or the disk is full).
+        let kept = paths.allSatisfy { app.ignoreList.contains(.path(URL(fileURLWithPath: $0))) }
+        if kept { defaults.removeObject(forKey: Keys.ignored) }
     }
 
     // MARK: Scanning

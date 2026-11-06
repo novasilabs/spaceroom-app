@@ -164,16 +164,18 @@ public enum LaunchAuditor {
         let expanded = (path as NSString).expandingTildeInPath
         if expanded.hasPrefix("/tmp/") || expanded.hasPrefix("/private/tmp/")
             || expanded.hasPrefix("/var/folders/") || expanded.hasPrefix("/private/var/folders/") {
-            return "temporary folder"
+            return String(localized: "temporary folder", bundle: .module)
         }
-        if expanded.hasPrefix(home.appendingPathComponent("Downloads").path + "/") { return "Downloads" }
+        if expanded.hasPrefix(home.appendingPathComponent("Downloads").path + "/") {
+            return String(localized: "Downloads folder", bundle: .module)
+        }
         // A hidden folder anywhere below home, except well-known tool folders.
         let homePath = home.path + "/"
         if expanded.hasPrefix(homePath) {
             let relative = expanded.dropFirst(homePath.count).split(separator: "/").dropLast()
             let allowed: Set<String> = [".local", ".cargo", ".nvm", ".bun", ".deno", ".volta", ".rbenv", ".pyenv", ".sdkman", ".docker", ".orbstack"]
             if let hidden = relative.first(where: { $0.hasPrefix(".") }), !allowed.contains(String(hidden)) {
-                return "hidden folder (\(hidden))"
+                return String(localized: "hidden folder (\(String(hidden)))", bundle: .module)
             }
         }
         return nil
@@ -312,12 +314,15 @@ public struct LaunchItemRemover: Sendable {
                 skipped.append(SkippedItem(path: item.url.path, size: 0, reason: .protectedPath))
                 continue
             }
-            stopJob(item.label)
             moves.append(PlannedMove(url: item.url, ruleID: "startup." + item.label,
                                      size: DiskUsage.size(of: item.url), isDirectory: false))
         }
         guard !moves.isEmpty else { return CleanOutcome(operation: nil, skipped: skipped) }
         let (record, failures) = try await store.quarantine(moves, module: "startup", now: now)
+        // Stop only the jobs whose plist really moved: one the Restore Center refused (ignored,
+        // or the ignore list can't be read) keeps running as before.
+        let moved = Set(record?.items.map(\.originalPath) ?? [])
+        for item in items where moved.contains(item.url.path) { stopJob(item.label) }
         return CleanOutcome(operation: record,
                             skipped: skipped + failures.map { SkippedItem(path: $0.path, size: 0, reason: $0.reason) })
     }

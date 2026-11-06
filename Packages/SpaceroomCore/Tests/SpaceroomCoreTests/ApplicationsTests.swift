@@ -207,3 +207,32 @@ struct VendorLeftoverTests {
             .contains { $0.url.lastPathComponent == "AndroidStudioPreview" })
     }
 }
+
+@Suite("Leftovers never take another app's data")
+struct LeftoverOwnershipTests {
+    @Test("Chrome's leftovers exclude installed Chrome Canary; launch agents need a dot")
+    func otherInstalledApp() throws {
+        let box = try Sandbox()
+        for path in ["Caches/com.google.Chrome", "Caches/com.google.Chrome.canary", "Preferences/com.google.Chrome.plist",
+                     "Preferences/com.google.Chrome.canary.plist", "Caches/com.google.Chrome.helper",
+                     "LaunchAgents/com.google.ChromeUpdater.plist", "LaunchAgents/com.google.Chrome.agent.plist"] {
+            try box.file("Library/" + path, bytes: 10)
+        }
+        let names = LeftoverFinder(home: box.home)
+            .leftovers(bundleID: "com.google.Chrome", appName: "Google Chrome",
+                       installedBundleIDs: ["com.google.Chrome", "com.google.Chrome.canary"])
+            .map(\.url.lastPathComponent).sorted()
+        #expect(names == ["com.google.Chrome", "com.google.Chrome.agent.plist", "com.google.Chrome.helper", "com.google.Chrome.plist"])
+    }
+
+    @Test("Leftovers of an app that is running now are skipped")
+    func runningOwner() async throws {
+        let box = try Sandbox()
+        let data = try box.folder("Library/Application Support/com.example.back")
+        let leftover = Leftover(url: data, category: .applicationSupport, size: 10, lastModified: .distantPast)
+        let outcome = try await Uninstaller(store: try box.store(), home: box.home)
+            .remove(app: nil, leftovers: [leftover], runningBundleIDs: ["com.example.back"])
+        #expect(outcome.operation == nil)
+        #expect(outcome.skipped.first?.reason == .inUse(bundleID: "com.example.back"))
+    }
+}

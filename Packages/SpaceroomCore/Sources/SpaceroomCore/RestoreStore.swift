@@ -14,7 +14,7 @@ public struct QuarantinedItem: Codable, Sendable, Identifiable, Hashable {
     public enum State: Codable, Sendable, Hashable {
         case stored
         case restored(at: Date, path: String)
-        /// Permanently removed (expired or "Delete now"). Trash-stored items are left in the Trash.
+        /// Permanently removed (expired or "Delete now"), or found missing.
         case purged(at: Date)
     }
 
@@ -98,10 +98,13 @@ public enum RestoreStoreError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .unreadableIndex(let url, let underlying): "Restore Center index at \(url.path) is unreadable: \(underlying)"
-        case .operationNotFound(let id): "Operation \(id) not found"
-        case .purgeIncomplete(let paths): "\(paths.count) item(s) could not be deleted and are still in the Restore Center"
-        case .ignoreListUnavailable(let reason): "The ignore list can't be read, so nothing is moved: \(reason)"
+        case .unreadableIndex(let url, let underlying):
+            String(localized: "The Restore Center list at \(url.path) can't be read: \(underlying)", bundle: .module)
+        case .operationNotFound: String(localized: "That clean isn't in the Restore Center any more.", bundle: .module)
+        case .purgeIncomplete(let paths):
+            String(localized: "\(paths.count) items couldn't be deleted and are still in the Restore Center.", bundle: .module)
+        case .ignoreListUnavailable(let reason):
+            String(localized: "The ignore list can't be read, so nothing is moved: \(reason)", bundle: .module)
         }
     }
 }
@@ -192,6 +195,14 @@ public actor RestoreStore {
         let quarantineDevice = FileStat.device(of: opFolder)
 
         var items: [QuarantinedItem] = []
+        // Written before anything moves, so a crash or a failed index save can't leave moved
+        // files that nothing knows about: the next launch adopts them from this journal.
+        let journal = Journal(module: module, date: now, entries: moves.enumerated().map { index, move in
+            Journal.Entry(originalPath: move.url.path,
+                          storedPath: opFolder.appendingPathComponent("\(index)-\(move.url.lastPathComponent)" + Self.heldSuffix(for: move.url)).path,
+                          ruleID: move.ruleID, size: move.size, isDirectory: move.isDirectory)
+        })
+        try Self.encoder.encode(journal).write(to: opFolder.appendingPathComponent(Journal.fileName), options: .atomic)
 
         for (index, move) in moves.enumerated() {
             do {
@@ -224,6 +235,7 @@ public actor RestoreStore {
         let record = OperationRecord(id: opID, date: now, module: module, items: items)
         records.append(record)
         try save()
+        try? fileManager.removeItem(at: opFolder.appendingPathComponent(Journal.fileName))
         return (record, failures)
     }
 
@@ -249,6 +261,8 @@ public actor RestoreStore {
             guard itemIDs.contains(item.id), item.isStored else { continue }
             let stored = URL(fileURLWithPath: item.storedPath)
             guard FileStat.exists(stored) else {
+                // Gone (the Trash was emptied, or it was put back from Finder): stop counting it.
+                records[opIndex].items[itemIndex].state = .purged(at: now)
                 outcomes.append(.missing(itemID: item.id))
                 continue
             }
@@ -291,8 +305,18 @@ public actor RestoreStore {
         var failed: [String] = []
         for itemIndex in records[opIndex].items.indices where records[opIndex].items[itemIndex].isStored {
             let item = records[opIndex].items[itemIndex]
-            if item.storage == .quarantine {
-                let url = URL(fileURLWithPath: item.storedPath)
+            let url = URL(fileURLWithPath: item.storedPath)
+            if !FileStat.exists(url) {
+                // Already gone: nothing to free.
+            } else if item.storage == .trash {
+                // "Delete now" means now: remove it from that drive's Trash too.
+                if (try? Self.forceRemove(url, fileManager: fileManager)) != nil {
+                    result.freed += item.size
+                } else {
+                    failed.append(item.originalPath)
+                    continue
+                }
+            } else {
                 switch removeOrTrash(url) {
                 case .deleted: result.freed += item.size
                 case .trashed:
@@ -303,7 +327,6 @@ public actor RestoreStore {
                     continue
                 }
             }
-            // Trash-stored items stay in that volume's Trash, which the user manages in Finder.
             records[opIndex].items[itemIndex].state = .purged(at: now)
         }
         try save()
@@ -355,6 +378,17 @@ public actor RestoreStore {
             let folder = quarantineRoot.appendingPathComponent(name, isDirectory: true)
             if let id = UUID(uuidString: name), let record = operation(id), record.hasStoredItems { continue }
             let size = FileStat.measure(folder)?.allocatedSize ?? 0
+            if let id = UUID(uuidString: name), operation(id) == nil {
+                // Moved, but the index never heard of it (a crash, a full disk): adopt it from the
+                // journal so it shows up and can be restored. Without a journal, never delete
+                // blindly: it goes to the Trash.
+                if adoptJournal(in: folder, id: id) { continue }
+                if (try? trashHandler(folder)) != nil {
+                    result.movedToTrash.append(folder.path)
+                    result.movedToTrashSize += size
+                }
+                continue
+            }
             switch removeOrTrash(folder) {
             case .deleted: result.freed += size
             case .trashed:
@@ -364,6 +398,21 @@ public actor RestoreStore {
             }
         }
         return result
+    }
+
+    /// Rebuilds an operation from its journal, keeping the entries whose files are really there.
+    private func adoptJournal(in folder: URL, id: UUID) -> Bool {
+        guard let data = try? Data(contentsOf: folder.appendingPathComponent(Journal.fileName)),
+              let journal = try? Self.decoder.decode(Journal.self, from: data) else { return false }
+        let items = journal.entries.filter { FileStat.exists(URL(fileURLWithPath: $0.storedPath)) }.map {
+            QuarantinedItem(id: UUID(), originalPath: $0.originalPath, storedPath: $0.storedPath, storage: .quarantine,
+                            ruleID: $0.ruleID, size: $0.size, isDirectory: $0.isDirectory, state: .stored)
+        }
+        guard !items.isEmpty else { return false }
+        records.append(OperationRecord(id: id, date: journal.date, module: journal.module, items: items))
+        guard (try? save()) != nil else { records.removeLast(); return false }
+        try? fileManager.removeItem(at: folder.appendingPathComponent(Journal.fileName))
+        return true
     }
 
     /// Removes a file or folder tree, first making read-only folders writable.
@@ -393,10 +442,35 @@ public actor RestoreStore {
         }
     }
 
+    /// What a clean is about to move, kept next to the files until the index is saved.
+    struct Journal: Codable {
+        static let fileName = "pending.json"
+        struct Entry: Codable {
+            let originalPath: String
+            let storedPath: String
+            let ruleID: String
+            let size: Int64
+            let isDirectory: Bool
+        }
+        let module: String
+        let date: Date
+        let entries: [Entry]
+    }
+
     // MARK: Private
 
+    /// Writes the index under a lock, keeping operations another process (the `spaceroom`
+    /// command, a second window) added since this one loaded it, so neither loses the other's.
     private func save() throws {
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        let lock = open(directory.appendingPathComponent(".lock").path, O_CREAT | O_RDWR | O_CLOEXEC, 0o644)
+        if lock >= 0 { flock(lock, LOCK_EX) }
+        defer { if lock >= 0 { flock(lock, LOCK_UN); close(lock) } }
+        if let data = try? Data(contentsOf: indexURL),
+           let onDisk = try? Self.decoder.decode([OperationRecord].self, from: data) {
+            let known = Set(records.map(\.id))
+            records += onDisk.filter { !known.contains($0.id) }
+        }
         try Self.encoder.encode(records).write(to: indexURL, options: .atomic)
     }
 
@@ -416,7 +490,9 @@ public actor RestoreStore {
     static func freeDestination(for original: URL, isDirectory: Bool) -> URL {
         guard FileStat.exists(original) else { return original }
         let folder = original.deletingLastPathComponent()
-        let ext = isDirectory ? "" : original.pathExtension
+        // Folders keep their whole name, except bundles: "Foo (restored).app" is still an app.
+        let bundleExtensions: Set<String> = ["app", "bundle", "plugin", "framework", "appex", "prefpane", "saver", "photoslibrary"]
+        let ext = isDirectory && !bundleExtensions.contains(original.pathExtension.lowercased()) ? "" : original.pathExtension
         let base = ext.isEmpty ? original.lastPathComponent : original.deletingPathExtension().lastPathComponent
         var n = 1
         while true {

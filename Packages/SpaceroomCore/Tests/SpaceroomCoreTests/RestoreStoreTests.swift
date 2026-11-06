@@ -231,3 +231,87 @@ struct RestoreProtectedPurgeTests {
         }
     }
 }
+
+@Suite("Restore Center: never losing track")
+struct RestoreStoreRecoveryTests {
+    @Test("Files moved without a saved index are adopted from the journal, not deleted")
+    func adoptsJournal() async throws {
+        let box = try Sandbox()
+        let file = try box.file("Library/Caches/com.example/blob", bytes: 3000)
+        let store = try box.store()
+        let (record, _) = try await store.quarantine([PlannedMove(url: file.deletingLastPathComponent(), ruleID: "r", size: 3000, isDirectory: true)], module: "cleanup")
+        let op = try #require(record)
+        // Simulate a crash before the index was written: lose the index, put the journal back.
+        let folder = box.support.appendingPathComponent("Quarantine/\(op.id.uuidString)")
+        let journal = RestoreStore.Journal(module: "cleanup", date: op.date, entries: op.items.map {
+            .init(originalPath: $0.originalPath, storedPath: $0.storedPath, ruleID: $0.ruleID, size: $0.size, isDirectory: $0.isDirectory)
+        })
+        try RestoreStore.encoder.encode(journal).write(to: folder.appendingPathComponent(RestoreStore.Journal.fileName))
+        try FileManager.default.removeItem(at: box.support.appendingPathComponent("operations.json"))
+
+        let fresh = try box.store()
+        await fresh.removeOrphanedFolders()
+        let adopted = try #require(await fresh.operation(op.id))
+        #expect(adopted.hasStoredItems)
+        _ = try await fresh.restoreAll(in: op.id)
+        #expect(box.exists("Library/Caches/com.example/blob"))
+    }
+
+    @Test("An unknown folder without a journal goes to the Trash, never deleted outright")
+    func unknownFolderToTrash() async throws {
+        let box = try Sandbox()
+        let stray = box.support.appendingPathComponent("Quarantine/\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: stray, withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: stray.appendingPathComponent("0-thing"))
+        let store = try box.store()
+        let trashed = TrashLog()
+        await store.setTrashHandler { trashed.add($0) }
+        let result = await store.removeOrphanedFolders()
+        #expect(trashed.urls.map(\.lastPathComponent) == [stray.lastPathComponent])
+        #expect(result.freed == 0)
+    }
+
+    @Test("Two writers keep each other's operations")
+    func mergesWriters() async throws {
+        let box = try Sandbox()
+        let a = try box.file("Library/Caches/com.a/x"), b = try box.file("Library/Caches/com.b/x")
+        let app = try box.store(), cli = try box.store()   // both loaded the same (empty) index
+        _ = try await cli.quarantine([PlannedMove(url: b.deletingLastPathComponent(), ruleID: "r", size: 1, isDirectory: true)], module: "cleanup")
+        _ = try await app.quarantine([PlannedMove(url: a.deletingLastPathComponent(), ruleID: "r", size: 1, isDirectory: true)], module: "cleanup")
+        let reread = try box.store()
+        #expect(await reread.operations.count == 2)
+    }
+
+    @Test("A restored app that had to be renamed is still an app")
+    func renamedApp() async throws {
+        let box = try Sandbox()
+        let app = try box.folder("Applications/Foo.app/Contents")
+        let store = try box.store()
+        let (record, _) = try await store.quarantine([PlannedMove(url: app.deletingLastPathComponent(), ruleID: "app", size: 1, isDirectory: true)], module: "applications")
+        try box.folder("Applications/Foo.app")   // reinstalled meanwhile
+        let outcomes = try await store.restoreAll(in: try #require(record).id)
+        guard case .restoredRenamed(_, let path) = outcomes.first else { Issue.record("\(outcomes)"); return }
+        #expect(path.hasSuffix("Foo (restored).app"))
+    }
+
+    @Test("Missing items stop counting; Delete Now empties Trash-stored items too")
+    func missingAndTrash() async throws {
+        let box = try Sandbox()
+        let file = try box.file("Library/Caches/com.example/blob")
+        let store = try box.store()
+        let (record, _) = try await store.quarantine([PlannedMove(url: file, ruleID: "r", size: 4096, isDirectory: false)], module: "cleanup")
+        let op = try #require(record)
+        try FileManager.default.removeItem(atPath: op.items[0].storedPath)
+        _ = try await store.restoreAll(in: op.id)
+        #expect(await store.operation(op.id)?.hasStoredItems == false)
+        let purged = try await store.purge(op.id)
+        #expect(purged.freed == 0)
+    }
+}
+
+final class TrashLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: [URL] = []
+    func add(_ url: URL) { lock.withLock { stored.append(url) } }
+    var urls: [URL] { lock.withLock { stored } }
+}

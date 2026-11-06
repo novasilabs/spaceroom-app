@@ -22,7 +22,9 @@ public struct IgnoreEntry: Codable, Hashable, Sendable, Identifiable {
 
     public init(kind: Kind, value: String, addedAt: Date = .now) {
         self.kind = kind
-        self.value = kind == .path ? SafetyGuard.realPath(URL(fileURLWithPath: value)) : value
+        // Canonical: symlinks resolved, and a startup-disk scan's /System/Volumes/Data/Users/…
+        // stored as /Users/…, which is how every remover sees the same file.
+        self.value = kind == .path ? LensRemovalPolicy.canonical(URL(fileURLWithPath: value)) : value
         // Whole seconds, so a saved and reloaded entry compares equal.
         self.addedAt = Date(timeIntervalSince1970: addedAt.timeIntervalSince1970.rounded(.down))
     }
@@ -55,12 +57,15 @@ public struct IgnoreList: Codable, Hashable, Sendable {
         entries.removeAll { $0.id == id }
     }
 
-    private var paths: [String] { entries.filter { $0.kind == .path }.map(\.value) }
+    // Entries saved before paths were canonical may still carry the firmlink prefix.
+    private var paths: [String] {
+        entries.filter { $0.kind == .path }.map { LensRemovalPolicy.canonical(URL(fileURLWithPath: $0.value)) }
+    }
 
     /// The ignored path that protects `url`: `url` is it, is inside it, or contains it (cleaning a
     /// folder must never take an ignored file along).
     public func protectingPath(for url: URL) -> String? {
-        let real = SafetyGuard.realPath(url)
+        let real = LensRemovalPolicy.canonical(url)
         return paths.first { path in
             real == path || real.hasPrefix(path + "/") || path.hasPrefix(real + "/")
         }

@@ -7,6 +7,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @Environment(MenuBarModel.self) private var menuBar
+    @State private var pendingRetention: Int?
 
     var body: some View {
         @Bindable var app = app
@@ -36,7 +37,14 @@ struct SettingsView: View {
             }
 
             Section("Restore Center") {
-                Picker("Keep cleaned items for", selection: $app.retentionDays) {
+                Picker("Keep cleaned items for", selection: Binding(get: { app.retentionDays }, set: { days in
+                    // A shorter period deletes older items right away: ask first.
+                    if days < app.retentionDays, app.expiringItems(withRetention: days).count > 0 {
+                        pendingRetention = days
+                    } else {
+                        app.retentionDays = days
+                    }
+                })) {
                     ForEach(AppModel.retentionChoices, id: \.self) { days in
                         Text("\(days) days").tag(days)
                     }
@@ -65,7 +73,7 @@ struct SettingsView: View {
                 if let catalog = app.catalog {
                     LabeledContent("Loaded rules", value: "\(catalog.rules.count)")
                 } else {
-                    Label(app.catalogError ?? "Unavailable", systemImage: "exclamationmark.octagon.fill")
+                    Label(app.catalogError ?? String(localized: "Unavailable"), systemImage: "exclamationmark.octagon.fill")
                         .foregroundStyle(.red)
                 }
             }
@@ -86,6 +94,25 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .confirmationDialog(
+            pendingRetention.map { days in
+                let expiring = app.expiringItems(withRetention: days)
+                return String(localized: "Delete \(expiring.count) items (\(expiring.size.bytesText)) older than \(days) days now?")
+            } ?? "",
+            isPresented: Binding(get: { pendingRetention != nil }, set: { if !$0 { pendingRetention = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Delete and Keep \(pendingRetention ?? 0) Days", role: .destructive) {
+                if let days = pendingRetention {
+                    app.retentionDays = days
+                    Task { await app.purgeExpired() }
+                }
+                pendingRetention = nil
+            }
+            Button("Cancel", role: .cancel) { pendingRetention = nil }
+        } message: {
+            Text("They can't be restored after this.")
+        }
         .frame(width: 520, height: 700)
         .onAppear {
             app.refreshFullDiskAccess()

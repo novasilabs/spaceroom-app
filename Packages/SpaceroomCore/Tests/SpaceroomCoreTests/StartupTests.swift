@@ -98,7 +98,7 @@ struct LaunchAuditTests {
 
     @Test("Unusual locations", arguments: [
         ("/tmp/x", "temporary folder"), ("/private/var/folders/ab/x", "temporary folder"),
-        ("/Users/test/Downloads/run", "Downloads"), ("/Users/test/.config/x/run", "hidden folder (.config)"),
+        ("/Users/test/Downloads/run", "Downloads folder"), ("/Users/test/.config/x/run", "hidden folder (.config)"),
     ])
     func unusualLocations(path: String, reason: String) {
         #expect(LaunchAuditor.unusualLocation(path, home: home) == reason)

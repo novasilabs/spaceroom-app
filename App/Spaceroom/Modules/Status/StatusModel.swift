@@ -49,6 +49,15 @@ final class StatusModel {
 
     func start() {
         guard task == nil else { return }
+        // Fresh samplers and charts: rates measured since the screen was last open would be
+        // averages over all that time.
+        cpuSampler = CPUSampler()
+        networkSampler = NetworkSampler()
+        processSampler = ProcessSampler()
+        cpuHistory = []
+        memoryHistory = []
+        downHistory = []
+        upHistory = []
         sampleSlow()
         task = Task { [weak self] in
             while !Task.isCancelled {

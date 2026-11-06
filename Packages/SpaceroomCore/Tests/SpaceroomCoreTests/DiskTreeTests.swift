@@ -123,3 +123,16 @@ struct DiskTreeBenchmark {
         for child in root.children.prefix(8) { print("BENCH   \(child.name): \(child.size / 1_000_000) MB") }
     }
 }
+
+@Suite("Disk map: hard links")
+struct DiskTreeHardLinkTests {
+    @Test("A file hard-linked into two parallel-scanned folders counts once")
+    func linkedOnce() async throws {
+        let box = try Sandbox()
+        let original = try box.file("store/pkg/blob.bin", bytes: 2_000_000)
+        try box.folder("app/node_modules/pkg")
+        try FileManager.default.linkItem(at: original, to: box.home.appendingPathComponent("app/node_modules/pkg/blob.bin"))
+        let tree = await DiskScanner().scan(box.home)
+        #expect(tree.size < 3_000_000)
+    }
+}

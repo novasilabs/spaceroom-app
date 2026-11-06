@@ -204,7 +204,7 @@ public struct ProcessSampler: Sendable {
     static func name(of pid: Int32) -> String {
         var buffer = [CChar](repeating: 0, count: 256)
         let length = proc_name(pid, &buffer, UInt32(buffer.count))
-        guard length > 0 else { return "pid \(pid)" }
+        guard length > 0 else { return String(localized: "process \(pid)", bundle: .module) }
         return String(decoding: buffer.prefix(Int(length)).map { UInt8(bitPattern: $0) }, as: UTF8.self)
     }
 }

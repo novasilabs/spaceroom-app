@@ -88,7 +88,7 @@ struct DockerCard: View {
         .sheet(isPresented: $isConfirming) {
             ConfirmSheet(
                 symbol: "cube.box",
-                title: String(localized: "Let Docker free \(model.selectedSize.bytesText)?"),
+                title: String(localized: "Let Docker free up to \(model.selectedSize.bytesText)?"),
                 message: String(localized: "Docker removes these itself, so they don't go to the Restore Center and can't be restored. Docker rebuilds the cache and downloads images again when it needs them."),
                 details: [
                     .init(symbol: "checkmark.circle", text: String(localized: "Build cache and untagged images only")),
@@ -122,7 +122,7 @@ struct DockerCard: View {
                     HStack(spacing: 14) {
                         toggle(String(localized: "Build cache \(usage.buildCache.bytesText)"),
                                isOn: $model.includeBuildCache, enabled: usage.buildCache > 0)
-                        toggle(String(localized: "\(usage.danglingImageCount) untagged images \(usage.danglingImages.bytesText)"),
+                        toggle(String(localized: "\(usage.danglingImageCount) untagged images, up to \(usage.danglingImages.bytesText)"),
                                isOn: $model.includeImages, enabled: usage.danglingImages > 0)
                     }
                 }
@@ -139,7 +139,7 @@ struct DockerCard: View {
         } else if model.status == .notRunning || model.lastResult != nil {
             Button("Check Again") { model.check() }.buttonStyle(GhostButtonStyle())
         } else if let usage = model.usage, usage.reclaimable > 0 {
-            Button("Free \(model.selectedSize.bytesText)…") { isConfirming = true }
+            Button("Free up to \(model.selectedSize.bytesText)…") { isConfirming = true }
                 .buttonStyle(GhostButtonStyle())
                 .disabled(model.selectedSize == 0)
         }

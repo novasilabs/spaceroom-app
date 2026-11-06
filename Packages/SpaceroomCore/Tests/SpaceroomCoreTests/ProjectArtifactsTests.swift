@@ -151,3 +151,36 @@ struct ProjectArtifactsTests {
         #expect(rules.allSatisfy { !$0.smartCare && $0.module == .devCleanup && $0.minAgeDays >= 30 })
     }
 }
+
+@Suite("Project build folders: running programs")
+struct ProjectRunningTests {
+    @Test("A tool running from target/release keeps its folder, at scan and at clean time")
+    func runningTool() async throws {
+        let box = try Sandbox()
+        try box.file("development/tool/Cargo.toml", bytes: 10)
+        let exe = box.home.appendingPathComponent("development/tool/target/release/tool")
+        let old = Date.now.addingTimeInterval(-90 * 86_400)
+        let process = try TestProgram.run(at: exe)
+        defer { process.terminate() }
+        for path in ["development/tool/Cargo.toml", "development/tool"] {
+            try FileManager.default.setAttributes([.modificationDate: old], ofItemAtPath: box.home.appendingPathComponent(path).path)
+        }
+
+        let rule = Rule(id: "dev.projects.rust-target", module: .devCleanup, group: "projects", title: "target", whySafe: "w",
+                        paths: ["~/development"], minAgeDays: 30,
+                        projectArtifact: ProjectArtifactSpec(folders: ["target"], markers: ["Cargo.toml"]))
+        let item = try #require(await Scanner().scan([rule], context: box.context()).results[0].items.first)
+        #expect(item.skipReason == .running(name: "tool"))
+        // Even if the scan had missed it, the clean-time check stops it.
+        let forced = item.withoutSkipReason()
+        let plan = CleanupEngine(store: try box.store()).plan([forced], rules: [rule], context: box.context())
+        #expect(plan.moves.isEmpty)
+    }
+}
+
+extension ScanItem {
+    func withoutSkipReason() -> ScanItem {
+        ScanItem(url: url, ruleID: ruleID, root: root, size: size, fileCount: fileCount, lastModified: lastModified,
+                 isDirectory: isDirectory, identity: identity, skipReason: nil, label: label)
+    }
+}

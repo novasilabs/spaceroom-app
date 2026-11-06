@@ -102,3 +102,17 @@ struct IgnoreListTests {
         #expect(try IgnoreListFile.load(directory: box.home.appendingPathComponent("nowhere")).isEmpty)
     }
 }
+
+@Suite("Ignore list: one file, one path")
+struct IgnoreCanonicalTests {
+    @Test("Ignoring from a startup-disk scan protects the file however it's reached")
+    func firmlink() {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        var list = IgnoreList()
+        list.add(.path(URL(fileURLWithPath: "/System/Volumes/Data" + home + "/Projects/keep")))
+        #expect(list.ignores(URL(fileURLWithPath: home + "/Projects/keep/file.txt")))
+        #expect(list.ignores(URL(fileURLWithPath: "/System/Volumes/Data" + home + "/Projects/keep")))
+        let old = IgnoreList(entries: [IgnoreEntry(kind: .rule, value: "x")])
+        #expect(!old.ignores(URL(fileURLWithPath: home + "/Projects/keep")))
+    }
+}

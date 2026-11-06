@@ -50,12 +50,17 @@ enum SelfUninstall {
     /// Moves everything to the Trash, then quits. Returns the paths that couldn't be moved.
     @discardableResult
     static func run(_ plan: Plan) -> [String] {
+        // The app goes first: if it can't be moved (no permission in /Applications), stop before
+        // touching anything else, so Spaceroom isn't left running without its data.
+        if let app = plan.app {
+            do { try FileManager.default.trashItem(at: app, resultingItemURL: nil) } catch { return [app.path] }
+        }
         if SMAppService.mainApp.status == .enabled { try? SMAppService.mainApp.unregister() }
-        // Forget the settings first, or the preferences daemon writes the file again on quit.
+        // Forget the settings before trashing their file, or the preferences daemon writes it again on quit.
         for id in bundleIDs { UserDefaults.standard.removePersistentDomain(forName: id) }
         UserDefaults.standard.synchronize()
         var failed: [String] = []
-        for url in plan.files + [plan.app].compactMap({ $0 }) {
+        for url in plan.files {
             do { try FileManager.default.trashItem(at: url, resultingItemURL: nil) } catch { failed.append(url.path) }
         }
         return failed
@@ -92,7 +97,8 @@ struct SelfUninstallSection: View {
                 onConfirm: {
                     plan = nil
                     failures = SelfUninstall.run(current)
-                    if failures.isEmpty { NSApp.terminate(nil) }
+                    // Quit unless the app itself couldn't be moved (then nothing else was touched).
+                    if failures != [current.app?.path].compactMap({ $0 }) || failures.isEmpty { NSApp.terminate(nil) }
                 },
                 onCancel: { plan = nil })
         }

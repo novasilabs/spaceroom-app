@@ -48,7 +48,13 @@ final class ClutterModel {
     var tab: Tab = .large
     var minimumSize: MinimumSize = .mb100
     var age: Age = .any
-    var selection: Set<String> = []
+    /// Ticks per tab: what's ticked for you in Installers or Duplicates never shows up (or gets
+    /// removed) in Large & Old, where nothing is ticked for you.
+    private var selections: [Tab: Set<String>] = [:]
+    var selection: Set<String> {
+        get { selections[tab] ?? [] }
+        set { selections[tab] = newValue }
+    }
     private(set) var isWorking = false
     private(set) var lastResult: (message: String, operationID: UUID?)?
     /// Files removed this session (hidden from the lists without rescanning).
@@ -68,13 +74,16 @@ final class ClutterModel {
 
     func start() {
         guard phase != .scanning else { return }
+        // A previous scan's duplicate and photo passes may still be running: they'd land later
+        // and overwrite this scan's results.
+        scanTask?.cancel()
         scannedItems = 0
         pendingItems = 0
         report = nil
         duplicates = []
         similarIndex = nil
         similarGroups = []
-        selection = []
+        selections = [:]
         removedIDs = []
         lastResult = nil
         withAnimation(Motion.phaseChange) { phase = .scanning }
@@ -108,7 +117,9 @@ final class ClutterModel {
             guard let self, !Task.isCancelled else { return }
             self.scannedItems += self.pendingItems
             self.report = result
-            self.selection = Set(result.installers.map(\.id))
+            // Only installers that were downloaded (Downloads, Desktop) are ticked for you; a disk
+            // image kept in Documents may be an encrypted vault.
+            self.selections[.installers] = Set(result.installers.filter { Self.isLikelyAccidental($0) }.map(\.id))
             withAnimation(Motion.phaseChange) { self.phase = .results }
             await self.findDuplicates(in: result.duplicateCandidates)
             await self.findSimilar(in: result.photos)
@@ -122,17 +133,20 @@ final class ClutterModel {
     }
 
     func newScan() {
+        scanTask?.cancel()
+        scanTask = nil
         withAnimation(Motion.phaseChange) { phase = .intro }
     }
 
     private func findDuplicates(in candidates: [ClutterFile]) async {
         isFindingDuplicates = true
         let groups = await Task.detached(priority: .utility) { DuplicateFinder.groups(from: candidates) }.value
+        guard !Task.isCancelled else { return }
         duplicates = groups
         // Only obviously accidental copies are ticked for you (Downloads, Desktop). Copies inside
         // projects are often intentional (each project has its own assets), so those wait for you.
         // The copy to keep is never ticked.
-        selection.formUnion(groups.flatMap(\.extras).filter { Self.isLikelyAccidental($0) }.map(\.id))
+        selections[.duplicates, default: []].formUnion(groups.flatMap(\.extras).filter { Self.isLikelyAccidental($0) }.map(\.id))
         isFindingDuplicates = false
     }
 
@@ -152,6 +166,7 @@ final class ClutterModel {
         }.value
         continuation.finish()
         await listen.value
+        guard !Task.isCancelled else { return }
         similarIndex = index
         similarGroups = index.groups(threshold: strictness.threshold)
         isFindingSimilar = false
@@ -190,13 +205,15 @@ final class ClutterModel {
 
     func ignore(_ file: ClutterFile) {
         app.ignore(.path(file.url))
-        selection.remove(file.id)
+        for key in selections.keys { selections[key]?.remove(file.id) }
     }
 
+    /// Groups without removed or ignored files, with the copy to keep picked again from what's
+    /// left: if the original keeper was removed elsewhere, another copy is kept, never none.
     var visibleDuplicates: [DuplicateGroup] {
         duplicates.compactMap { group in
             let remaining = group.files.filter { isVisible($0) }
-            return remaining.count > 1 ? group : nil
+            return remaining.count > 1 ? group.restricted(to: remaining) : nil
         }
     }
 
@@ -224,7 +241,7 @@ final class ClutterModel {
 
     /// Ticks every extra copy in Duplicates (never the copy to keep).
     func tickAllExtras() {
-        selection.formUnion(visibleDuplicates.flatMap(\.extras).map(\.id))
+        selections[.duplicates, default: []].formUnion(visibleDuplicates.flatMap(\.extras).map(\.id))
     }
 
     func toggle(_ file: ClutterFile) {
@@ -251,7 +268,7 @@ final class ClutterModel {
                 await app.refreshOperations()
                 if let operation = outcome.operation {
                     removedIDs.formUnion(operation.items.map(\.originalPath))
-                    selection.subtract(operation.items.map(\.originalPath))
+                    for key in selections.keys { selections[key]?.subtract(operation.items.map(\.originalPath)) }
                     var message = String(localized: "Moved \(operation.totalSize.bytesText) to the Restore Center")
                     if !outcome.skipped.isEmpty { message += " " + String(localized: "(\(outcome.skipped.count) skipped)") }
                     lastResult = (message, operation.id)

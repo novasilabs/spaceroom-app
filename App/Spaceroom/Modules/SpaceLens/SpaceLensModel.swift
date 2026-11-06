@@ -220,6 +220,7 @@ final class SpaceLensModel {
     }
 
     func newScan() {
+        guard !isRemoving else { return }
         refreshTargets()
         withAnimation(Motion.phaseChange) { phase = .intro }
     }
@@ -336,14 +337,20 @@ final class SpaceLensModel {
     var selectedSize: Int64 { selection.values.reduce(0) { $0 + $1.size } }
 
     func removeSelected() {
-        guard let store = app.store, let root, canSelect else { return }
+        guard let store = app.store, root != nil, canSelect else { return }
         let nodes = selectedNodes
         guard !nodes.isEmpty else { return }
         isRemoving = true
+        let scan = scanStarted
         Task {
             do {
                 let outcome = try await LensRemover(store: store, volumes: removableVolumes).remove(nodes)
                 await app.refreshOperations()
+                // A new scan replaced the map meanwhile: the files moved, but this map is gone.
+                guard scanStarted == scan, let root else {
+                    isRemoving = false
+                    return
+                }
                 if let operation = outcome.operation {
                     // The store records canonical paths; map them back to the paths on the map.
                     let moved = Set(operation.items.map(\.originalPath))
@@ -367,7 +374,7 @@ final class SpaceLensModel {
     }
 
     func undoLast() {
-        guard let id = lastResult?.operationID else { return }
+        guard !isRemoving, let id = lastResult?.operationID else { return }
         Task {
             if await app.restoreAll(id) {
                 if let before = rootBeforeRemoval { apply(before) }

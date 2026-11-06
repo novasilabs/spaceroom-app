@@ -90,13 +90,14 @@ final class AutomationsModel {
         guard let store, runningID == nil, let catalog = app.catalog, let restore = app.store else { return }
         runningID = automation.id
         let result = await AutomationRunner(catalog: catalog, store: restore).run(automation, context: app.scanContext())
-        runningID = nil
         do {
             try await store.record(result)
         } catch {
             app.show(String(localized: "Couldn't save the automation run"), error)
         }
         await reload()
+        // Only now: a check in between would still see the old "last run" and start it again.
+        runningID = nil
         if result.operationID != nil || result.freedNow { await app.refreshOperations() }
         // Someone who pressed Run Now sees the result on screen; notifications are for unattended runs.
         if automation.notifies && !isManual { notifier.post(result, retentionDays: app.retentionDays) }

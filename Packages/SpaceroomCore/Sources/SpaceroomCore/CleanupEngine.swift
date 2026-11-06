@@ -46,9 +46,12 @@ public struct CleanupEngine: Sendable {
         let guardrail = SafetyGuard(home: context.home)
         var moves: [PlannedMove] = []
         var skipped: [SkippedItem] = []
+        // Build folders can hold programs people run (a CLI in target/release): check processes,
+        // once, when any are being cleaned.
+        let running = items.contains { rulesByID[$0.ruleID]?.projectArtifact != nil } ? RunningProcesses.current() : nil
 
         for item in items {
-            if let reason = verify(item, rule: rulesByID[item.ruleID], guardrail: guardrail, context: context) {
+            if let reason = verify(item, rule: rulesByID[item.ruleID], guardrail: guardrail, context: context, running: running) {
                 skipped.append(SkippedItem(path: item.url.path, size: item.size, reason: reason))
             } else {
                 moves.append(PlannedMove(url: item.url, ruleID: item.ruleID, size: item.size, isDirectory: item.isDirectory))
@@ -69,7 +72,8 @@ public struct CleanupEngine: Sendable {
         return CleanOutcome(operation: record, skipped: plan.skipped + failed)
     }
 
-    func verify(_ item: ScanItem, rule: Rule?, guardrail: SafetyGuard, context: ScanContext) -> SkipReason? {
+    func verify(_ item: ScanItem, rule: Rule?, guardrail: SafetyGuard, context: ScanContext,
+                running: RunningProcesses? = nil) -> SkipReason? {
         if let reason = item.skipReason { return reason }
         // Unknown rule: refuse. Items may only be cleaned on behalf of a loaded, validated rule.
         guard let rule else { return .outsideRoot }
@@ -77,9 +81,13 @@ public struct CleanupEngine: Sendable {
         if context.ignore.ignoresRule(rule.id) || context.ignore.ignoresItem(at: item.url) { return .ignored }
         if let reason = guardrail.check(item.url, root: item.root) { return reason }
         if let app = rule.skipIfRunning.first(where: context.runningBundleIDs.contains) { return .inUse(bundleID: app) }
-        if rule.skipIfOwnerRunning, let owner = context.runningOwner(of: item.url.lastPathComponent) {
+        // The same two names the scanner checks ("com.foo" and "com.foo.plist").
+        if rule.skipIfOwnerRunning,
+           let owner = context.runningOwner(of: item.url.lastPathComponent)
+               ?? context.runningOwner(of: item.url.deletingPathExtension().lastPathComponent) {
             return .inUse(bundleID: owner)
         }
+        if rule.projectArtifact != nil, let name = running?.program(inside: item.url) { return .running(name: name) }
         guard let identity = FileStat.identity(of: item.url) else { return .missing }
         if identity != item.identity { return .changedSinceScan }
         return nil

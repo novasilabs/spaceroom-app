@@ -43,14 +43,25 @@ echo "▸ Creating the disk image"
 mkdir -p dist
 DMG="dist/Spaceroom-$VERSION.dmg"
 RW="build/Spaceroom-rw.dmg"
+VOLUME="Spaceroom $VERSION"
+# A disk with the same name would make this one mount as "… 1", and Finder would save the
+# background against that name, so the window would open without it for everyone else.
+if [ -e "/Volumes/$VOLUME" ]; then
+  echo "✗ /Volumes/$VOLUME is mounted. Eject it, then run this again." >&2
+  exit 1
+fi
 rm -f "$DMG" "$RW"
-hdiutil create -quiet -volname "Spaceroom $VERSION" -srcfolder "$STAGE" -fs HFS+ -format UDRW -ov "$RW"
+hdiutil create -quiet -volname "$VOLUME" -srcfolder "$STAGE" -fs HFS+ -format UDRW -ov "$RW"
 MOUNT=$(hdiutil attach -noverify -noautoopen "$RW" | awk -F'\t' '/\/Volumes\//{print $NF}')
 DISK=$(basename "$MOUNT")
+[ "$DISK" = "$VOLUME" ] || { echo "✗ mounted as $DISK instead of $VOLUME" >&2; hdiutil detach -quiet "$MOUNT"; exit 1; }
 
-echo "▸ Laying out the window (macOS may ask to let this app control Finder)"
-# Positions match scripts/dmg-background.swift (window content 660 × 500 points).
-if ! osascript <<APPLESCRIPT
+# Finder saves its view settings in .DS_Store whenever it gets round to it; the background is
+# the "pBBk" record. Lay out, then wait for it, and try again if Finder didn't write it.
+has_background() { [ -f "$MOUNT/.DS_Store" ] && grep -aq pBBk "$MOUNT/.DS_Store"; }
+
+layout() {
+osascript <<APPLESCRIPT
 tell application "Finder"
   tell disk "$DISK"
     open
@@ -74,8 +85,24 @@ tell application "Finder"
   end tell
 end tell
 APPLESCRIPT
-then
-  echo "  (Finder layout skipped: allow control of Finder in System Settings › Privacy & Security › Automation)"
+}
+
+echo "▸ Laying out the window (macOS may ask to let this app control Finder)"
+# Positions match scripts/dmg-background.swift (window content 660 × 500 points).
+for attempt in 1 2 3; do
+  layout >/dev/null || { echo "  Finder didn't respond (allow control of Finder in System Settings › Privacy & Security › Automation)"; }
+  for _ in $(seq 1 30); do has_background && break; sleep 0.5; done
+  has_background && break
+  echo "  Finder hasn't saved the background yet, trying again ($attempt/3)"
+done
+if ! has_background; then
+  if [ "${DMG_ALLOW_PLAIN:-0}" = "1" ]; then
+    echo "  ⚠︎ No window background (DMG_ALLOW_PLAIN=1)"
+  else
+    hdiutil detach -quiet "$MOUNT" || hdiutil detach -force -quiet "$MOUNT"
+    echo "✗ Finder didn't save the window background. Set DMG_ALLOW_PLAIN=1 to build a plain image anyway." >&2
+    exit 1
+  fi
 fi
 # The volume icon goes in after Finder is done: Finder drops it while applying the layout.
 if [ -f "$APP/Contents/Resources/AppIcon.icns" ]; then
@@ -88,6 +115,19 @@ hdiutil detach -quiet "$MOUNT" || { sleep 2; hdiutil detach -force -quiet "$MOUN
 hdiutil convert -quiet "$RW" -format UDZO -imagekey zlib-level=9 -o "$DMG"
 rm -f "$RW"
 [ "$SIGN_IDENTITY" != "-" ] && codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"
+
+echo "▸ Checking the finished image"
+CHECK=$(hdiutil attach -nobrowse -readonly -noverify "$DMG" | awk -F'\t' '/\/Volumes\//{print $NF}')
+problems=""
+[ -f "$CHECK/.background/background.tiff" ] || problems="$problems background-file"
+{ [ -f "$CHECK/.DS_Store" ] && grep -aq pBBk "$CHECK/.DS_Store"; } || problems="$problems background-setting"
+grep -aq Iloc "$CHECK/.DS_Store" 2>/dev/null || problems="$problems icon-positions"
+[ -f "$CHECK/.VolumeIcon.icns" ] || problems="$problems volume-icon"
+hdiutil detach -quiet "$CHECK" || hdiutil detach -force -quiet "$CHECK"
+if [ -n "$problems" ] && [ "${DMG_ALLOW_PLAIN:-0}" != "1" ]; then
+  echo "✗ The image is missing:$problems" >&2
+  exit 1
+fi
 
 hdiutil verify -quiet "$DMG"
 (cd dist && shasum -a 256 "$(basename "$DMG")" | tee "$(basename "$DMG").sha256")

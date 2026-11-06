@@ -120,7 +120,9 @@ public struct LeftoverFinder: Sendable {
     static let ambiguousNames: Set<String> = ["google", "microsoft", "adobe", "apple", "mozilla", "jetbrains",
                                               "library", "data", "app", "helper", "support", "cache", "caches"]
 
-    public func leftovers(bundleID: String, appName: String) -> [Leftover] {
+    /// - Parameter installedBundleIDs: every installed app. Data of another installed app whose ID
+    ///   merely starts with this one (`com.google.Chrome.canary` for `com.google.Chrome`) is left alone.
+    public func leftovers(bundleID: String, appName: String, installedBundleIDs: Set<String> = []) -> [Leftover] {
         guard Self.isValidBundleID(bundleID), !bundleID.hasPrefix("com.apple.") else { return [] }
         let name = appName.hasSuffix(".app") ? String(appName.dropLast(4)) : appName
         let nameUsable = name.count >= 3 && !Self.ambiguousNames.contains(name.lowercased())
@@ -142,7 +144,7 @@ public struct LeftoverFinder: Sendable {
         add("Saved Application State", .savedState) { $0 == bundleID + ".savedState" }
         add("HTTPStorages", .webData) { $0 == bundleID || $0 == bundleID + ".binarycookies" }
         add("WebKit", .webData) { $0 == bundleID }
-        add("LaunchAgents", .launchAgents) { $0.hasPrefix(bundleID) && $0.hasSuffix(".plist") }
+        add("LaunchAgents", .launchAgents) { ($0 == bundleID + ".plist" || $0.hasPrefix(bundleID + ".")) && $0.hasSuffix(".plist") }
         add("Preferences", .preferences) { idOrHelper($0, suffix: ".plist") }
         add("Preferences/ByHost", .preferences) { $0.hasPrefix(bundleID + ".") && $0.hasSuffix(".plist") }
         add("Cookies", .cookies) { $0 == bundleID + ".binarycookies" }
@@ -164,8 +166,12 @@ public struct LeftoverFinder: Sendable {
             }
         }
 
+        let others = installedBundleIDs.filter { $0 != bundleID && $0.hasPrefix(bundleID + ".") }
+        func belongsToOther(_ name: String) -> Bool {
+            others.contains { name == $0 || name.hasPrefix($0 + ".") || name == "group." + $0 }
+        }
         return matches.compactMap { url, category in
-            guard let m = FileStat.measure(url) else { return nil }
+            guard !belongsToOther(url.lastPathComponent), let m = FileStat.measure(url) else { return nil }
             return Leftover(url: url, category: category, size: m.allocatedSize, lastModified: m.newestModification)
         }
         .sorted { $0.size > $1.size }
@@ -211,6 +217,11 @@ public struct OrphanGroup: Sendable, Identifiable, Hashable {
     public let bundleID: String
     public let items: [Leftover]
     public var size: Int64 { items.reduce(0) { $0 + $1.size } }
+
+    public init(bundleID: String, items: [Leftover]) {
+        self.bundleID = bundleID
+        self.items = items
+    }
     public var lastModified: Date { items.map(\.lastModified).max() ?? .distantPast }
 }
 
@@ -325,6 +336,12 @@ public struct Uninstaller: Sendable {
 
         let library = home.appendingPathComponent("Library")
         for item in leftovers {
+            // Data of an app that's running right now (say it was reinstalled since the scan).
+            let name = item.url.lastPathComponent
+            if let owner = runningBundleIDs.first(where: { name == $0 || name.hasPrefix($0 + ".") || name == "group." + $0 }) {
+                skipped.append(SkippedItem(path: item.url.path, size: item.size, reason: .inUse(bundleID: owner)))
+                continue
+            }
             // Leftovers live directly in a ~/Library subfolder (one deeper for Preferences/ByHost).
             let parent = item.url.deletingLastPathComponent()
             let insideLibrary = SafetyGuard.realPath(parent).hasPrefix(SafetyGuard.realPath(library) + "/")

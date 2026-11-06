@@ -146,3 +146,38 @@ struct ProtectionTests {
         #expect(FileManager.default.fileExists(atPath: photo.path))
     }
 }
+
+@Suite("Protection: payloads after images")
+struct HiddenPayloadTests {
+    /// A real JPEG from ImageIO, so its structure is genuine.
+    private func jpeg(at url: URL) throws {
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try SimilarPhotosTests.writePhoto(to: url, scene: 0, width: 400, height: 300)
+    }
+
+    @Test("A large program appended to a JPEG is found even though it contains FF D9 itself")
+    func largePayloadInJPEG() throws {
+        let box = try Sandbox()
+        let url = box.home.appendingPathComponent("Downloads/cat.jpg")
+        try jpeg(at: url)
+        var payload = Data([0xCF, 0xFA, 0xED, 0xFE]) + Data(repeating: 0x11, count: 300_000)
+        payload.append(contentsOf: [0xFF, 0xD9])   // an end marker inside the program
+        payload.append(Data(repeating: 0x22, count: 1_000))
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.seekToEnd()
+        try handle.write(contentsOf: payload)
+        try handle.close()
+        let size = Int64((try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0)
+        #expect(ProtectionScanner.hiddenPayload(url, type: .jpeg, size: size) == .machO)
+    }
+
+    @Test("A clean JPEG has nothing after its end")
+    func cleanJPEG() throws {
+        let box = try Sandbox()
+        let url = box.home.appendingPathComponent("Downloads/clean.jpg")
+        try jpeg(at: url)
+        let size = Int64((try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0)
+        #expect(ProtectionScanner.imageEnd(url, type: .jpeg, size: size) == size)
+        #expect(ProtectionScanner.hiddenPayload(url, type: .jpeg, size: size) == nil)
+    }
+}

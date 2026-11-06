@@ -307,7 +307,7 @@ private struct BatteryCard: View {
     }
 
     private var stateText: String {
-        let watts = battery.watts.map { String(format: "%.1f W", abs($0)) }
+        let watts = battery.watts.map { (Measurement(value: abs($0), unit: UnitPower.watts)).formatted(.measurement(width: .abbreviated, numberFormatStyle: .number.precision(.fractionLength(1)))) }
         if battery.isCharging { return [String(localized: "Charging"), watts].compactMap { $0 }.joined(separator: " · ") }
         if battery.isPluggedIn { return String(localized: "Plugged in") }
         return [String(localized: "On battery"), watts].compactMap { $0 }.joined(separator: " · ")

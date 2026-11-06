@@ -6,7 +6,8 @@ import Foundation
 public struct DockerUsage: Sendable, Equatable {
     /// Build cache Docker could remove (`docker builder prune`).
     public var buildCache: Int64
-    /// Untagged images left behind by rebuilds (`docker image prune`, without `-a`).
+    /// Untagged images left behind by rebuilds (`docker image prune`, without `-a`). An upper
+    /// bound: layers they share with tagged images stay.
     public var danglingImages: Int64
     public var danglingImageCount: Int
     /// Everything else, for context only. Never offered: tagged images may exist nowhere else,
@@ -97,7 +98,9 @@ public struct Docker: Sendable {
         var result = DockerPruneResult(reclaimed: 0, failures: [])
         guard let executable else { return result }
         var steps: [[String]] = []
-        if buildCache { steps.append(["builder", "prune", "--force"]) }
+        // --all: every unused build cache entry, which is what `system df` reports as reclaimable
+        // (plain prune only removes dangling entries, so the card would promise more than it frees).
+        if buildCache { steps.append(["builder", "prune", "--all", "--force"]) }
         if danglingImages { steps.append(["image", "prune", "--force"]) }
         for arguments in steps {
             guard let run = Tool.run(executable, arguments, timeout: 900), run.status == 0 else {

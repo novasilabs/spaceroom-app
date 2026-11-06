@@ -271,6 +271,11 @@ public struct DuplicateGroup: Sendable, Identifiable, Hashable {
     /// Space the extra copies take.
     public var wasted: Int64 { size * Int64(max(0, files.count - 1)) }
     public var extras: [ClutterFile] { files.filter { $0.id != keeper.id } }
+
+    /// The same group with only `remaining` files, and the copy to keep picked from those.
+    public func restricted(to remaining: [ClutterFile]) -> DuplicateGroup {
+        DuplicateGroup(id: id, files: remaining, keeper: DuplicateFinder.keeper(of: remaining))
+    }
 }
 
 /// Confirms duplicates by content: same size → same first/last 64 KB → same SHA-256.

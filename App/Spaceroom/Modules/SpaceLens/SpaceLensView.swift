@@ -156,6 +156,7 @@ struct SpaceLensView: View {
             if result.operationID != nil {
                 Button { model.undoLast() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
                     .buttonStyle(GhostButtonStyle())
+                    .disabled(model.isRemoving)
             }
             Button { model.dismissResult() } label: { Image(systemName: "xmark") }
                 .buttonStyle(.plain).foregroundStyle(.textSecondary)
@@ -222,6 +223,7 @@ struct SpaceLensView: View {
             } else {
                 Button { model.newScan() } label: { Label("New Scan", systemImage: "arrow.clockwise") }
                     .buttonStyle(GhostButtonStyle())
+                    .disabled(model.isRemoving)
             }
         }
     }

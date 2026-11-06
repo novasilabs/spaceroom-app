@@ -29,6 +29,8 @@ final class SmartCareExtras {
         var movedThreats = 0
         var ranTasks = 0
         var removedLeftovers: Int64 = 0
+        /// Restore Center operations these tiles created, so Undo and Free Up Now cover them too.
+        var operations: [OperationRecord] = []
         var isEmpty: Bool { movedThreats == 0 && ranTasks == 0 && removedLeftovers == 0 }
     }
 
@@ -52,7 +54,8 @@ final class SmartCareExtras {
     func check() {
         lastOutcome = nil
         app.startup.loadIfNeeded()
-        app.applications.loadIfNeeded()
+        // Fresh every time: an app reinstalled since the last look owns its data again.
+        app.applications.reload()
         protectionTask?.cancel()
         isCheckingProtection = true
         threats = []
@@ -82,14 +85,14 @@ final class SmartCareExtras {
     var harmfulThreats: [ThreatFinding] { visibleThreats.filter { $0.severity == .high } }
     var dueTasks: [MaintenanceTask] { app.performance.dueTasks }
     var startupAttention: Int { app.startup.hasLoaded ? app.startup.attention.count : 0 }
-    var leftovers: [Leftover] { app.applications.hasLoaded ? app.applications.selectedOrphanItems : [] }
+    var leftovers: [Leftover] { app.applications.hasLoadedOrphans ? app.applications.selectedOrphanItems : [] }
     var leftoversSize: Int64 { leftovers.reduce(0) { $0 + $1.size } }
 
     func isReady(_ area: Area) -> Bool {
         switch area {
         case .protection: !isCheckingProtection
         case .speed: true
-        case .applications: app.applications.hasLoaded
+        case .applications: app.applications.hasLoadedOrphans
         }
     }
 
@@ -120,6 +123,7 @@ final class SmartCareExtras {
         if isSelected(.protection) {
             if let result = try? await ThreatRemover(store: store).remove(harmfulThreats), let operation = result.operation {
                 outcome.movedThreats = operation.items.count
+                outcome.operations.append(operation)
                 let moved = Set(operation.items.map(\.originalPath))
                 threats.removeAll { moved.contains($0.url.path) }
             }
@@ -130,6 +134,7 @@ final class SmartCareExtras {
                                                                         runningBundleIDs: AppNames.runningBundleIDs()),
                let operation = result.operation {
                 outcome.removedLeftovers = operation.totalSize
+                outcome.operations.append(operation)
             }
             app.applications.reload()
         }

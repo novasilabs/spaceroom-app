@@ -106,15 +106,15 @@ public struct DiskScanner: Sendable {
         let path = root.standardizedFileURL.path
         let device = FileStat.lstatInfo(root).map { Int32($0.st_dev) } ?? 0
         let name = path == "/" ? "/" : (path as NSString).lastPathComponent
-        return await scanFolder(path: path, name: name, device: device, depth: 0, progress: progress,
-                                onChild: onTopLevel)
+        return await scanFolder(path: path, name: name, device: device, depth: 0, links: HardLinks(),
+                                progress: progress, onChild: onTopLevel)
     }
 
     /// Reads one folder, then scans its subfolders — in parallel near the top, sequentially below.
-    private func scanFolder(path: String, name: String, device: Int32, depth: Int,
+    private func scanFolder(path: String, name: String, device: Int32, depth: Int, links: HardLinks,
                             progress: @escaping @Sendable (Int, Int64) -> Void,
                             onChild: @Sendable (DiskNode) -> Void = { _ in }) async -> DiskNode {
-        var reader = BulkReader()
+        var reader = BulkReader(links: links)
         var builder = FolderBuilder(name: name, path: path)
         let subfolders = reader.read(path: path, device: device, minFileSize: minFileSize, into: &builder)
         reader.flush(progress)
@@ -123,7 +123,8 @@ public struct DiskScanner: Sendable {
             let children = await withTaskGroup(of: DiskNode.self) { group in
                 for sub in subfolders {
                     group.addTask {
-                        await scanFolder(path: sub.path, name: sub.name, device: device, depth: depth + 1, progress: progress)
+                        await scanFolder(path: sub.path, name: sub.name, device: device, depth: depth + 1, links: links,
+                                         progress: progress)
                     }
                 }
                 var nodes: [DiskNode] = []
@@ -167,14 +168,27 @@ final class ScanBuffer {
     deinit { pointer.deallocate() }
 }
 
-/// Per-worker `getattrlistbulk` state: a reusable buffer, hard-link set and progress counters.
+/// Files with several hard links, seen by any worker: each is counted once in the whole scan,
+/// not once per folder that happens to be scanned in parallel.
+final class HardLinks: @unchecked Sendable {
+    private let lock = NSLock()
+    private var seen: Set<UInt64> = []
+    /// True the first time an inode is seen.
+    func insert(_ inode: UInt64) -> Bool { lock.withLock { seen.insert(inode).inserted } }
+}
+
+/// Per-worker `getattrlistbulk` state: a reusable buffer and progress counters.
 struct BulkReader {
     struct Subfolder { let name: String; let path: String }
 
     private let storage = ScanBuffer()
     private var buffer: UnsafeMutableRawPointer { storage.pointer }
     private static var bufferSize: Int { ScanBuffer.size }
-    private var seenInodes: Set<UInt64> = []
+    private let links: HardLinks
+
+    init(links: HardLinks = HardLinks()) {
+        self.links = links
+    }
     private(set) var pendingItems = 0
     private var pendingBytes: Int64 = 0
 
@@ -236,7 +250,7 @@ struct BulkReader {
                     let name = String(cString: namePointer)
                     subfolders.append(Subfolder(name: name, path: base + "/" + name))
                 case 1, 5: // VREG, VLNK (a link's own size; never followed)
-                    if objectType == 1, linkCount > 1, !seenInodes.insert(fileID).inserted { continue }
+                    if objectType == 1, linkCount > 1, !links.insert(fileID) { continue }
                     pendingItems += 1
                     pendingBytes += allocated
                     if allocated >= minFileSize {

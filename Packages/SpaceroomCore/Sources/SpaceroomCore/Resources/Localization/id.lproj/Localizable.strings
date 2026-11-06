@@ -84,3 +84,15 @@
 "Apple recommends a battery service at this level." = "Apple menyarankan servis baterai di tingkat ini.";
 "Running for %lld days without a restart" = "Berjalan %lld hari tanpa restart";
 "A restart applies updates and clears memory." = "Restart menerapkan pembaruan dan membersihkan memori.";
+
+/* Startup: where a program runs from */
+"temporary folder" = "folder sementara";
+"Downloads folder" = "folder Unduhan";
+"hidden folder (%@)" = "folder tersembunyi (%@)";
+"process %d" = "proses %d";
+
+/* Restore Center errors */
+"The Restore Center list at %@ can't be read: %@" = "Daftar Pusat Pemulihan di %@ tidak bisa dibaca: %@";
+"That clean isn't in the Restore Center any more." = "Pembersihan itu sudah tidak ada di Pusat Pemulihan.";
+"%lld items couldn't be deleted and are still in the Restore Center." = "%lld item tidak bisa dihapus dan masih ada di Pusat Pemulihan.";
+"The ignore list can't be read, so nothing is moved: %@" = "Daftar abaikan tidak bisa dibaca, jadi tidak ada yang dipindah: %@";

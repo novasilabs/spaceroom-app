@@ -869,12 +869,12 @@
         }
       }
     },
-    "%lld untagged images %@": {
+    "%lld untagged images, up to %@": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld image tanpa tag %@"
+            "value": "%lld image tanpa tag, hingga %@"
           }
         }
       }
@@ -2291,6 +2291,26 @@
         }
       }
     },
+    "Couldn't clear expired items": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak bisa menghapus item kedaluwarsa"
+          }
+        }
+      }
+    },
+    "Couldn't delete": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak bisa menghapus"
+          }
+        }
+      }
+    },
     "Couldn't delete the automation": {
       "localizations": {
         "id": {
@@ -2347,6 +2367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak bisa menghapus item"
+          }
+        }
+      }
+    },
+    "Couldn't restore": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak bisa memulihkan"
           }
         }
       }
@@ -2431,6 +2461,16 @@
         }
       }
     },
+    "Delete %lld items (%@) older than %lld days now?": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hapus %lld item (%@) yang lebih lama dari %lld hari sekarang?"
+          }
+        }
+      }
+    },
     "Delete Now": {
       "localizations": {
         "id": {
@@ -2447,6 +2487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hapus Permanen"
+          }
+        }
+      }
+    },
+    "Delete and Keep %lld Days": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hapus dan Simpan %lld Hari"
           }
         }
       }
@@ -3037,16 +3087,6 @@
         }
       }
     },
-    "Free %@…": {
-      "localizations": {
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kosongkan %@…"
-          }
-        }
-      }
-    },
     "Free Space": {
       "localizations": {
         "id": {
@@ -3123,6 +3163,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kosongkan %@ sekarang?"
+          }
+        }
+      }
+    },
+    "Free up to %@…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosongkan hingga %@…"
           }
         }
       }
@@ -3739,12 +3789,12 @@
         }
       }
     },
-    "Let Docker free %@?": {
+    "Let Docker free up to %@?": {
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biarkan Docker mengosongkan %@?"
+            "value": "Biarkan Docker mengosongkan hingga %@?"
           }
         }
       }
@@ -5226,6 +5276,16 @@
         }
       }
     },
+    "Quit %@ first, then press Undo again.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutup %@ dulu, lalu tekan Urungkan lagi."
+          }
+        }
+      }
+    },
     "Quit Spaceroom": {
       "localizations": {
         "id": {
@@ -5878,17 +5938,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Simpan"
-          }
-        }
-      }
-    },
-    "Saved passwords and bookmarks are never touched. Everything you clear can be restored for %lld days.": {
-      "extractionState": "stale",
-      "localizations": {
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kata sandi dan bookmark yang tersimpan tidak pernah disentuh. Semua yang Anda hapus bisa dipulihkan selama %lld hari."
           }
         }
       }
@@ -6975,6 +7024,16 @@
         }
       }
     },
+    "They can't be restored after this.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setelah ini item tersebut tidak bisa dipulihkan."
+          }
+        }
+      }
+    },
     "They leave your folders now and can be restored for %lld days if one turns out to be fine.": {
       "localizations": {
         "id": {
@@ -7221,6 +7280,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktifkan Spaceroom di daftar Akses Disk Penuh."
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak tersedia"
           }
         }
       }

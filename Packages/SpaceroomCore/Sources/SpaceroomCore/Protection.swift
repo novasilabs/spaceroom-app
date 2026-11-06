@@ -173,14 +173,15 @@ public struct ProtectionScanner: Sendable {
         let ext = url.pathExtension.lowercased()
         let fromInternet = Self.isFromInternet(url)
         if let finding = Self.nameFinding(url, size: size, isDirectory: false) { findings.append(finding) }
+        // Checked for every file, hidden ones included (".x.command" reads its header too).
+        if Self.scriptExtensions.contains(ext) && fromInternet {
+            findings.append(ThreatFinding(url: url, kind: .downloadedScript, severity: .low,
+                                          evidence: String(localized: "A .\(ext) file downloaded from the internet", bundle: .module), size: size,
+                                          isFromInternet: true))
+        }
 
         let needsHeader = Self.documentExtensions.contains(ext) || name.hasPrefix(".")
         guard needsHeader, size > 0, size <= maxInspectedSize, let header = Self.read(url, range: .head(64)) else {
-            if Self.scriptExtensions.contains(ext) && fromInternet {
-                findings.append(ThreatFinding(url: url, kind: .downloadedScript, severity: .low,
-                                              evidence: String(localized: "A .\(ext) file downloaded from the internet", bundle: .module), size: size,
-                                              isFromInternet: true))
-            }
             return findings
         }
         let detected = Self.detect(header)
@@ -199,8 +200,7 @@ public struct ProtectionScanner: Sendable {
         }
 
         if Self.imageExtensions.contains(ext), [.jpeg, .png, .gif].contains(detected),
-           let tail = Self.read(url, range: .tail(256 * 1024)),
-           let payload = Self.appendedPayload(tail, type: detected) {
+           let payload = Self.hiddenPayload(url, type: detected, size: size) {
             findings.append(ThreatFinding(url: url, kind: .hiddenPayload, severity: payload.isProgram ? .high : .medium,
                                           evidence: String(localized: "Hidden after the end of the image: \(payload.label)", bundle: .module),
                                           size: size, isFromInternet: fromInternet))
@@ -217,6 +217,13 @@ public struct ProtectionScanner: Sendable {
     public func inspectBundle(_ url: URL) -> [ThreatFinding] {
         var findings: [ThreatFinding] = []
         if let finding = Self.nameFinding(url, size: 0, isDirectory: true) { findings.append(finding) }
+        // Automator workflows and script bundles are folders too, and run code just the same.
+        let ext = url.pathExtension.lowercased()
+        if Self.scriptExtensions.contains(ext), Self.isFromInternet(url) {
+            findings.append(ThreatFinding(url: url, kind: .downloadedScript, severity: .low,
+                                          evidence: String(localized: "A .\(ext) file downloaded from the internet", bundle: .module),
+                                          size: DiskUsage.size(of: url), isDirectory: true, isFromInternet: true))
+        }
         guard url.pathExtension.lowercased() == "app" else { return findings }
         let fromInternet = Self.isFromInternet(url)
         let evidence: String? = switch CodeSignature.status(of: url.path) {
@@ -286,6 +293,69 @@ public struct ProtectionScanner: Sendable {
         if starts(Array("GIF8".utf8)) { return .gif }
         if starts(Array("%PDF".utf8)) { return .pdf }
         return .other
+    }
+
+    /// Code or an archive appended to an image. The image's real end is found by walking its
+    /// structure (PNG chunks; JPEG segments and scan data), so markers inside a large payload
+    /// can't hide it; when the structure can't be followed, the tail is checked instead.
+    static func hiddenPayload(_ url: URL, type: DetectedType, size: Int64) -> DetectedType? {
+        if let end = imageEnd(url, type: type, size: size) {
+            guard end < size, let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+            defer { try? handle.close() }
+            try? handle.seek(toOffset: UInt64(end))
+            guard let head = try? handle.read(upToCount: 64), !head.isEmpty else { return nil }
+            let kind = detect(head)
+            if kind.isProgram || kind == .zip || kind == .windowsProgram { return kind }
+            // An image that is also a zip (zip directories live at the end): a classic polyglot.
+            if let tail = read(url, range: .tail(64 * 1024)), lastIndex(of: [0x50, 0x4B, 0x05, 0x06], in: [UInt8](tail)) != nil {
+                return .zip
+            }
+            return nil
+        }
+        guard let tail = read(url, range: .tail(256 * 1024)) else { return nil }
+        return appendedPayload(tail, type: type)
+    }
+
+    /// Where the image data really ends, or nil when that can't be worked out.
+    static func imageEnd(_ url: URL, type: DetectedType, size: Int64) -> Int64? {
+        switch type {
+        case .png:
+            guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+            defer { try? handle.close() }
+            var offset: Int64 = 8
+            for _ in 0..<100_000 {
+                try? handle.seek(toOffset: UInt64(offset))
+                guard let header = try? handle.read(upToCount: 8), header.count == 8 else { return nil }
+                let bytes = [UInt8](header)
+                let length = Int64(bytes[0]) << 24 | Int64(bytes[1]) << 16 | Int64(bytes[2]) << 8 | Int64(bytes[3])
+                offset += 12 + length   // length, type, data, CRC
+                if bytes[4...7].elementsEqual(Array("IEND".utf8)) { return offset }
+                if offset > size { return nil }
+            }
+            return nil
+        case .jpeg:
+            // Entropy-coded data has to be read; photos above this are checked by their tail.
+            guard size <= 20_000_000, let data = try? Data(contentsOf: url) else { return nil }
+            let b = [UInt8](data)
+            var i = 2
+            while i + 2 <= b.count {
+                guard b[i] == 0xFF else { return nil }
+                let marker = b[i + 1]
+                if marker == 0xD9 { return Int64(i + 2) }
+                if marker == 0xFF { i += 1; continue }   // fill bytes
+                if marker == 0x01 || (0xD0...0xD8).contains(marker) { i += 2; continue }
+                guard i + 4 <= b.count else { return nil }
+                let length = Int(b[i + 2]) << 8 | Int(b[i + 3])
+                i += 2 + length
+                if marker == 0xDA {
+                    // Scan data runs to the next marker that isn't stuffing (FF 00) or a restart.
+                    while i + 1 < b.count, !(b[i] == 0xFF && b[i + 1] != 0x00 && !(0xD0...0xD7).contains(b[i + 1])) { i += 1 }
+                }
+            }
+            return nil
+        default:
+            return nil
+        }
     }
 
     /// What sits after an image's end marker, when it's code or an archive (not padding or a second photo).

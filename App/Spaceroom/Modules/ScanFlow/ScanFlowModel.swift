@@ -214,9 +214,16 @@ final class ScanFlowModel {
     }
 
     func toggleItem(_ item: ScanItem) {
+        guard selectedRuleIDs.contains(item.ruleID) else {
+            // Ticking one item of an unticked rule ticks just that item: the rule turns on with
+            // every other item of it left unticked.
+            selectedRuleIDs.insert(item.ruleID)
+            let others = results.first { $0.rule.id == item.ruleID }?.items.map(\.id).filter { $0 != item.id } ?? []
+            deselectedItemIDs.formUnion(others)
+            deselectedItemIDs.remove(item.id)
+            return
+        }
         if deselectedItemIDs.contains(item.id) { deselectedItemIDs.remove(item.id) } else { deselectedItemIDs.insert(item.id) }
-        // Ticking an item in an unticked rule selects the rule.
-        if !deselectedItemIDs.contains(item.id) { selectedRuleIDs.insert(item.ruleID) }
     }
 
     // MARK: Ignore
@@ -253,9 +260,10 @@ final class ScanFlowModel {
             do {
                 let outcome = items.isEmpty ? CleanOutcome(operation: nil, skipped: [])
                     : try await CleanupEngine(store: store).clean(items, rules: catalog.rules, operationName: operationName, context: context)
-                if runsExtras { _ = await app.smartCareExtras.run() }
+                let extras = runsExtras ? await app.smartCareExtras.run().operations : []
                 try? await Task.sleep(until: minimumDisplay)
                 lastOutcome = outcome
+                lastOperations = [outcome.operation].compactMap { $0 } + extras
                 await app.refreshOperations()
                 withAnimation(Motion.phaseChange) { phase = .done }
             } catch {
@@ -266,23 +274,31 @@ final class ScanFlowModel {
         }
     }
 
+    /// Every operation the last clean created: the junk, plus Smart Care's threats and leftovers.
+    private(set) var lastOperations: [OperationRecord] = []
+    /// What the last clean moved in total.
+    var lastMovedSize: Int64 { lastOperations.reduce(0) { $0 + $1.totalSize } }
+
     /// Restores everything the last clean moved, then returns to the intro screen.
     func undoLastClean() {
-        guard let operation = lastOutcome?.operation else { return }
+        let operations = lastOperations
+        guard !operations.isEmpty else { return }
         Task {
-            if await app.restoreAll(operation.id) {
-                notice = String(localized: "Restored \(operation.totalSize.bytesText). Everything is back where it was.")
+            if await app.restoreAll(operations.map(\.id)) {
+                notice = String(localized: "Restored \(operations.reduce(0) { $0 + $1.totalSize }.bytesText). Everything is back where it was.")
             }
             lastOutcome = nil
+            lastOperations = []
             withAnimation(Motion.phaseChange) { phase = .intro }
         }
     }
 
     /// Permanently deletes what the last clean moved, so the disk space is free right away.
     func freeUpNow() {
-        guard let operation = lastOutcome?.operation else { return }
+        let ids = lastOperations.map(\.id)
+        guard !ids.isEmpty else { return }
         Task {
-            if await app.purge(operation.id) {
+            if await app.purge(ids) {
                 withAnimation(Motion.hover) { isReleased = true }
             }
         }
@@ -291,6 +307,7 @@ final class ScanFlowModel {
     func finish() {
         isReleased = false
         lastOutcome = nil
+        lastOperations = []
         results = []
         withAnimation(Motion.phaseChange) { phase = .intro }
     }
@@ -299,6 +316,6 @@ final class ScanFlowModel {
 extension ScanItem {
     func withSkipReason(_ reason: SkipReason?) -> ScanItem {
         ScanItem(url: url, ruleID: ruleID, root: root, size: size, fileCount: fileCount, lastModified: lastModified,
-                 isDirectory: isDirectory, identity: identity, skipReason: reason)
+                 isDirectory: isDirectory, identity: identity, skipReason: reason, label: label)
     }
 }

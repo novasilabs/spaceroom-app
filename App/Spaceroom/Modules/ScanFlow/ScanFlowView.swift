@@ -251,7 +251,7 @@ struct ScanFlowView: View {
         return VStack(spacing: 0) {
             Spacer(minLength: 16)
             ModuleHero(module: module, size: 140, symbolOverride: "checkmark.seal.fill").entrance(0)
-            Text("\((outcome?.freedSize ?? 0).bytesText) cleaned")
+            Text("\(max(outcome?.freedSize ?? 0, flow.lastMovedSize).bytesText) cleaned")
                 .font(Typography.bigNumber(48))
                 .entrance(1)
             Text(flow.isReleased
@@ -271,15 +271,15 @@ struct ScanFlowView: View {
                     .entrance(3)
             }
 
-            if let operation = outcome?.operation, !flow.isReleased {
-                ReleaseCard(size: operation.totalSize, retentionDays: app.retentionDays) { flow.freeUpNow() }
+            if !flow.lastOperations.isEmpty, !flow.isReleased {
+                ReleaseCard(size: flow.lastMovedSize, retentionDays: app.retentionDays) { flow.freeUpNow() }
                     .frame(maxWidth: 520)
                     .padding(.top, 20)
                     .entrance(3)
             }
 
             HStack(spacing: 10) {
-                if outcome?.operation != nil && !flow.isReleased {
+                if !flow.lastOperations.isEmpty && !flow.isReleased {
                     Button { flow.undoLastClean() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
                         .buttonStyle(GhostButtonStyle())
                 }

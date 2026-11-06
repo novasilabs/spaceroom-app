@@ -107,6 +107,7 @@ final class ApplicationsModel {
     func reload() {
         loadTask?.cancel()
         isLoading = true
+        hasLoadedOrphans = false
         let home = FileManager.default.homeDirectoryForCurrentUser
         loadTask = Task { [weak self] in
             let infos = await Self.inventory(home: home)
@@ -117,10 +118,20 @@ final class ApplicationsModel {
             }
             self.hasLoaded = true
             self.isLoading = false
+            // The selection may be the same app, so its leftovers are reloaded explicitly
+            // (after Remove Data, the removed items must disappear).
+            self.loadLeftoversForSelection()
+            self.isLoadingOrphans = true
             await self.measureSizes()
+            guard !Task.isCancelled else { return }
             await self.loadOrphans(home: home, installed: Set(infos.map(\.bundleID)))
         }
     }
+
+    /// Leftovers of removed apps are still being looked for.
+    private(set) var isLoadingOrphans = false
+    /// Whether the leftover list reflects the current state (Smart Care waits for this).
+    private(set) var hasLoadedOrphans = false
 
     /// `nonisolated async` runs off the main actor in Swift 6.0 (there is no `@concurrent` yet).
     nonisolated private static func inventory(home: URL) async -> [InstalledApp] {
@@ -149,8 +160,12 @@ final class ApplicationsModel {
                 NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) != nil
             }
         }.value
+        // A newer reload (say, after Undo) owns the results now.
+        guard !Task.isCancelled else { return }
         foundOrphans = found
         selectedOrphanItemIDs = Set(found.flatMap(\.items).filter { !$0.isPersonal }.map(\.id))
+        isLoadingOrphans = false
+        hasLoadedOrphans = true
     }
 
     /// Spaceroom's own live data (the Restore Center, its settings). Uninstalling an old copy of
@@ -202,10 +217,11 @@ final class ApplicationsModel {
         guard let row = selectedRow else { return }
         isLoadingLeftovers = true
         let bundleID = row.app.bundleID, name = row.app.name
+        let installed = Set(rows.map(\.app.bundleID))
         let home = FileManager.default.homeDirectoryForCurrentUser
         leftoverTask = Task { [weak self] in
             let found = await Task.detached(priority: .userInitiated) {
-                LeftoverFinder(home: home).leftovers(bundleID: bundleID, appName: name)
+                LeftoverFinder(home: home).leftovers(bundleID: bundleID, appName: name, installedBundleIDs: installed)
             }.value
             guard let self, !Task.isCancelled, self.selectedRow?.app.bundleID == bundleID else { return }
             self.leftovers = found.filter { !self.app.ignoreList.ignoresItem(at: $0.url) && !Self.isSpaceroomData($0.url) }
@@ -304,11 +320,25 @@ final class ApplicationsModel {
 
     func removeSelectedOrphans() {
         guard let store = app.store else { return }
-        let items = selectedOrphanItems
+        // An app may have been installed again since the scan: its data isn't a leftover any more.
+        let items = selectedOrphanItems.filter { item in
+            !orphans.contains { group in
+                group.items.contains(item) && NSWorkspace.shared.urlForApplication(withBundleIdentifier: group.bundleID) != nil
+            }
+        }
         run(store: store) { uninstaller, running in
             try await uninstaller.remove(app: nil, leftovers: items, runningBundleIDs: running)
-        } message: { freed in
-            String(localized: "Removed \(freed.bytesText) of leftovers")
+        } message: { [weak self] freed in
+            // Gone now: don't keep them listed (and tickable) until the rescan finishes.
+            if let self {
+                let moved = Set(items.map(\.id))
+                self.foundOrphans = self.foundOrphans.compactMap { group in
+                    let rest = group.items.filter { !moved.contains($0.id) }
+                    return rest.isEmpty ? nil : OrphanGroup(bundleID: group.bundleID, items: rest)
+                }
+                self.selectedOrphanItemIDs.subtract(moved)
+            }
+            return String(localized: "Removed \(freed.bytesText) of leftovers")
         }
     }
 

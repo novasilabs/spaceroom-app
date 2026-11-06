@@ -154,22 +154,7 @@ struct LensExternalRemovalTests {
 
 @Suite("Removal safety: apps and running programs")
 struct RemovalSafetyTests {
-    /// Copies /bin/sleep into the sandbox and runs it, so a "program inside the folder" is running.
-    private func runSleep(at url: URL) throws -> Process {
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/bin/sleep"), to: url)
-        let process = Process()
-        process.executableURL = url
-        process.arguments = ["30"]
-        try process.run()
-        // Wait until the process has actually started running this executable (under load,
-        // exec can take a while), so the tests check removal, not timing.
-        let deadline = Date.now.addingTimeInterval(5)
-        while RunningProcesses.current().program(inside: url) == nil, Date.now < deadline {
-            Thread.sleep(forTimeInterval: 0.05)
-        }
-        return process
-    }
+    private func runSleep(at url: URL) throws -> Process { try TestProgram.run(at: url) }
 
     @Test("Running programs are found by path")
     func detects() throws {

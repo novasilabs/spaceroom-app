@@ -105,6 +105,35 @@ final class AppModel {
         let environment = ProcessInfo.processInfo.environment
         let isTooling = environment["SPACEROOM_SNAPSHOT_DIR"] != nil || environment["SPACEROOM_EXPORT_ICON"] != nil
         automations.start(schedules: !isTooling)
+        if !isTooling { startExpiryTimer() }
+    }
+
+    /// Expiry runs every hour too, not only when the window opens: Spaceroom often lives in the
+    /// menu bar for days, and automations keep adding to the Restore Center meanwhile.
+    private func startExpiryTimer() {
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3600))
+                guard let self else { return }
+                await self.purgeExpired()
+            }
+        }
+    }
+
+    func purgeExpired() async {
+        guard let store else { return }
+        do {
+            reportTrashFallback(try await store.purgeExpired(retentionDays: retentionDays))
+        } catch {
+            show(String(localized: "Couldn't clear expired items"), error)
+        }
+        await refreshOperations()
+    }
+
+    /// What a shorter retention would delete right away.
+    func expiringItems(withRetention days: Int, now: Date = .now) -> (count: Int, size: Int64) {
+        let expiring = operations.filter { $0.hasStoredItems && $0.expiryDate(retentionDays: days) <= now }
+        return (expiring.reduce(0) { $0 + $1.storedItems.count }, expiring.reduce(0) { $0 + $1.storedSize })
     }
 
     /// Why cleaning is disabled, if it is.
@@ -139,9 +168,9 @@ final class AppModel {
     func onLaunch() async {
         if let store {
             do {
-                try await store.purgeExpired(retentionDays: retentionDays)
+                reportTrashFallback(try await store.purgeExpired(retentionDays: retentionDays))
             } catch {
-                show("Couldn't clear expired items", error)
+                show(String(localized: "Couldn't clear expired items"), error)
             }
             reportTrashFallback(await store.removeOrphanedFolders())
         }
@@ -167,17 +196,17 @@ final class AppModel {
 
     @discardableResult
     func restoreAll(_ operationID: UUID) async -> Bool {
-        await perform("Couldn't restore") { try await $0.restoreAll(in: operationID) }
+        await perform(String(localized: "Couldn't restore")) { try await $0.restoreAll(in: operationID) }
     }
 
     @discardableResult
     func restore(_ itemID: UUID, in operationID: UUID) async -> Bool {
-        await perform("Couldn't restore") { try await $0.restore([itemID], in: operationID) }
+        await perform(String(localized: "Couldn't restore")) { try await $0.restore([itemID], in: operationID) }
     }
 
     @discardableResult
     func purge(_ operationID: UUID) async -> Bool {
-        await perform("Couldn't delete") { try await $0.purge(operationID) }
+        await perform(String(localized: "Couldn't delete")) { try await $0.purge(operationID) }
     }
 
     /// Permanently deletes several operations; one combined report instead of an alert each.

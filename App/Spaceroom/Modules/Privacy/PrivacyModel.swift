@@ -112,6 +112,7 @@ final class PrivacyModel {
                 let outcome = try await PrivacyCleaner(store: store).clear(chosen, runningBundleIDs: runningBundleIDs)
                 await app.refreshOperations()
                 if let operation = outcome.operation {
+                    lastClearedApps = Set(chosen.compactMap(\.bundleID))
                     lastResult = (String(localized: "Cleared \(chosen.count) items. They're in the Restore Center if you change your mind."), operation.id)
                 }
             } catch {
@@ -122,8 +123,18 @@ final class PrivacyModel {
         }
     }
 
+    /// Browsers whose data the last clear removed.
+    private var lastClearedApps: Set<String> = []
+
     func undoLast() {
         guard let id = lastResult?.operationID else { return }
+        // Putting a database back under a running browser would leave it next to the new one
+        // (and its -wal journal in the wrong place): the browser has to be closed first.
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        if let open = lastClearedApps.first(where: running.contains) {
+            lastResult = (String(localized: "Quit \(AppNames.name(for: open)) first, then press Undo again."), id)
+            return
+        }
         Task {
             if await app.restoreAll(id) { lastResult = (String(localized: "Restored. Everything is back."), nil) }
             reload()

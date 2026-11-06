@@ -11,7 +11,7 @@ body:
     attributes:
       label: Spaceroom version
       description: Settings › About
-      placeholder: "0.10.1"
+      placeholder: "0.10.2"
     validations:
       required: true
   - type: input

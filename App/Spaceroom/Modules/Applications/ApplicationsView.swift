@@ -130,7 +130,7 @@ struct ApplicationsView: View {
         if !chosen.isEmpty {
             details.append(.init(symbol: "folder", text: String(localized: "\(chosen.count) leftover items · \(chosen.reduce(0) { $0 + $1.size }.bytesText)")))
         }
-        let kept = model.leftovers.count - chosen.count
+        let kept = model.leftovers.filter { $0.isPersonal && !model.selectedLeftoverIDs.contains($0.id) }.count
         if kept > 0 {
             details.append(.init(symbol: "lock", text: String(localized: "\(kept) personal items kept")))
         }
@@ -180,8 +180,10 @@ struct ApplicationsView: View {
             if model.orphans.isEmpty {
                 VStack(spacing: 8) {
                     GlassGlyph(symbol: "checkmark.seal", tint: module.palette.accent, size: 56)
-                    Text(model.isLoading ? "Looking for leftovers…" : "No leftovers from removed apps")
-                        .font(.title3.weight(.semibold))
+                    Group {
+                        if model.isLoading || model.isLoadingOrphans { Text("Looking for leftovers…") } else { Text("No leftovers from removed apps") }
+                    }
+                    .font(.title3.weight(.semibold))
                     Text("Spaceroom looks for data of apps that are no longer installed and haven't been touched for 30 days.")
                         .font(.callout).foregroundStyle(.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 420)
                 }
@@ -345,8 +347,9 @@ private struct AppDetail: View {
                     Button(model.removesApp ? "Uninstall · \(model.uninstallSize.bytesText)"
                                             : "Remove Data · \(model.uninstallSize.bytesText)", action: uninstall)
                         .buttonStyle(FilledButtonStyle(tint: .hex(0xFF5A6E)))
+                        // Wait for the leftover scan, or uninstalling would leave them all behind.
                         .disabled(model.uninstallSize == 0 && model.selectedLeftovers.isEmpty && !model.removesApp
-                                  || model.isWorking || app.cleaningBlockedReason != nil)
+                                  || model.isWorking || model.isLoadingLeftovers || app.cleaningBlockedReason != nil)
                 }
             }
             .padding(12)

@@ -30,6 +30,8 @@ enum ProjectArtifactFinder {
     static func scan(_ rule: Rule, spec: ProjectArtifactSpec, context: ScanContext) -> RuleScanResult {
         let guardrail = SafetyGuard(home: context.home)
         let git = GitProbe.shared
+        let ruleInUse = rule.skipIfRunning.first { context.runningBundleIDs.contains($0) }
+        let running = RunningProcesses.current()
         var items: [ScanItem] = []
         for project in projects(in: searchRoots(rule, home: context.home), spec: spec) {
             if Task.isCancelled { break }
@@ -40,6 +42,8 @@ enum ProjectArtifactFinder {
                 guard let m = FileStat.measure(url, isCancelled: { Task.isCancelled }), m.isDirectory else { continue }
                 var reason: SkipReason? = context.ignore.ignoresItem(at: url) ? .ignored : nil
                 if reason == nil { reason = guardrail.check(url, root: project.url) }
+                if reason == nil, let app = ruleInUse { reason = .inUse(bundleID: app) }
+                if reason == nil, let name = running.program(inside: url) { reason = .running(name: name) }
                 if reason == nil, let repository {
                     switch git.isTracked(url, in: repository) {
                     case .some(true): reason = .trackedByGit(verified: true)

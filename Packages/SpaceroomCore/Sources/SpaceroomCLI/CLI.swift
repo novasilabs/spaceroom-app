@@ -46,7 +46,7 @@ public struct CLI: Sendable {
         case ok = 0, failure = 1, usage = 2, refused = 3
     }
 
-    public static let version = "0.10.1"
+    public static let version = "0.10.2"
 
     let env: Environment
 
@@ -258,6 +258,11 @@ public struct CLI: Sendable {
                 return .refused
             }
         }
+        // The scan and the question can take a while: check again right before writing.
+        if env.isAppRunning() {
+            env.writeError("spaceroom: Spaceroom was opened meanwhile. Nothing was changed; quit it and run this again.\n")
+            return .refused
+        }
         var moved: Int64 = 0
         var operations: [String] = []
         var skipped = 0
@@ -368,7 +373,12 @@ public struct CLI: Sendable {
                 return .failure
             }
             let outcomes = try await store.restoreAll(in: operation.id)
-            let restored = outcomes.filter { if case .missing = $0 { return false } else { return true } }.count
+            let restored = outcomes.filter {
+                switch $0 {
+                case .restored, .restoredRenamed: true
+                default: false
+                }
+            }.count
             env.write("Restored \(restored) of \(outcomes.count) items.\n")
             return restored == outcomes.count ? .ok : .failure
         } catch {
