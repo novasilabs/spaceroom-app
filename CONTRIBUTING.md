@@ -98,7 +98,15 @@ Spaceroom ships in English and Bahasa Indonesia (`id`).
 ./scripts/make-dmg.sh
 ```
 
-Builds a universal Release `Spaceroom.app`, checks its signature and writes `dist/Spaceroom-<version>.dmg`. The image has a designed window (background drawn by `scripts/dmg-background.swift`, with icon positions applied through Finder, so macOS asks once to let your terminal control Finder), an Applications shortcut, a bilingual *Read Me First* and a SHA-256 file. Pushing a `v*` tag runs the same script in the **Release** workflow and opens a draft GitHub release. Local builds are ad-hoc signed, so macOS asks people to confirm the first launch in System Settings › Privacy & Security. For a public release, pass a Developer ID (`SIGN_IDENTITY="Developer ID Application: …" ./scripts/make-dmg.sh`) and notarize the image with `xcrun notarytool submit … --wait` and `xcrun stapler staple`.
+Builds a universal Release `Spaceroom.app`, checks its signature and writes `dist/Spaceroom-<version>.dmg`. The image has a designed window (background drawn by `scripts/dmg-background.swift`, with icon positions applied through Finder, so macOS asks once to let your terminal control Finder), an Applications shortcut, a bilingual *Read Me First* and a SHA-256 file. Pushing a `v*` tag runs the same script in the **Release** workflow and opens a draft GitHub release. Builds are ad-hoc signed and not notarized. Browser downloads therefore get the Gatekeeper prompt, and the install script (`scripts/install.sh`) and Homebrew cask (`Casks/spaceroom.rb`) avoid it.
+
+**Release checklist:**
+1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml` and `CLI.version`, and move *Unreleased* in the changelog to the new version.
+2. Run `make dmg` and `make cli`.
+3. Run `./scripts/bump-cask.sh`.
+4. Commit, publish the release with the four files, then push.
+
+The cask's checksum must match the published DMG, or `brew install` refuses it.
 
 ## UI snapshot tour (Debug builds)
 

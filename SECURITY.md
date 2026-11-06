@@ -44,7 +44,8 @@ prefer otherwise.
 - The Protection scan not detecting a given piece of malware. It's a heuristic scan for
   common disguises, not an antivirus. Please open a regular issue with the sample's
   characteristics, not the sample itself.
-- Gatekeeper warnings on beta builds (they aren't notarized yet).
+- Gatekeeper warnings on disk images downloaded in a browser. Spaceroom isn't notarized on purpose; the install
+  script and the Homebrew cask verify the download's SHA-256 and avoid the prompt.
 
 ## How Spaceroom limits its own reach
 

@@ -6,6 +6,9 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Install without the Gatekeeper prompt.** `scripts/install.sh` downloads the newest release, checks its SHA-256, and copies the app into Applications (`curl … | bash`). A Homebrew cask in `Casks/` does the same through `brew tap novasilabs/spaceroom https://github.com/novasilabs/spaceroom-app`. Spaceroom stays un-notarized on purpose.
+
 ## [0.10.2] - 2026-11-07
 
 ### Fixed

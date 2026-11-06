@@ -31,7 +31,7 @@
   <img src="docs/images/smart-care.jpg" alt="Smart Care results: system junk, developer junk, Trash, Protection, Speed and Applications tiles" width="900">
 </p>
 
-> **Status: 0.10 beta.** Every module works and is covered by tests, but builds are not notarized yet and admin-only tasks wait for the privileged helper. See the [roadmap](#roadmap).
+> **Status: 0.10 beta.** Every module works and is covered by tests. Builds aren't notarized (install with the script or Homebrew to skip the Gatekeeper prompt), and admin-only tasks wait for the privileged helper. See the [roadmap](#roadmap).
 
 ## Why Spaceroom
 
@@ -106,12 +106,32 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SECURITY.md](SECURITY
 
 ## Download
 
-1. Get **Spaceroom-x.y.z.dmg** from [Releases](https://github.com/novasilabs/spaceroom-app/releases/latest).
-2. Open it and drag **Spaceroom** into **Applications**.
-3. **First launch:** beta builds aren't notarized yet, so macOS stops the first open. Go to **System Settings › Privacy & Security** and click **Open Anyway** next to Spaceroom. (On macOS 14 you can also right-click the app and choose **Open**.) You only need to do this once.
-4. The welcome tour asks for **Full Disk Access**, which lets Spaceroom measure protected places such as the Trash and Safari data. It works without it, and locked places are marked.
+Spaceroom is free and isn't notarized by Apple (that needs a paid Apple Developer account). The first two ways install it without the "can't check it for malicious software" prompt.
 
-Each release includes a `.sha256` file. Check your download with `shasum -a 256 Spaceroom-x.y.z.dmg`.
+**Install script** (checks the download's SHA-256, then copies the app into Applications. [Read it first](scripts/install.sh).)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/novasilabs/spaceroom-app/main/scripts/install.sh | bash
+```
+
+**Homebrew**
+
+```bash
+brew tap novasilabs/spaceroom https://github.com/novasilabs/spaceroom-app
+brew install --cask spaceroom
+```
+
+Update with `brew upgrade --cask spaceroom`.
+
+**Disk image**
+
+1. Get **Spaceroom-x.y.z.dmg** from [Releases](https://github.com/novasilabs/spaceroom-app/releases).
+2. Open it and drag **Spaceroom** into **Applications**.
+3. **First launch:** macOS stops apps downloaded in a browser that aren't notarized. Click **OK**, go to **System Settings › Privacy & Security**, and click **Open Anyway** next to Spaceroom. You only need to do this once.
+
+Each release includes a `.sha256` file. Check your download with `shasum -a 256 -c Spaceroom-x.y.z.dmg.sha256`.
+
+The welcome tour asks for **Full Disk Access**, which lets Spaceroom measure protected places such as the Trash and Safari data. It works without it, and locked places are marked.
 
 **Uninstalling Spaceroom:** quit it, delete the app, then delete `~/Library/Application Support/Spaceroom` (this also permanently deletes anything still in the Restore Center).
 
@@ -168,7 +188,6 @@ project.yml                    XcodeGen project definition
 ## Roadmap
 
 - **Privileged helper:** system caches and logs, plus the admin maintenance tasks (DNS, Spotlight, memory purge)
-- **Signed and notarized releases** with Sparkle updates and a Homebrew cask
 
 The full plan is in [docs/PRD.md](docs/PRD.md). See [CHANGELOG.md](CHANGELOG.md) for what's shipped.
 

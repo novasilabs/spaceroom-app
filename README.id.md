@@ -30,7 +30,7 @@
   <img src="docs/images/smart-care.jpg" alt="Hasil Smart Care" width="900">
 </p>
 
-> **Status: 0.10 beta.** Semua modul berfungsi dan teruji, tetapi build belum dinotarisasi Apple, dan tugas yang butuh hak admin masih menunggu helper. Lihat [rencana](#rencana).
+> **Status: 0.10 beta.** Semua modul berfungsi dan teruji. Build tidak dinotarisasi (pasang lewat skrip atau Homebrew agar tanpa peringatan Gatekeeper), dan tugas yang butuh hak admin masih menunggu helper. Lihat [rencana](#rencana).
 
 ## Kenapa Spaceroom
 
@@ -75,12 +75,32 @@ Detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dan [SECURITY.md](SECURITY.
 
 ## Unduh
 
-1. Ambil **Spaceroom-x.y.z.dmg** dari [Releases](https://github.com/novasilabs/spaceroom-app/releases/latest).
-2. Buka, lalu seret **Spaceroom** ke **Aplikasi**.
-3. **Pembukaan pertama:** build beta belum dinotarisasi, jadi macOS menahan pembukaan pertama. Buka **Pengaturan Sistem › Privasi & Keamanan**, lalu klik **Tetap Buka** di samping Spaceroom. Cukup sekali.
-4. Tur selamat datang akan meminta **Akses Disk Penuh** agar Spaceroom bisa mengukur tempat yang dilindungi, seperti Tong Sampah dan data Safari. Aplikasi tetap berfungsi tanpanya.
+Spaceroom gratis dan tidak dinotarisasi Apple (itu butuh akun Apple Developer berbayar). Dua cara pertama memasangnya tanpa peringatan "can't check it for malicious software".
 
-Cek keaslian unduhan dengan `shasum -a 256 Spaceroom-x.y.z.dmg`, lalu bandingkan dengan file `.sha256` di halaman rilis.
+**Skrip instalasi** (memeriksa SHA-256 unduhan, lalu menyalin app ke Aplikasi. [Baca dulu skripnya](scripts/install.sh).)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/novasilabs/spaceroom-app/main/scripts/install.sh | bash
+```
+
+**Homebrew**
+
+```bash
+brew tap novasilabs/spaceroom https://github.com/novasilabs/spaceroom-app
+brew install --cask spaceroom
+```
+
+Update dengan `brew upgrade --cask spaceroom`.
+
+**Disk image**
+
+1. Ambil **Spaceroom-x.y.z.dmg** dari [Releases](https://github.com/novasilabs/spaceroom-app/releases).
+2. Buka, lalu seret **Spaceroom** ke **Aplikasi**.
+3. **Pembukaan pertama:** macOS menahan app yang diunduh lewat browser dan tidak dinotarisasi. Klik **OK**, buka **Pengaturan Sistem › Privasi & Keamanan**, lalu klik **Tetap Buka** di samping Spaceroom. Cukup sekali.
+
+Cek keaslian unduhan dengan `shasum -a 256 -c Spaceroom-x.y.z.dmg.sha256`.
+
+Tur selamat datang akan meminta **Akses Disk Penuh** agar Spaceroom bisa mengukur tempat yang dilindungi, seperti Tong Sampah dan data Safari. Aplikasi tetap berfungsi tanpanya.
 
 **Menghapus Spaceroom:** keluar dari aplikasi, hapus aplikasinya, lalu hapus `~/Library/Application Support/Spaceroom`. Ini juga menghapus permanen isi Pusat Pemulihan.
 
@@ -104,7 +124,6 @@ make dmg         # build Release jadi dist/Spaceroom-<versi>.dmg
 ## Rencana
 
 - Helper dengan hak admin: cache dan log sistem, flush DNS, Spotlight
-- Rilis yang ditandatangani dan dinotarisasi, update otomatis Sparkle, dan Homebrew cask
 
 Rencana lengkap ada di [docs/PRD.md](docs/PRD.md), dan riwayat rilis di [CHANGELOG.md](CHANGELOG.md).
 

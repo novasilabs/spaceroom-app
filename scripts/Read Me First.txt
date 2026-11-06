@@ -5,8 +5,10 @@ INSTALL
 2. Open it from Applications.
 
 FIRST OPEN
-This build is not notarized by Apple yet, so macOS stops the first launch.
-- Click Done (or Cancel) in the warning.
+Spaceroom isn't notarized by Apple, so macOS stops the first launch of a copy
+downloaded in a browser. (Installing with the script or Homebrew avoids this:
+see github.com/novasilabs/spaceroom-app.)
+- Click OK (or Done) in the warning.
 - Open System Settings › Privacy & Security, scroll down and click
   "Open Anyway" next to Spaceroom, then confirm.
 - On macOS 14 you can also right-click Spaceroom in Applications and choose Open.
@@ -26,8 +28,10 @@ PASANG
 2. Buka dari folder Aplikasi.
 
 PEMBUKAAN PERTAMA
-Build ini belum dinotarisasi Apple, jadi macOS menahan pembukaan pertama.
-- Klik Selesai (atau Batal) pada peringatan.
+Spaceroom tidak dinotarisasi Apple, jadi macOS menahan pembukaan pertama salinan
+yang diunduh lewat browser. (Memasang lewat skrip atau Homebrew menghindari ini:
+lihat github.com/novasilabs/spaceroom-app.)
+- Klik OK (atau Selesai) pada peringatan.
 - Buka Pengaturan Sistem › Privasi & Keamanan, gulir ke bawah, lalu klik
   "Tetap Buka" di samping Spaceroom dan konfirmasi.
 - Di macOS 14 Anda juga bisa klik kanan Spaceroom di Aplikasi lalu pilih Buka.

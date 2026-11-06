@@ -21,9 +21,8 @@ jobs:
       - name: Check translations
         run: python3 scripts/check-translations.py
       - name: Build disk image
-        # Ad-hoc signed. To ship a notarized build, import a Developer ID certificate,
-        # set SIGN_IDENTITY, then run `xcrun notarytool submit dist/*.dmg --wait` and
-        # `xcrun stapler staple dist/*.dmg` before uploading.
+        # Ad-hoc signed and not notarized; scripts/install.sh and Casks/spaceroom.rb install
+        # it without the Gatekeeper prompt. Remember ./scripts/bump-cask.sh after publishing.
         run: ./scripts/make-dmg.sh
       - name: Build the command-line tool
         run: |
