@@ -91,7 +91,12 @@ final class StartupModel {
                 let outcome = try await LaunchItemRemover(store: store).remove([entry.item])
                 await app.refreshOperations()
                 if let operation = outcome.operation {
-                    lastResult = (String(localized: "Removed \(entry.displayName). It's in the Restore Center if you need it back."), operation.id)
+                    var message = String(localized: "Removed \(entry.displayName). It's in the Restore Center if you need it back.")
+                    // The app that installed it may add it back next time it runs.
+                    if let owner = Self.installedOwner(of: entry.item) {
+                        message += " " + String(localized: "\(owner) may add it back the next time it runs. To stop it for good, turn it off in \(owner)'s settings or uninstall \(owner).")
+                    }
+                    lastResult = (message, operation.id)
                 } else if let first = outcome.skipped.first {
                     lastResult = (String(localized: "Nothing was removed: \(first.reason.text)"), nil)
                 }
@@ -101,6 +106,18 @@ final class StartupModel {
             isWorking = false
             reload()
         }
+    }
+
+    /// The installed app a launch agent belongs to: the app its program lives in, or one of its
+    /// associated bundle IDs.
+    static func installedOwner(of item: LaunchItem) -> String? {
+        if let path = item.containingApp, FileManager.default.fileExists(atPath: path) {
+            return FileManager.default.displayName(atPath: path).replacingOccurrences(of: ".app", with: "")
+        }
+        for id in item.associatedBundleIDs where NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) != nil {
+            return AppNames.name(for: id)
+        }
+        return nil
     }
 
     func undoLast() {

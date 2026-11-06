@@ -183,3 +183,27 @@ struct UninstallerTests {
         #expect(box.exists("Documents/important.txt"))
     }
 }
+
+@Suite("Leftovers in vendor folders")
+struct VendorLeftoverTests {
+    @Test("Versioned folders inside Google/JetBrains are found; similar names aren't")
+    func vendor() throws {
+        let box = try Sandbox()
+        for path in ["Application Support/Google/AndroidStudio2025.2.3/options.xml", "Caches/Google/AndroidStudio2025.2.3/x",
+                     "Application Support/Google/Chrome/Default/History", "Application Support/Google/Chrome for Testing/x",
+                     "Application Support/Google/ChromeForTesting/x", "Logs/JetBrains/IntelliJIdea2025.1/idea.log"] {
+            try box.file("Library/" + path, bytes: 10)
+        }
+        let finder = LeftoverFinder(home: box.home)
+        let studio = finder.leftovers(bundleID: "com.google.android.studio", appName: "Android Studio").map(\.url.lastPathComponent)
+        #expect(studio.sorted() == ["AndroidStudio2025.2.3", "AndroidStudio2025.2.3"])
+        let chrome = finder.leftovers(bundleID: "com.google.Chrome", appName: "Google Chrome").map { $0.url.path }
+        #expect(chrome.count == 1 && chrome[0].hasSuffix("Google/Chrome"))
+        let idea = finder.leftovers(bundleID: "com.jetbrains.intellij", appName: "IntelliJ IDEA").map(\.url.lastPathComponent)
+        #expect(idea == ["IntelliJIdea2025.1"])
+        // A different product that merely starts with the name is left alone.
+        try box.file("Library/Application Support/Google/AndroidStudioPreview/x", bytes: 10)
+        #expect(!finder.leftovers(bundleID: "com.google.android.studio", appName: "Android Studio")
+            .contains { $0.url.lastPathComponent == "AndroidStudioPreview" })
+    }
+}

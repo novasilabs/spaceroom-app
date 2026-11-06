@@ -153,9 +153,50 @@ final class ApplicationsModel {
         selectedOrphanItemIDs = Set(found.flatMap(\.items).filter { !$0.isPersonal }.map(\.id))
     }
 
+    /// Spaceroom's own live data (the Restore Center, its settings). Uninstalling an old copy of
+    /// Spaceroom must not take the running one's data with it; Settings › Uninstall Spaceroom does that.
+    static func isSpaceroomData(_ url: URL) -> Bool {
+        let own = RestoreStore.defaultDirectory.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        if path == own || path.hasPrefix(own + "/") { return true }
+        guard let current = Bundle.main.bundleIdentifier else { return false }
+        return url.lastPathComponent.hasPrefix(current)
+    }
+
+    /// This very app (uninstalling it from itself needs its own flow).
+    func isSelf(_ installed: InstalledApp) -> Bool {
+        installed.url.resolvingSymlinksInPath().standardizedFileURL == Bundle.main.bundleURL.resolvingSymlinksInPath().standardizedFileURL
+    }
+
+    /// Other copies of the selected app that macOS knows about (another folder, a disk image, a
+    /// build folder). They stay launchable after this copy is uninstalled.
+    private(set) var otherCopies: [URL] = []
+
+    static func otherCopies(of installed: InstalledApp) -> [URL] {
+        let this = installed.url.resolvingSymlinksInPath().standardizedFileURL
+        return NSWorkspace.shared.urlsForApplications(withBundleIdentifier: installed.bundleID)
+            .map { $0.resolvingSymlinksInPath().standardizedFileURL }
+            .filter { $0 != this && !$0.path.contains("/Spaceroom/Quarantine/") && !$0.path.contains("/.Trash/")
+                && FileManager.default.fileExists(atPath: $0.path) }
+            .reduce(into: [URL]()) { if !$0.contains($1) { $0.append($1) } }
+    }
+
+    /// Personal leftovers (settings, app data) are left unticked; this ticks or unticks all of them.
+    var includesPersonalData: Bool {
+        let personal = leftovers.filter(\.isPersonal)
+        return !personal.isEmpty && personal.allSatisfy { selectedLeftoverIDs.contains($0.id) }
+    }
+    var hasPersonalLeftovers: Bool { leftovers.contains(where: \.isPersonal) }
+
+    func setIncludesPersonalData(_ on: Bool) {
+        let ids = Set(leftovers.filter(\.isPersonal).map(\.id))
+        if on { selectedLeftoverIDs.formUnion(ids) } else { selectedLeftoverIDs.subtract(ids) }
+    }
+
     private func loadLeftoversForSelection() {
         leftoverTask?.cancel()
         leftovers = []
+        otherCopies = selectedRow.map { Self.otherCopies(of: $0.app) } ?? []
         selectedLeftoverIDs = []
         removesApp = true
         guard let row = selectedRow else { return }
@@ -167,7 +208,7 @@ final class ApplicationsModel {
                 LeftoverFinder(home: home).leftovers(bundleID: bundleID, appName: name)
             }.value
             guard let self, !Task.isCancelled, self.selectedRow?.app.bundleID == bundleID else { return }
-            self.leftovers = found.filter { !self.app.ignoreList.ignoresItem(at: $0.url) }
+            self.leftovers = found.filter { !self.app.ignoreList.ignoresItem(at: $0.url) && !Self.isSpaceroomData($0.url) }
             // Mole's rule: keep personal data (settings, documents an app keeps) unless asked.
             self.selectedLeftoverIDs = Set(found.filter { !$0.isPersonal }.map(\.id))
             self.isLoadingLeftovers = false
@@ -215,6 +256,7 @@ final class ApplicationsModel {
 
     func isRunning(_ app: InstalledApp) -> Bool {
         NSWorkspace.shared.runningApplications.contains { $0.bundleIdentifier == app.bundleID }
+            || RunningProcesses.current().program(inside: app.url) != nil
     }
 
     var selectedOrphanItems: [Leftover] {
@@ -245,11 +287,18 @@ final class ApplicationsModel {
         let target = row.app
         let items = selectedLeftovers
         let includeApp = removesApp
+        let copies = otherCopies
         run(store: store) { uninstaller, running in
             try await uninstaller.remove(app: includeApp ? target : nil, leftovers: items, runningBundleIDs: running)
         } message: { freed in
-            includeApp ? String(localized: "Uninstalled \(target.name) · \(freed.bytesText) moved to the Restore Center")
-                       : String(localized: "Removed \(freed.bytesText) of \(target.name) data")
+            var text = includeApp ? String(localized: "Uninstalled \(target.name) · \(freed.bytesText) moved to the Restore Center")
+                                  : String(localized: "Removed \(freed.bytesText) of \(target.name) data")
+            if includeApp, let first = copies.first {
+                text += " " + (copies.count == 1
+                    ? String(localized: "Another copy is still at \(first.path.abbreviatingHome), so it can still be opened.")
+                    : String(localized: "\(copies.count) other copies are still on this Mac, so it can still be opened."))
+            }
+            return text
         }
     }
 

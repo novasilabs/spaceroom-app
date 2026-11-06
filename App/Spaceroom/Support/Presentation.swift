@@ -76,6 +76,7 @@ extension SkipReason {
         case .ignored: String(localized: "Ignored")
         case .trackedByGit(let verified):
             verified ? String(localized: "Committed to Git") : String(localized: "In a Git repository (Git isn't installed to check)")
+        case .running(let name): String(localized: "\(name) is running. Quit it first.")
         }
     }
 
@@ -90,6 +91,7 @@ extension SkipReason {
         case .moveFailed: "exclamationmark.triangle"
         case .ignored: "eye.slash"
         case .trackedByGit: "arrow.triangle.branch"
+        case .running: "play.circle"
         }
     }
 }

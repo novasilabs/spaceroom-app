@@ -87,6 +87,16 @@
         }
       }
     },
+    "%@ is running. Quit it first.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sedang berjalan. Tutup dulu."
+          }
+        }
+      }
+    },
     "%@ is still on your disk": {
       "localizations": {
         "id": {
@@ -113,6 +123,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ item diperiksa"
+          }
+        }
+      }
+    },
+    "%@ may add it back the next time it runs. To stop it for good, turn it off in %@'s settings or uninstall %@.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ mungkin menambahkannya lagi saat dijalankan berikutnya. Agar berhenti permanen, matikan di pengaturan %@ atau uninstall %@."
           }
         }
       }
@@ -443,6 +463,16 @@
         }
       }
     },
+    "%lld cleaned items (%@) are still in the Restore Center. They go to the Trash too. Put back anything you need first.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld item yang dibersihkan (%@) masih ada di Pusat Pemulihan. Semuanya ikut ke Tong Sampah. Pulihkan dulu yang masih Anda perlukan."
+          }
+        }
+      }
+    },
     "%lld cleanups": {
       "localizations": {
         "id": {
@@ -707,6 +737,26 @@
         }
       }
     },
+    "%lld other copies are still on this Mac, so it can still be opened.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masih ada %lld salinan lain di Mac ini, jadi app-nya masih bisa dibuka."
+          }
+        }
+      }
+    },
+    "%lld other copies of this app are on your Mac": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ada %lld salinan lain app ini di Mac Anda"
+          }
+        }
+      }
+    },
     "%lld percent used": {
       "localizations": {
         "id": {
@@ -739,6 +789,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld dipilih · %@"
+          }
+        }
+      }
+    },
+    "%lld settings and data items · %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld item pengaturan dan data · %@"
           }
         }
       }
@@ -1129,6 +1189,26 @@
         }
       }
     },
+    "Another copy is still at %@, so it can still be opened.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masih ada salinan lain di %@, jadi app-nya masih bisa dibuka."
+          }
+        }
+      }
+    },
+    "Another copy of this app is on your Mac": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ada salinan lain app ini di Mac Anda"
+          }
+        }
+      }
+    },
     "Any age": {
       "localizations": {
         "id": {
@@ -1275,6 +1355,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aplikasi"
+          }
+        }
+      }
+    },
+    "Apps are removed in Applications, so their leftovers go too and a running app isn't pulled out from under you.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App dihapus lewat Aplikasi, supaya sisanya ikut terhapus dan app yang sedang berjalan tidak dicabut begitu saja."
           }
         }
       }
@@ -2227,6 +2317,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak bisa memindahkan file"
+          }
+        }
+      }
+    },
+    "Couldn't move: %@": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak bisa dipindahkan: %@"
           }
         }
       }
@@ -4046,6 +4146,16 @@
         }
       }
     },
+    "Moves Spaceroom, its settings and its data, including the Restore Center, to the Trash, then quits.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memindahkan Spaceroom, pengaturan, dan datanya, termasuk Pusat Pemulihan, ke Tong Sampah, lalu keluar."
+          }
+        }
+      }
+    },
     "Moves it into the Restore Center": {
       "localizations": {
         "id": {
@@ -4766,6 +4876,16 @@
         }
       }
     },
+    "Open Settings": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Pengaturan"
+          }
+        }
+      }
+    },
     "Open Spaceroom": {
       "localizations": {
         "id": {
@@ -5316,6 +5436,16 @@
         }
       }
     },
+    "Remove everything, including personal data": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hapus semua, termasuk data pribadi"
+          }
+        }
+      }
+    },
     "Remove system junk, caches, logs and Trash — safely.": {
       "localizations": {
         "id": {
@@ -5753,11 +5883,22 @@
       }
     },
     "Saved passwords and bookmarks are never touched. Everything you clear can be restored for %lld days.": {
+      "extractionState": "stale",
       "localizations": {
         "id": {
           "stringUnit": {
             "state": "translated",
             "value": "Kata sandi dan bookmark yang tersimpan tidak pernah disentuh. Semua yang Anda hapus bisa dipulihkan selama %lld hari."
+          }
+        }
+      }
+    },
+    "Saved passwords and bookmarks are never touched. Everything you clear can be restored for %lld days. If a browser syncs (Chrome Sync, iCloud for Safari), history can come back from your other devices, so clear it there too.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kata sandi dan bookmark tersimpan tidak pernah disentuh. Semua yang Anda bersihkan bisa dipulihkan selama %lld hari. Kalau browser melakukan sync (Chrome Sync, iCloud untuk Safari), riwayat bisa kembali dari perangkat lain, jadi bersihkan juga di sana."
           }
         }
       }
@@ -6028,6 +6169,16 @@
         }
       }
     },
+    "Settings, sign-ins and files the app keeps. Still restorable from the Restore Center.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pengaturan, login, dan file yang disimpan app. Tetap bisa dipulihkan dari Pusat Pemulihan."
+          }
+        }
+      }
+    },
     "Settings…": {
       "localizations": {
         "id": {
@@ -6044,6 +6195,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Container bersama"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan"
           }
         }
       }
@@ -6498,6 +6659,16 @@
         }
       }
     },
+    "Spaceroom, its settings and its data go to the Trash. Empty the Trash to free the space.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaceroom, pengaturan, dan datanya masuk ke Tong Sampah. Kosongkan Tong Sampah untuk mengosongkan ruang."
+          }
+        }
+      }
+    },
     "Startup & Background": {
       "localizations": {
         "id": {
@@ -6530,6 +6701,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Masih terbuka"
+          }
+        }
+      }
+    },
+    "Still running, so not moved: %@. Quit and try again.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masih berjalan, jadi tidak dipindahkan: %@. Tutup lalu coba lagi."
           }
         }
       }
@@ -6660,6 +6841,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Butuh satu atau dua menit"
+          }
+        }
+      }
+    },
+    "The app isn't in Applications, so only its data is removed": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App tidak ada di folder Applications, jadi hanya datanya yang dihapus"
           }
         }
       }
@@ -6870,6 +7061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ini data milik Spaceroom sendiri, termasuk Pusat Pemulihan. Untuk mengosongkannya, kosongkan Pusat Pemulihan."
+          }
+        }
+      }
+    },
+    "This is the Spaceroom you're using. To remove it with its settings and the Restore Center, use Uninstall Spaceroom in Settings.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ini Spaceroom yang sedang Anda pakai. Untuk menghapusnya beserta pengaturan dan Pusat Pemulihan, gunakan Uninstall Spaceroom di Pengaturan."
           }
         }
       }
@@ -7085,6 +7286,36 @@
         }
       }
     },
+    "Uninstall Spaceroom?": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall Spaceroom?"
+          }
+        }
+      }
+    },
+    "Uninstall Spaceroom…": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall Spaceroom…"
+          }
+        }
+      }
+    },
+    "Uninstall and Quit": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall dan Keluar"
+          }
+        }
+      }
+    },
     "Uninstall apps completely, leftovers included.": {
       "localizations": {
         "id": {
@@ -7137,6 +7368,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld aplikasi dihapus instalannya"
+          }
+        }
+      }
+    },
+    "Uninstalling this one leaves those, so the app can still be opened.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uninstall yang ini tidak menghapus salinan itu, jadi app-nya masih bisa dibuka."
           }
         }
       }
@@ -7643,6 +7884,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "tekanan kritis"
+          }
+        }
+      }
+    },
+    "disk image or drive: eject it": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "disk image atau drive: eject dulu"
           }
         }
       }

@@ -25,6 +25,9 @@ public enum LensVerdict: Sendable, Hashable {
     case spaceroomData
     /// The "smaller items" summary, which isn't a real file.
     case notAnItem
+    /// An app, or a folder with apps in it. Apps are removed in Applications, which also finds
+    /// their leftovers and checks they aren't running.
+    case application
 }
 
 public struct LensRemovalPolicy: Sendable {
@@ -78,7 +81,31 @@ public struct LensRemovalPolicy: Sendable {
 
     public func verdict(for node: DiskNode) -> LensVerdict {
         if case .other = node.kind { return .notAnItem }
-        return verdict(for: URL(fileURLWithPath: node.path))
+        let verdict = verdict(for: URL(fileURLWithPath: node.path))
+        if verdict == .allowed, Self.containsApplication(node) { return .application }
+        return verdict
+    }
+
+    /// The node is an app bundle, or one appears in the part of the tree that was measured.
+    static func containsApplication(_ node: DiskNode, depth: Int = 0) -> Bool {
+        if node.path.lowercased().hasSuffix(".app") { return true }
+        guard depth < 6 else { return false }
+        return node.children.contains { !$0.isAggregate && containsApplication($0, depth: depth + 1) }
+    }
+
+    /// The same check on disk, right before removal (the map may have folded small apps away).
+    static func containsApplication(at url: URL) -> Bool {
+        if url.pathExtension.lowercased() == "app" { return true }
+        guard let enumerator = FileManager.default.enumerator(
+            at: url, includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsPackageDescendants]) else { return false }
+        var checked = 0
+        for case let child as URL in enumerator {
+            checked += 1
+            if child.pathExtension.lowercased() == "app" { return true }
+            if checked > 200_000 { break }   // a huge tree (say a project with dependencies): stop looking
+        }
+        return false
     }
 
     public func verdict(for url: URL) -> LensVerdict {
@@ -130,7 +157,7 @@ public struct LensRemover: Sendable {
         self.policy = LensRemovalPolicy(home: home, ownData: store.directory, volumes: volumes)
     }
 
-    public func remove(_ nodes: [DiskNode], now: Date = .now) async throws -> CleanOutcome {
+    public func remove(_ nodes: [DiskNode], running: RunningProcesses = .current(), now: Date = .now) async throws -> CleanOutcome {
         var moves: [PlannedMove] = []
         var skipped: [SkippedItem] = []
         for node in Self.outermost(nodes) {
@@ -139,10 +166,13 @@ public struct LensRemover: Sendable {
                 skipped.append(SkippedItem(path: node.path, size: node.size, reason: .missing))
                 continue
             }
-            if policy.verdict(for: node) != .allowed || ![S_IFREG, S_IFDIR, S_IFLNK].contains(mode) {
+            if policy.verdict(for: node) != .allowed || ![S_IFREG, S_IFDIR, S_IFLNK].contains(mode)
+                || (mode == S_IFDIR && LensRemovalPolicy.containsApplication(at: url)) {
                 skipped.append(SkippedItem(path: node.path, size: node.size, reason: .protectedPath))
             } else if let reason = SafetyGuard(home: policy.home).check(url, root: policy.root(for: url)) {
                 skipped.append(SkippedItem(path: node.path, size: node.size, reason: reason))
+            } else if let name = running.program(inside: url) {
+                skipped.append(SkippedItem(path: node.path, size: node.size, reason: .running(name: name)))
             } else {
                 moves.append(PlannedMove(url: url, ruleID: "spaceLens", size: node.size, isDirectory: mode == S_IFDIR))
             }

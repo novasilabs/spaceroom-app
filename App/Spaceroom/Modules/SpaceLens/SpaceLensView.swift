@@ -361,6 +361,8 @@ private struct FolderList: View {
             return .blocked(String(localized: "Space Lens removes items in your home folder and on external drives. To remove an app, use Applications."))
         case .protectedFolder:
             return .blocked(String(localized: "macOS and your apps rely on this folder, so Space Lens won't remove it. You can remove items inside it."))
+        case .application:
+            return .blocked(String(localized: "Apps are removed in Applications, so their leftovers go too and a running app isn't pulled out from under you."))
         case .spaceroomData:
             return .blocked(String(localized: "This is Spaceroom's own data, including the Restore Center. To free it, empty the Restore Center."))
         }

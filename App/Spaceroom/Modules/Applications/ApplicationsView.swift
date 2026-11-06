@@ -90,7 +90,9 @@ struct ApplicationsView: View {
         HStack(alignment: .top, spacing: 16) {
             appList.frame(minWidth: 300, maxWidth: 380)
             Group {
-                if let row = model.selectedRow {
+                if let row = model.selectedRow, model.isSelf(row.app) {
+                    SelfAppDetail(row: row)
+                } else if let row = model.selectedRow {
                     AppDetail(model: model, row: row) { isConfirmingUninstall = true }
                 } else if model.isLoading {
                     placeholder(ProgressView().controlSize(.large))
@@ -300,6 +302,17 @@ private struct AppDetail: View {
                     if model.isLoadingLeftovers {
                         ProgressView().controlSize(.small).padding(12)
                     }
+                    if model.hasPersonalLeftovers {
+                        Toggle(isOn: Binding(get: { model.includesPersonalData }, set: { model.setIncludesPersonalData($0) })) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Remove everything, including personal data").font(.system(size: 12, weight: .medium))
+                                Text("Settings, sign-ins and files the app keeps. Still restorable from the Restore Center.")
+                                    .font(.caption).foregroundStyle(.textTertiary)
+                            }
+                        }
+                        .toggleStyle(.switch).controlSize(.small)
+                        .padding(.horizontal, 8).padding(.vertical, 6)
+                    }
                     ForEach(model.leftovers) { item in
                         CheckRow(isOn: model.selectedLeftoverIDs.contains(item.id), symbol: item.category.symbol,
                                  title: item.category.title, detail: item.url.path.abbreviatingHome,
@@ -315,6 +328,9 @@ private struct AppDetail: View {
                 .padding(6)
             }
 
+            if !model.otherCopies.isEmpty {
+                OtherCopiesNote(copies: model.otherCopies).padding(.horizontal, 12).padding(.bottom, 8)
+            }
             Rectangle().fill(.white.opacity(0.08)).frame(height: 1)
             HStack(spacing: 10) {
                 if running {
@@ -335,6 +351,55 @@ private struct AppDetail: View {
             }
             .padding(12)
         }
+        .glassSurface(cornerRadius: 20)
+    }
+}
+
+/// Other copies of the same app stay launchable after this one is uninstalled.
+private struct OtherCopiesNote: View {
+    let copies: [URL]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(copies.count == 1 ? String(localized: "Another copy of this app is on your Mac")
+                                    : String(localized: "\(copies.count) other copies of this app are on your Mac"),
+                  systemImage: "square.on.square")
+                .font(.caption.weight(.semibold)).foregroundStyle(.yellow)
+            ForEach(copies.prefix(4), id: \.self) { url in
+                HStack(spacing: 6) {
+                    Text(url.path.abbreviatingHome).font(.caption).foregroundStyle(.textSecondary)
+                        .lineLimit(1).truncationMode(.middle)
+                    if url.path.hasPrefix("/Volumes/") {
+                        Text("disk image or drive: eject it").font(.caption2).foregroundStyle(.textTertiary)
+                    }
+                    Spacer(minLength: 4)
+                    Button("Show") { Finder.reveal(url) }.buttonStyle(.plain).font(.caption).foregroundStyle(.textSecondary)
+                }
+            }
+            Text("Uninstalling this one leaves those, so the app can still be opened.")
+                .font(.caption2).foregroundStyle(.textTertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.yellow.opacity(0.08)))
+    }
+}
+
+/// Spaceroom itself: it can't move its own data while running, so it points to Settings.
+private struct SelfAppDetail: View {
+    let row: ApplicationsModel.Row
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        VStack(spacing: 12) {
+            AppIcon(url: row.app.url, size: 84)
+            Text(row.app.name).font(.system(size: 20, weight: .bold))
+            Text("This is the Spaceroom you're using. To remove it with its settings and the Restore Center, use Uninstall Spaceroom in Settings.")
+                .font(.callout).foregroundStyle(.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 360)
+            Button("Open Settings") { openSettings() }.buttonStyle(GhostButtonStyle())
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassSurface(cornerRadius: 20)
     }
 }

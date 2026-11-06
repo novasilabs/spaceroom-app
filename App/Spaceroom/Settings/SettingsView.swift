@@ -70,6 +70,8 @@ struct SettingsView: View {
                 }
             }
 
+            SelfUninstallSection()
+
             Section("About") {
                 Button("Show Welcome Tour Again") {
                     app.hasCompletedOnboarding = false

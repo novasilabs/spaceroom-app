@@ -6,6 +6,18 @@ All notable changes to Spaceroom are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **Removed apps could still be opened.** macOS kept launching an app from the Restore Center (Spotlight, *Open With*, its links, `open -b`) for as long as it was kept. Apps are now stored under a name that isn't an app bundle, and they get their name back when restored. This also applies to apps removed by Protection, Space Lens and the Trash rule.
+- **Running programs were moved out from under themselves.** Protection and Space Lens now check every running process by path and skip anything running, with "Quit it first". Uninstalling also catches a running helper or second copy, not just the app's bundle ID.
+- **Space Lens could remove apps**, which skipped their leftovers and the running check. Apps, and folders with apps in them (checked on disk right before removal), are now left to Applications.
+- **Uninstall missed data kept in vendor folders**, such as `Application Support/Google/AndroidStudio2025.2` or `Caches/JetBrains/IntelliJIdea2025.1`. Exact names and versioned names are matched; similar products (Google/Chrome for Testing) are not.
+- Uninstalling an old copy of Spaceroom no longer lists the running Spaceroom's own data, which can't be moved into itself.
+
+### Added
+- **Applications:** a *Remove everything, including personal data* switch for a true deep clean (still restorable). There's also a note when other copies of the app are on the Mac, on a disk image or in a build folder, since they stay launchable. Spaceroom itself points to the new **Settings › Uninstall Spaceroom…**, which moves the app, its settings and its data (including the Restore Center) to the Trash, then quits.
+- **Startup:** after removing a launch agent whose app is still installed, Spaceroom says the app may add it back, and how to stop it for good.
+- **Privacy:** a note that browser sync (Chrome Sync, iCloud for Safari) can bring history back from other devices.
+
 ## [0.10.0] - 2026-11-06
 
 ### Added

@@ -25,6 +25,8 @@ public enum SkipReason: Codable, Sendable, Hashable {
     /// Part of a Git repository's tracked files (`verified`), or inside a repository when Git
     /// isn't installed to check (`verified == false`). Committed folders are never offered.
     case trackedByGit(verified: Bool)
+    /// A program at or inside it is running ("Quit Foo first"). Moving it wouldn't stop it.
+    case running(name: String)
 }
 
 /// Last line of defence before anything is moved. Pure path logic, no side effects.

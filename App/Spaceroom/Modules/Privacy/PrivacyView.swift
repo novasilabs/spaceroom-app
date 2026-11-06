@@ -23,7 +23,7 @@ struct PrivacyView: View {
                     } else {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Browsing traces").font(.headline)
-                            Text("Saved passwords and bookmarks are never touched. Everything you clear can be restored for \(app.retentionDays) days.")
+                            Text("Saved passwords and bookmarks are never touched. Everything you clear can be restored for \(app.retentionDays) days. If a browser syncs (Chrome Sync, iCloud for Safari), history can come back from your other devices, so clear it there too.")
                                 .font(.caption).foregroundStyle(.textTertiary)
                         }
                         ForEach(model.owners) { owner in OwnerCard(model: model, owner: owner).entrance(0) }

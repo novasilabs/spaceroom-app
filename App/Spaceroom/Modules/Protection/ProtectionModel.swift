@@ -130,11 +130,21 @@ final class ProtectionModel {
             do {
                 let outcome = try await ThreatRemover(store: store).remove(chosen)
                 await app.refreshOperations()
+                var message: String
                 if let operation = outcome.operation {
-                    lastResult = (String(localized: "Moved \(operation.items.count) items to the Restore Center."), operation.id)
+                    message = String(localized: "Moved \(operation.items.count) items to the Restore Center.")
                 } else {
-                    lastResult = (String(localized: "Nothing was moved. The files changed or are protected."), nil)
+                    message = String(localized: "Nothing was moved. The files changed or are protected.")
                 }
+                // A running program would keep running from its new place, so it's never moved.
+                let running = outcome.skipped.compactMap { item -> String? in
+                    if case .running(let name) = item.reason { return name }
+                    return nil
+                }
+                if !running.isEmpty {
+                    message += " " + String(localized: "Still running, so not moved: \(Set(running).sorted().formatted(.list(type: .and))). Quit and try again.")
+                }
+                lastResult = (message, outcome.operation?.id)
             } catch {
                 app.show(String(localized: "Couldn't move the files"), error)
             }

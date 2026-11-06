@@ -387,7 +387,8 @@ public struct ThreatRemover: Sendable {
         self.home = home
     }
 
-    public func remove(_ findings: [ThreatFinding], now: Date = .now) async throws -> CleanOutcome {
+    public func remove(_ findings: [ThreatFinding], running: RunningProcesses = .current(),
+                       now: Date = .now) async throws -> CleanOutcome {
         let guardrail = SafetyGuard(home: home)
         let realHome = SafetyGuard.realPath(home)
         let shared = SafetyGuard.realPath(URL(fileURLWithPath: "/Users/Shared"))
@@ -408,6 +409,9 @@ public struct ThreatRemover: Sendable {
                 skipped.append(SkippedItem(path: url.path, size: finding.size, reason: .protectedPath))
             } else if let reason = guardrail.check(url, root: url.deletingLastPathComponent()) {
                 skipped.append(SkippedItem(path: url.path, size: finding.size, reason: reason))
+            } else if let name = running.program(inside: url) {
+                // Moving a running program wouldn't stop it; it has to be quit first.
+                skipped.append(SkippedItem(path: url.path, size: finding.size, reason: .running(name: name)))
             } else {
                 moves.append(PlannedMove(url: url, ruleID: "protection." + finding.kind.rawValue, size: finding.size,
                                          isDirectory: finding.isDirectory))

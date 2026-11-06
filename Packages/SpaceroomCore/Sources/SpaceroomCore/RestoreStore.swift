@@ -198,7 +198,7 @@ public actor RestoreStore {
                 let storedURL: URL
                 let storage: QuarantinedItem.Storage
                 if let device = FileStat.device(of: move.url), device == quarantineDevice {
-                    storedURL = opFolder.appendingPathComponent("\(index)-\(move.url.lastPathComponent)")
+                    storedURL = opFolder.appendingPathComponent("\(index)-\(move.url.lastPathComponent)" + Self.heldSuffix(for: move.url))
                     try fileManager.moveItem(at: move.url, to: storedURL)
                     storage = .quarantine
                 } else {
@@ -225,6 +225,16 @@ public actor RestoreStore {
         records.append(record)
         try save()
         return (record, failures)
+    }
+
+    /// Apps keep working wherever they are: macOS would still open an app from the Restore
+    /// Center (from Spotlight, "Open With", its links or `open -b`). Stored under a name
+    /// that isn't a bundle, it can't be launched; restoring gives it its name back.
+    static let launchableExtensions: Set<String> = ["app"]
+    static let held = ".held"
+
+    static func heldSuffix(for url: URL) -> String {
+        launchableExtensions.contains(url.pathExtension.lowercased()) ? held : ""
     }
 
     // MARK: Restore

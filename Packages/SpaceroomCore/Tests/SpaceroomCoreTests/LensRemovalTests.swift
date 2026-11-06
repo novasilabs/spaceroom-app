@@ -151,3 +151,97 @@ struct LensExternalRemovalTests {
         #expect(FileManager.default.fileExists(atPath: clip.path))
     }
 }
+
+@Suite("Removal safety: apps and running programs")
+struct RemovalSafetyTests {
+    /// Copies /bin/sleep into the sandbox and runs it, so a "program inside the folder" is running.
+    private func runSleep(at url: URL) throws -> Process {
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/bin/sleep"), to: url)
+        let process = Process()
+        process.executableURL = url
+        process.arguments = ["30"]
+        try process.run()
+        Thread.sleep(forTimeInterval: 0.3)
+        return process
+    }
+
+    @Test("Running programs are found by path")
+    func detects() throws {
+        let box = try Sandbox()
+        let tool = box.home.appendingPathComponent("Downloads/Tool.app/Contents/MacOS/tool")
+        let process = try runSleep(at: tool)
+        defer { process.terminate() }
+        let running = RunningProcesses.current()
+        #expect(running.program(inside: box.home.appendingPathComponent("Downloads/Tool.app")) == "Tool")
+        #expect(running.program(inside: box.home.appendingPathComponent("Downloads")) == "Tool")
+        #expect(running.program(inside: box.home.appendingPathComponent("Documents")) == nil)
+    }
+
+    @Test("Protection never moves a running program")
+    func protection() async throws {
+        let box = try Sandbox()
+        let tool = box.home.appendingPathComponent("Downloads/payload")
+        let process = try runSleep(at: tool)
+        defer { process.terminate() }
+        let finding = ThreatFinding(url: tool, kind: .disguisedProgram, severity: .high, evidence: "", size: 100)
+        let outcome = try await ThreatRemover(store: try box.store(), home: box.home).remove([finding])
+        #expect(outcome.operation == nil)
+        #expect(outcome.skipped.first?.reason == .running(name: "payload"))
+        #expect(FileManager.default.fileExists(atPath: tool.path))
+    }
+
+    @Test("Space Lens leaves apps to Applications and skips running programs")
+    func lens() async throws {
+        let box = try Sandbox()
+        try box.folder("Applications/Tool.app/Contents/MacOS")
+        let folderWithApp = try box.folder("Downloads/Bundle")
+        try box.folder("Downloads/Bundle/Inner.app/Contents")
+        let policy = LensRemovalPolicy(home: box.home, ownData: box.support)
+        let app = DiskNode(name: "Tool.app", path: box.home.appendingPathComponent("Applications/Tool.app").path,
+                           kind: .package, size: 10, itemCount: 1)
+        #expect(policy.verdict(for: app) == .application)
+        let folder = DiskNode(name: "Bundle", path: folderWithApp.path, kind: .folder, size: 10, itemCount: 2)
+        #expect(policy.verdict(for: folder) == .allowed)   // the map didn't show the app inside…
+        let remover = LensRemover(store: try box.store(), home: box.home)
+        let outcome = try await remover.remove([folder])    // …but removal checks the disk
+        #expect(outcome.operation == nil)
+        #expect(FileManager.default.fileExists(atPath: folderWithApp.path))
+
+        let running = box.home.appendingPathComponent("Downloads/Tools/server")
+        let process = try runSleep(at: running)
+        defer { process.terminate() }
+        let tools = DiskNode(name: "Tools", path: running.deletingLastPathComponent().path, kind: .folder, size: 10, itemCount: 1)
+        let busy = try await remover.remove([tools])
+        #expect(busy.skipped.first?.reason == .running(name: "server"))
+    }
+
+    @Test("Uninstalling refuses while a copy of the app is running, found by path")
+    func uninstall() async throws {
+        let box = try Sandbox()
+        let exe = box.home.appendingPathComponent("Applications/Tool.app/Contents/MacOS/tool")
+        let process = try runSleep(at: exe)
+        defer { process.terminate() }
+        let app = InstalledApp(url: box.home.appendingPathComponent("Applications/Tool.app"), name: "Tool",
+                               bundleID: "com.example.tool", version: "1", source: .developer, lastUsed: nil)
+        let uninstaller = Uninstaller(store: try box.store(), home: box.home, appFolders: [box.home.appendingPathComponent("Applications")])
+        await #expect(throws: UninstallError.appIsRunning("Tool")) {
+            _ = try await uninstaller.remove(app: app, leftovers: [], runningBundleIDs: [])
+        }
+    }
+
+    @Test("Apps in the Restore Center can't be launched, and come back with their name")
+    func heldApps() async throws {
+        let box = try Sandbox()
+        let app = try box.folder("Applications/Tool.app/Contents")
+        try Data("x".utf8).write(to: app.appendingPathComponent("Info.plist"))
+        let store = try box.store()
+        let (record, _) = try await store.quarantine(
+            [PlannedMove(url: app.deletingLastPathComponent(), ruleID: "app.x", size: 1, isDirectory: true)], module: "applications")
+        let item = try #require(record?.items.first)
+        #expect(item.storedPath.hasSuffix("Tool.app.held"))
+        #expect(!FileManager.default.fileExists(atPath: box.home.appendingPathComponent("Applications/Tool.app").path))
+        _ = try await store.restoreAll(in: try #require(record).id)
+        #expect(box.exists("Applications/Tool.app/Contents/Info.plist"))
+    }
+}

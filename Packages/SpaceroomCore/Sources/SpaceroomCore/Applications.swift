@@ -150,11 +150,49 @@ public struct LeftoverFinder: Sendable {
         add("Containers", .containers) { idOrHelper($0) }
         add("Group Containers", .groupContainers) { $0 == "group." + bundleID || $0.hasSuffix("." + bundleID) }
 
+        // Vendors keep each app's data in a shared folder: Application Support/Google/AndroidStudio2025.2,
+        // Caches/JetBrains/IntelliJIdea2025.1. Only an exact name, or the name followed by a version, counts,
+        // so "Google Chrome" takes Google/Chrome but not Google/Chrome for Testing.
+        let candidates = Self.vendorCandidates(for: name)
+        for (folder, category) in [("Application Support", LeftoverCategory.applicationSupport), ("Caches", .caches), ("Logs", .logs)] {
+            for vendor in Self.vendorFolders {
+                let dir = library.appendingPathComponent(folder).appendingPathComponent(vendor)
+                guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { continue }
+                for entry in entries where candidates.contains(where: { Self.matchesVersioned(entry, name: $0) }) {
+                    matches.append((dir.appendingPathComponent(entry), category))
+                }
+            }
+        }
+
         return matches.compactMap { url, category in
             guard let m = FileStat.measure(url) else { return nil }
             return Leftover(url: url, category: category, size: m.allocatedSize, lastModified: m.newestModification)
         }
         .sorted { $0.size > $1.size }
+    }
+
+    static let vendorFolders = ["Google", "JetBrains", "Microsoft", "Adobe", "Mozilla"]
+
+    /// "Android Studio" → ["androidstudio"]; "Google Chrome" → ["googlechrome", "chrome"].
+    static func vendorCandidates(for name: String) -> [String] {
+        var names = [normalised(name)]
+        let words = name.split(separator: " ")
+        if words.count > 1, vendorFolders.contains(where: { $0.caseInsensitiveCompare(words[0]) == .orderedSame }) {
+            names.append(normalised(words.dropFirst().joined(separator: " ")))
+        }
+        return names.filter { $0.count >= 5 && !ambiguousNames.contains($0) }
+    }
+
+    static func normalised(_ text: String) -> String {
+        String(text.lowercased().filter { $0.isLetter || $0.isNumber })
+    }
+
+    /// Equal, or equal followed by a version number ("AndroidStudio2025.2.3").
+    static func matchesVersioned(_ entry: String, name: String) -> Bool {
+        let value = normalised(entry)
+        guard value.hasPrefix(name) else { return false }
+        let rest = value.dropFirst(name.count)
+        return rest.isEmpty || rest.first?.isNumber == true
     }
 
     /// Reverse-DNS with at least three parts, e.g. `com.example.app`.
@@ -261,14 +299,17 @@ public struct Uninstaller: Sendable {
 
     /// - Parameter app: `nil` removes only leftovers (apps that are already gone).
     public func remove(app: InstalledApp?, leftovers: [Leftover], runningBundleIDs: Set<String>,
-                       now: Date = .now) async throws -> CleanOutcome {
+                       running: RunningProcesses = .current(), now: Date = .now) async throws -> CleanOutcome {
         var moves: [PlannedMove] = []
         var skipped: [SkippedItem] = []
         let guardrail = SafetyGuard(home: home)
 
         if let app {
             if app.isProtected { throw UninstallError.protectedApp(app.name) }
-            if runningBundleIDs.contains(app.bundleID) { throw UninstallError.appIsRunning(app.name) }
+            // By bundle ID, and by path: a helper or a second copy may be what's running.
+            if runningBundleIDs.contains(app.bundleID) || running.program(inside: app.url) != nil {
+                throw UninstallError.appIsRunning(app.name)
+            }
             let parent = SafetyGuard.realPath(app.url.deletingLastPathComponent())
             let allowed = appFolders.map(SafetyGuard.realPath)
             // The bundle must sit in an app folder or one plain subfolder of it.
